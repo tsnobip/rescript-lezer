@@ -1,4 +1,34 @@
-## 1.5.4 (2025-09-18)
+## 0.1.0 (2025-10-10)
+
+### Initial ReScript Adaptation
+
+This is an initial adaptation of the lezer/javascript parser for ReScript syntax.
+
+**Supported features:**
+- Let bindings with optional type annotations
+- Function expressions (arrow functions)  
+- Basic expressions: literals (number, string, boolean), unary, binary, logical
+- List/Array expressions
+- Record/Object expressions
+- Function calls and member access
+- Line and block comments
+
+**Known limitations:**
+- Module system (open, module declarations) not yet fully functional
+- Type declarations need refinement
+- External declarations need work
+- Pattern matching (switch) not yet implemented
+- ReScript-specific operators (pipe `->`, string concatenation `++`) not yet working
+- JSX support present but untested
+
+**Breaking changes from lezer/javascript:**
+- Removed TypeScript dialect support
+- Changed package name to `@tsnobip/rescript-lezer`
+- Removed JavaScript-specific features
+
+---
+
+## 1.5.4 (2025-09-18) [Original JavaScript Parser]
 
 ### Bug fixes
 
