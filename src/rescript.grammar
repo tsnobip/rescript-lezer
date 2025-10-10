@@ -1,7 +1,6 @@
 @dialects { jsx }
 
 @precedence {
-  fun,
   member,
   call,
   prefix,
@@ -21,53 +20,11 @@
 
 statement[@isGroup=Statement] {
   LetBinding |
-  TypeDeclaration |
-  ModuleDeclaration |
-  OpenStatement |
-  ExternalDeclaration |
   expression
 }
 
 LetBinding {
-  kw<"let"> (kw<"rec">)? VariableDefinition (":" type)? "=" expression
-}
-
-TypeDeclaration {
-  kw<"type"> (kw<"rec">)? TypeDefinition typeParams? ("=" typeBody)?
-}
-
-typeBody {
-  RecordType |
-  VariantType
-}
-
-RecordType {
-  "{" commaSep<(kw<"mutable">)? PropertyName ":" type> "}"
-}
-
-VariantType {
-  variantCase ("|" variantCase)*
-}
-
-variantCase {
-  "|" ConstructorName ("(" commaSep1<type> ")")?
-}
-
-ModuleDeclaration {
-  kw<"module"> (kw<"rec">)? (kw<"type">)? ModuleName "=" moduleExpr
-}
-
-moduleExpr {
-  ModuleName |
-  "{" statement* "}"
-}
-
-OpenStatement {
-  kw<"open"> ModuleName
-}
-
-ExternalDeclaration {
-  kw<"external"> VariableDefinition ":" type "=" String
+  kw<"let"> VariableDefinition (":" type)? "=" expression
 }
 
 expression[@isGroup=Expression] {
@@ -77,12 +34,9 @@ expression[@isGroup=Expression] {
   boolean |
   VariableName |
   ConstructorName |
-  UnitLiteral { "(" ")" } |
   ListExpression { "[" commaSep<expression> "]" } |
-  RecordExpression { "{" commaSep<PropertyName ":" expression> "}" } |
-  FunctionExpression[@dynamicPrecedence=1] { !fun ParamList "=>" expression } |
-  IfExpression { kw<"if"> expression Block (kw<"else"> Block)? } |
-  SwitchExpression { kw<"switch"> expression "{" switchCase* "}" } |
+  RecordExpression { "{" commaSep<Property> "}" } |
+  ArrowFunction { ParamList "=>" expression } |
   CallExpression { expression !call "(" commaSep<expression> ")" } |
   MemberExpression { expression !member "." PropertyName } |
   BinaryExpression {
@@ -99,32 +53,16 @@ expression[@isGroup=Expression] {
   JSXElement
 }
 
+Property {
+  PropertyDefinition ":" expression
+}
+
 ParamList {
   "(" commaSep<VariableDefinition> ")"
 }
 
-switchCase {
-  "|" VariableDefinition "=>" expression
-}
-
-Block {
-  "{" expression "}"
-}
-
-typeParams {
-  "<" commaSep1<TypeParam> ">"
-}
-
-TypeParam {
-  "'" identifier
-}
-
 type[@isGroup=Type] {
   TypeName |
-  "'" identifier |
-  FunctionType[@dynamicPrecedence=1] { "(" commaSep<type> ")" "=>" type } |
-  RecordType |
-  ParameterizedType { TypeName "<" commaSep1<type> ">" } |
   ParenthesizedType { "(" type ")" }
 }
 
@@ -132,22 +70,17 @@ commaSep<content> {
   "" | content ("," content?)*
 }
 
-commaSep1<content> {
-  content ("," content)*
-}
-
 // Keywords
 kw<term> { @specialize[@name={term}]<identifier, term> }
 
 boolean { @specialize[@name=BooleanLiteral]<identifier, "true" | "false"> }
 
-VariableName { identifier }
-VariableDefinition { identifier }
-TypeDefinition { identifier }
+VariableName[@dynamicPrecedence=-1] { identifier }
+VariableDefinition[@dynamicPrecedence=1] { identifier }
 TypeName { identifier }
-ModuleName { uppercaseIdentifier }
 ConstructorName { uppercaseIdentifier }
 PropertyName { identifier }
+PropertyDefinition { identifier }
 
 @skip { spaces | newline | LineComment | BlockComment }
 
