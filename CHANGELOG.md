@@ -1,3 +1,33 @@
+## 0.1.2 (2025-10-10)
+
+### New Features
+
+**Pattern Matching:**
+- Added full support for `switch` expressions
+- Pattern types supported:
+  - Wildcard patterns (`_`)
+  - Variable binding patterns
+  - Number, string, and boolean literal patterns
+  - Constructor patterns with arguments (`Some(x)`, `None`)
+  - Array patterns (`[]`, `[x]`, `[x, y]`)
+  - Record patterns (`{x, y}`, `{x: 0, y: 0}`)
+  - Nested patterns (`Ok(Some(value))`)
+  - Parenthesized patterns
+- Switch expressions work in both statement and expression contexts
+
+**Template Strings:**
+- Added support for template string literals using backticks
+- Template strings can contain any content including newlines
+- Syntax: `` `template string` ``
+
+### Test Coverage
+
+Added 15 new tests (50 total):
+- **Pattern matching tests (8)**: Simple patterns, constructor patterns, string patterns, array patterns, record patterns, nested patterns, switch in expressions, boolean patterns
+- **Template string tests (7)**: Simple templates, templates with spaces, multiline templates, empty templates, templates with quotes, templates in function calls, multiple templates
+
+All 50 tests passing.
+
 ## 0.1.1 (2025-10-10)
 
 ### Enhancements

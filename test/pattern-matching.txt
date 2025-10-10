@@ -1,0 +1,91 @@
+# Simple switch with number patterns
+
+switch x {
+| 1 => "one"
+| 2 => "two"
+| _ => "other"
+}
+
+==>
+
+Script(SwitchExpression(switch,VariableName,SwitchCase(Pattern(Number),String),SwitchCase(Pattern(Number),String),SwitchCase(Pattern(VariableName),String)))
+
+# Switch with constructor patterns
+
+switch option {
+| Some(value) => value
+| None => 0
+}
+
+==>
+
+Script(SwitchExpression(switch,VariableName,SwitchCase(Pattern(ConstructorPattern(ConstructorName,Pattern(VariableName))),VariableName),SwitchCase(Pattern(ConstructorPattern(ConstructorName)),Number)))
+
+# Switch with string patterns
+
+switch color {
+| "red" => 1
+| "blue" => 2
+| "green" => 3
+}
+
+==>
+
+Script(SwitchExpression(switch,VariableName,SwitchCase(Pattern(String),Number),SwitchCase(Pattern(String),Number),SwitchCase(Pattern(String),Number)))
+
+# Switch with array patterns
+
+switch arr {
+| [] => "empty"
+| [x] => x
+| [x, y] => x + y
+}
+
+==>
+
+Script(SwitchExpression(switch,VariableName,SwitchCase(Pattern(ArrayPattern),String),SwitchCase(Pattern(ArrayPattern(Pattern(VariableName))),VariableName),SwitchCase(Pattern(ArrayPattern(Pattern(VariableName),Pattern(VariableName))),BinaryExpression(VariableName,ArithOp,VariableName))))
+
+# Switch with record patterns
+
+switch point {
+| {x: 0, y: 0} => "origin"
+| {x, y} => "point"
+}
+
+==>
+
+Script(SwitchExpression(switch,VariableName,SwitchCase(Pattern(RecordPattern(PatternField(PropertyName,Pattern(Number)),PatternField(PropertyName,Pattern(Number)))),String),SwitchCase(Pattern(RecordPattern(PatternField(PropertyName),PatternField(PropertyName))),String)))
+
+# Switch with nested patterns
+
+switch result {
+| Ok(Some(value)) => value
+| Ok(None) => 0
+| Error(_) => -1
+}
+
+==>
+
+Script(SwitchExpression(switch,VariableName,SwitchCase(Pattern(ConstructorPattern(ConstructorName,Pattern(ConstructorPattern(ConstructorName,Pattern(VariableName))))),VariableName),SwitchCase(Pattern(ConstructorPattern(ConstructorName,Pattern(ConstructorPattern(ConstructorName)))),Number),SwitchCase(Pattern(ConstructorPattern(ConstructorName,Pattern(VariableName))),UnaryExpression(ArithOp,Number))))
+
+# Switch in expression context
+
+let result = switch x {
+| 1 => "one"
+| _ => "other"
+}
+
+==>
+
+Script(LetBinding(let,VariableDefinition,SwitchExpression(switch,VariableName,SwitchCase(Pattern(Number),String),SwitchCase(Pattern(VariableName),String))))
+
+# Switch with boolean patterns
+
+switch flag {
+| true => 1
+| false => 0
+}
+
+==>
+
+Script(SwitchExpression(switch,VariableName,SwitchCase(Pattern(BooleanLiteral),Number),SwitchCase(Pattern(BooleanLiteral),Number)))

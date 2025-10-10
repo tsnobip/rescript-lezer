@@ -1,0 +1,58 @@
+# Simple template string
+
+let greeting = `Hello World`
+
+==>
+
+Script(LetBinding(let,VariableDefinition,TemplateString))
+
+# Template string with spaces
+
+let message = `This is a test`
+
+==>
+
+Script(LetBinding(let,VariableDefinition,TemplateString))
+
+# Template string with special characters
+
+let text = `Line 1
+Line 2
+Line 3`
+
+==>
+
+Script(LetBinding(let,VariableDefinition,TemplateString))
+
+# Empty template string
+
+let empty = ``
+
+==>
+
+Script(LetBinding(let,VariableDefinition,TemplateString))
+
+# Template string with quotes
+
+let quoted = `He said "hello"`
+
+==>
+
+Script(LetBinding(let,VariableDefinition,TemplateString))
+
+# Template string in function call
+
+console.log(`Debug message`)
+
+==>
+
+Script(CallExpression(MemberExpression(VariableName,PropertyName),TemplateString))
+
+# Multiple template strings
+
+let a = `first`
+let b = `second`
+
+==>
+
+Script(LetBinding(let,VariableDefinition,TemplateString),LetBinding(let,VariableDefinition,TemplateString))

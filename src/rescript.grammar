@@ -26,9 +26,50 @@ LetBinding {
   kw<"let"> (kw<"rec">)? VariableDefinition (":" type)? "=" expression
 }
 
+SwitchExpression[@dynamicPrecedence=1] {
+  kw<"switch"> expression "{" SwitchCase* "}"
+}
+
+SwitchCase[@dynamicPrecedence=2] {
+  "|" Pattern "=>" expression
+}
+
+Pattern {
+  Wildcard { "_" } |
+  VariableName |
+  Number |
+  String |
+  boolean |
+  ConstructorPattern |
+  ArrayPattern |
+  RecordPattern |
+  ParenthesizedPattern
+}
+
+ConstructorPattern {
+  ConstructorName ("(" commaSep<Pattern> ")")?
+}
+
+ArrayPattern {
+  "[" commaSep<Pattern> "]"
+}
+
+RecordPattern {
+  "{" commaSep<PatternField> "}"
+}
+
+PatternField {
+  PropertyName (":" Pattern)?
+}
+
+ParenthesizedPattern {
+  "(" Pattern ")"
+}
+
 expression[@isGroup=Expression] {
   Number |
   String |
+  TemplateString |
   Char |
   boolean |
   VariableName |
@@ -39,6 +80,7 @@ expression[@isGroup=Expression] {
   RecordExpression { "{" commaSep<Property> "}" } |
   Decorator { "@" VariableName } |
   ExtensionExpression { "%" VariableName "(" commaSep<expression> ")" } |
+  SwitchExpression |
   ArrowFunction[@dynamicPrecedence=1] {
     !arrow (
       VariableName |
@@ -129,7 +171,7 @@ PropertyDefinition { identifier }
   
   uppercaseIdentifier { $[A-Z] (identifierChar | @digit)* }
 
-  @precedence { spaces, newline, identifier }
+  @precedence { spaces, newline, identifier, "_" }
 
   Number {
     (@digit ("_" | @digit)* ("." ("_" | @digit)*)? | "." @digit ("_" | @digit)*)
@@ -143,6 +185,8 @@ PropertyDefinition { identifier }
   @precedence { Number, "." }
 
   Char { "'" (![\\\n'] | "\\" _) "'" }
+  
+  TemplateString { "`" ![`]* "`" }
 
   Escape {
     "\\" ("x" $[0-9a-fA-F] $[0-9a-fA-F] | "u" ("{" $[0-9a-fA-F]+ "}" | $[0-9a-fA-F] $[0-9a-fA-F] $[0-9a-fA-F] $[0-9a-fA-F]) | ![xu])
@@ -161,7 +205,7 @@ PropertyDefinition { identifier }
   "=>"
   "("  ")" "[" "]" "{" "}"
   "." "," ":" ";"
-  "=" "?" "|" "~" "'" "@" "%" "_"
+  "=" "?" "|" "~" "'" "@" "%" "_" "`"
 
   JSXEndTag { ">" }
   JSXSelfCloseEndTag { "/>" }
