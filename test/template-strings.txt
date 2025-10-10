@@ -4,7 +4,7 @@ let greeting = `Hello World`
 
 ==>
 
-Script(LetBinding(let,VariableDefinition,TemplateString))
+Script(LetBinding(let,VariableDefinition,TemplateString(TemplateContent)))
 
 # Template string with spaces
 
@@ -12,7 +12,7 @@ let message = `This is a test`
 
 ==>
 
-Script(LetBinding(let,VariableDefinition,TemplateString))
+Script(LetBinding(let,VariableDefinition,TemplateString(TemplateContent)))
 
 # Template string with special characters
 
@@ -22,7 +22,7 @@ Line 3`
 
 ==>
 
-Script(LetBinding(let,VariableDefinition,TemplateString))
+Script(LetBinding(let,VariableDefinition,TemplateString(TemplateContent)))
 
 # Empty template string
 
@@ -38,7 +38,7 @@ let quoted = `He said "hello"`
 
 ==>
 
-Script(LetBinding(let,VariableDefinition,TemplateString))
+Script(LetBinding(let,VariableDefinition,TemplateString(TemplateContent)))
 
 # Template string in function call
 
@@ -46,7 +46,7 @@ console.log(`Debug message`)
 
 ==>
 
-Script(CallExpression(MemberExpression(VariableName,PropertyName),TemplateString))
+Script(CallExpression(MemberExpression(VariableName,PropertyName),TemplateString(TemplateContent)))
 
 # Multiple template strings
 
@@ -55,4 +55,44 @@ let b = `second`
 
 ==>
 
-Script(LetBinding(let,VariableDefinition,TemplateString),LetBinding(let,VariableDefinition,TemplateString))
+Script(LetBinding(let,VariableDefinition,TemplateString(TemplateContent)),LetBinding(let,VariableDefinition,TemplateString(TemplateContent)))
+
+# Template string with interpolation
+
+let greeting = `Hello ${name}`
+
+==>
+
+Script(LetBinding(let,VariableDefinition,TemplateString(TemplateContent,Interpolation(VariableName))))
+
+# Template string with multiple interpolations
+
+let message = `${firstName} ${lastName}`
+
+==>
+
+Script(LetBinding(let,VariableDefinition,TemplateString(Interpolation(VariableName),TemplateContent,Interpolation(VariableName))))
+
+# Template string with expression interpolation
+
+let result = `The answer is ${x + y}`
+
+==>
+
+Script(LetBinding(let,VariableDefinition,TemplateString(TemplateContent,Interpolation(BinaryExpression(VariableName,ArithOp,VariableName)))))
+
+# Template string with function call interpolation
+
+let output = `User: ${getUser()}`
+
+==>
+
+Script(LetBinding(let,VariableDefinition,TemplateString(TemplateContent,Interpolation(CallExpression(VariableName)))))
+
+# Template string with nested member access
+
+let text = `Value: ${obj.prop.value}`
+
+==>
+
+Script(LetBinding(let,VariableDefinition,TemplateString(TemplateContent,Interpolation(MemberExpression(MemberExpression(VariableName,PropertyName),PropertyName)))))

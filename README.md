@@ -25,7 +25,8 @@ This is an adaptation of the lezer/javascript parser for ReScript syntax. The gr
 
 ### Advanced Features
 - **Pattern matching**: `switch` expressions with all pattern types (literals, constructors, arrays, records, nested patterns)
-- **Template strings**: `` `template string` ``
+- **Pattern guards**: `when` clauses in switch patterns for conditional matching
+- **Template strings**: `` `template string` `` with full interpolation support `` `Hello ${name}` ``
 - JSX (always available, not a dialect)
 - Decorators: `@decorator`
 - Extension expressions: `%raw()`
@@ -37,8 +38,6 @@ This is an adaptation of the lezer/javascript parser for ReScript syntax. The gr
 ### Not Yet Supported
 - Module system (`open`, `module` declarations)
 - Type declarations (variants, records as types)
-- Template string interpolation (`${...}`)
-- Pattern guards (`when` clauses)
 - External declarations
 
-50 tests passing.
+58 tests passing.

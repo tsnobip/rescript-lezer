@@ -1,3 +1,35 @@
+## 0.1.3 (2025-10-10)
+
+### New Features
+
+**Template String Interpolation:**
+- Added full support for template string interpolation: `` `Hello ${name}` ``
+- Interpolation can contain any expression:
+  - Variables: `` `${x}` ``
+  - Binary expressions: `` `${x + y}` ``
+  - Function calls: `` `${getUser()}` ``
+  - Member access: `` `${obj.prop}` ``
+  - Complex expressions: `` `${user.name || "Guest"}` ``
+- Multiple interpolations in one template string supported
+- Template strings automatically parse content and interpolations
+
+**Pattern Matching Guards:**
+- Added support for `when` clauses in switch patterns
+- Guards can contain any expression:
+  - Comparisons: `| n when n > 0 => ...`
+  - Logical operations: `| x when x > 10 && x < 100 => ...`
+  - Function calls: `| x when isValid(x) => ...`
+  - Member access and complex expressions
+- Guards work with all pattern types (literals, constructors, arrays, records)
+
+### Test Coverage
+
+Added 8 new tests (58 total):
+- **Template interpolation tests (5)**: Simple interpolation, multiple interpolations, expression interpolation, function call interpolation, member access in interpolation
+- **Pattern guard tests (3)**: Simple guards, complex guards with logical operations, function call guards
+
+All 58 tests passing.
+
 ## 0.1.2 (2025-10-10)
 
 ### New Features

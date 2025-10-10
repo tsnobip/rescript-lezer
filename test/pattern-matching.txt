@@ -89,3 +89,37 @@ switch flag {
 ==>
 
 Script(SwitchExpression(switch,VariableName,SwitchCase(Pattern(BooleanLiteral),Number),SwitchCase(Pattern(BooleanLiteral),Number)))
+
+# Pattern with guard clause
+
+switch x {
+| n when n > 0 => "positive"
+| n when n < 0 => "negative"
+| _ => "zero"
+}
+
+==>
+
+Script(SwitchExpression(switch,VariableName,SwitchCase(Pattern(VariableName),PatternGuard(when,BinaryExpression(VariableName,CompareOp,Number)),String),SwitchCase(Pattern(VariableName),PatternGuard(when,BinaryExpression(VariableName,CompareOp,Number)),String),SwitchCase(Pattern(VariableName),String)))
+
+# Pattern with complex guard
+
+switch value {
+| Some(x) when x > 10 && x < 100 => "valid"
+| _ => "invalid"
+}
+
+==>
+
+Script(SwitchExpression(switch,VariableName,SwitchCase(Pattern(ConstructorPattern(ConstructorName,Pattern(VariableName))),PatternGuard(when,BinaryExpression(BinaryExpression(VariableName,CompareOp,Number),LogicOp,BinaryExpression(VariableName,CompareOp,Number))),String),SwitchCase(Pattern(VariableName),String)))
+
+# Pattern with function call guard
+
+switch item {
+| x when isValid(x) => process(x)
+| _ => skip()
+}
+
+==>
+
+Script(SwitchExpression(switch,VariableName,SwitchCase(Pattern(VariableName),PatternGuard(when,CallExpression(VariableName,VariableName)),CallExpression(VariableName,VariableName)),SwitchCase(Pattern(VariableName),CallExpression(VariableName))))

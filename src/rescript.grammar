@@ -31,7 +31,30 @@ SwitchExpression[@dynamicPrecedence=1] {
 }
 
 SwitchCase[@dynamicPrecedence=2] {
-  "|" Pattern "=>" expression
+  "|" Pattern (PatternGuard)? "=>" expression
+}
+
+PatternGuard {
+  kw<"when"> guardExpression
+}
+
+guardExpression {
+  CallExpression { guardExpression !call "(" commaSep<expression> ")" } |
+  MemberExpression { guardExpression !member "." (PropertyName | ConstructorName) } |
+  BinaryExpression {
+    guardExpression !times (ArithOp<"*"> | ArithOp<"/"> | kw<"mod">) guardExpression |
+    guardExpression !plus (ArithOp<"+"> | ArithOp<"-">) guardExpression |
+    guardExpression !rel (LessThan | CompareOp<"<=" | ">" | ">=" | "==" | "!=">) guardExpression |
+    guardExpression !and LogicOp<"&&"> guardExpression |
+    guardExpression !or LogicOp<"||"> guardExpression
+  } |
+  UnaryExpression { !prefix (ArithOp<"-"> | LogicOp<"!">) guardExpression } |
+  ParenthesizedExpression { "(" expression ")" } |
+  Number |
+  String |
+  boolean |
+  VariableName |
+  ConstructorName
 }
 
 Pattern {
@@ -150,7 +173,19 @@ PropertyDefinition { identifier }
     '"' (stringContentDouble | Escape)* ('"' | "\n")
   }
   
+  TemplateString[isolate] {
+    "`" (TemplateContent | Interpolation)* "`"
+  }
+  
   BlockComment[isolate] { "/*" (blockCommentContent | blockCommentNewline)* blockCommentEnd }
+}
+
+TemplateContent {
+  templateText
+}
+
+Interpolation {
+  "${" expression "}"
 }
 
 @local tokens {
@@ -185,8 +220,6 @@ PropertyDefinition { identifier }
   @precedence { Number, "." }
 
   Char { "'" (![\\\n'] | "\\" _) "'" }
-  
-  TemplateString { "`" ![`]* "`" }
 
   Escape {
     "\\" ("x" $[0-9a-fA-F] $[0-9a-fA-F] | "u" ("{" $[0-9a-fA-F]+ "}" | $[0-9a-fA-F] $[0-9a-fA-F] $[0-9a-fA-F] $[0-9a-fA-F]) | ![xu])
@@ -199,13 +232,15 @@ PropertyDefinition { identifier }
   CompareOp<expr> { expr }
   StringOp<expr> { expr }
   PipeOp<expr> { expr }
+  
+  templateText { ![\`$]+ | "$" ![\{] }
 
   @precedence { LineComment, ArithOp }
 
   "=>"
   "("  ")" "[" "]" "{" "}"
   "." "," ":" ";"
-  "=" "?" "|" "~" "'" "@" "%" "_" "`"
+  "=" "?" "|" "~" "'" "@" "%" "_" "`" "${"
 
   JSXEndTag { ">" }
   JSXSelfCloseEndTag { "/>" }
