@@ -1,5 +1,3 @@
-@dialects { jsx }
-
 @precedence {
   member,
   call,
@@ -11,6 +9,7 @@
   rel @left,
   and @left,
   or @left,
+  arrow @right,
   statement @cut
 }
 
@@ -36,15 +35,20 @@ expression[@isGroup=Expression] {
   ConstructorName |
   ListExpression { "[" commaSep<expression> "]" } |
   RecordExpression { "{" commaSep<Property> "}" } |
-  ArrowFunction { ParamList "=>" expression } |
+  ArrowFunction[@dynamicPrecedence=1] {
+    !arrow (
+      VariableName |
+      ParamList
+    ) "=>" expression
+  } |
   CallExpression { expression !call "(" commaSep<expression> ")" } |
-  MemberExpression { expression !member "." PropertyName } |
+  MemberExpression { expression !member "." (PropertyName | ConstructorName) } |
   BinaryExpression {
     expression !times (ArithOp<"*"> | ArithOp<"/"> | kw<"mod">) expression |
     expression !plus (ArithOp<"+"> | ArithOp<"-">) expression |
     expression !concat StringOp<"++"> expression |
     expression !pipe PipeOp<"->" | "|>"> expression |
-    expression !rel (CompareOp<"<" | "<=" | ">" | ">=" | "==" | "!=">) expression |
+    expression !rel (LessThan | CompareOp<"<=" | ">" | ">=" | "==" | "!=">) expression |
     expression !and LogicOp<"&&"> expression |
     expression !or LogicOp<"||"> expression
   } |
@@ -58,7 +62,7 @@ Property {
 }
 
 ParamList {
-  "(" commaSep<VariableDefinition> ")"
+  "(" VariableName ("," VariableName)+ ")"
 }
 
 type[@isGroup=Type] {
@@ -75,8 +79,8 @@ kw<term> { @specialize[@name={term}]<identifier, term> }
 
 boolean { @specialize[@name=BooleanLiteral]<identifier, "true" | "false"> }
 
-VariableName[@dynamicPrecedence=-1] { identifier }
-VariableDefinition[@dynamicPrecedence=1] { identifier }
+VariableName { identifier }
+VariableDefinition { identifier }
 TypeName { identifier }
 ConstructorName { uppercaseIdentifier }
 PropertyName { identifier }
@@ -101,8 +105,8 @@ PropertyDefinition { identifier }
 }
 
 @tokens {
-  spaces { $[\u0009 \u000b\u00a0\u1680\u2000-\u200a\u202f\u205f\u3000\ufeff]+ }
-  newline { $[\r\n\u2028\u2029] }
+  spaces[@export] { $[\u0009 \u000b\u00a0\u1680\u2000-\u200a\u202f\u205f\u3000\ufeff]+ }
+  newline[@export] { $[\r\n\u2028\u2029] }
 
   LineComment[isolate] { "//" ![\n]* }
 
@@ -123,6 +127,8 @@ PropertyDefinition { identifier }
     "0o" $[0-7_]+
   }
 
+  @precedence { Number, "." }
+
   Char { "'" (![\\\n'] | "\\" _) "'" }
 
   Escape {
@@ -137,17 +143,18 @@ PropertyDefinition { identifier }
   StringOp<expr> { expr }
   PipeOp<expr> { expr }
 
+  @precedence { LineComment, ArithOp }
+
   "=>"
   "("  ")" "[" "]" "{" "}"
   "." "," ":" ";"
   "=" "?" "|" "~" "'"
 
-  JSXStartTag[@dialect=jsx] { "<" }
-  JSXEndTag[@dialect=jsx] { ">" }
-  JSXSelfCloseEndTag[@dialect=jsx] { "/>" }
-  JSXStartCloseTag[@dialect=jsx] { "</" }
-  JSXText[@dialect=jsx] { ![<]+ }
-  JSXIdentifier[@dialect=jsx] { identifier }
+  JSXEndTag { ">" }
+  JSXSelfCloseEndTag { "/>" }
+  JSXStartCloseTag { "</" }
+  JSXText { ![<]+ }
+  JSXIdentifier { identifier }
 }
 
 @skip {} {
@@ -178,5 +185,9 @@ jsxAttributeValue {
 }
 
 @external propSource rescriptHighlight from "./highlight"
+
+@external tokens insertSemicolon from "./tokens" { insertSemi }
+
+@external tokens jsx from "./tokens" { JSXStartTag, LessThan[@name=CompareOp] }
 
 @detectDelim
