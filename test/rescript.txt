@@ -39,13 +39,13 @@ let isFalse = false
 
 Script(LetBinding(let,VariableDefinition,BooleanLiteral),LetBinding(let,VariableDefinition,BooleanLiteral))
 
-# List expression
+# Array expression
 
 let numbers = [1, 2, 3]
 
 ==>
 
-Script(LetBinding(let,VariableDefinition,ListExpression(Number,Number,Number)))
+Script(LetBinding(let,VariableDefinition,ArrayExpression(Number,Number,Number)))
 
 # Record expression
 

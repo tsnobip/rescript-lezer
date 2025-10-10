@@ -1,0 +1,168 @@
+# Arrays
+
+let numbers = [1, 2, 3, 4, 5]
+
+==>
+
+Script(LetBinding(let,VariableDefinition,ArrayExpression(Number,Number,Number,Number,Number)))
+
+# Lists
+
+let myList = list{1, 2, 3}
+
+==>
+
+Script(LetBinding(let,VariableDefinition,ListExpression(list,Number,Number,Number)))
+
+# Dictionaries
+
+let myDict = dict{"key1": "value1", "key2": "value2"}
+
+==>
+
+Script(LetBinding(let,VariableDefinition,DictExpression(dict,DictEntry(String,String),DictEntry(String,String))))
+
+# Objects/Records
+
+let person = {name: "John", age: 30}
+
+==>
+
+Script(LetBinding(let,VariableDefinition,RecordExpression(Property(PropertyDefinition,String),Property(PropertyDefinition,Number))))
+
+# Type annotations
+
+let x: int = 5
+let y: string = "hello"
+
+==>
+
+Script(
+  LetBinding(let,VariableDefinition,TypeName,Number),
+  LetBinding(let,VariableDefinition,TypeName,String))
+
+# Decorators (as member expressions)
+
+let value = @decorator.field
+
+==>
+
+Script(LetBinding(let,VariableDefinition,MemberExpression(Decorator(VariableName),PropertyName)))
+
+# Extension syntax
+
+let rawJs = %raw("console.log('hello')")
+
+==>
+
+Script(LetBinding(let,VariableDefinition,ExtensionExpression(VariableName,String)))
+
+# Module paths
+
+Belt.Array.map
+Belt.Option.getWithDefault
+
+==>
+
+Script(
+  MemberExpression(MemberExpression(ConstructorName,ConstructorName),PropertyName),
+  MemberExpression(MemberExpression(ConstructorName,ConstructorName),PropertyName))
+
+# Pipe operators
+
+let result = value->Belt.Option.map(x => x + 1)
+
+==>
+
+Script(LetBinding(let,VariableDefinition,BinaryExpression(VariableName,PipeOp,CallExpression(MemberExpression(MemberExpression(ConstructorName,ConstructorName),PropertyName),ArrowFunction(VariableName,BinaryExpression(VariableName,ArithOp,Number))))))
+
+# Recursive functions
+
+let rec factorial = n => n * factorial(n)
+
+==>
+
+Script(LetBinding(let,rec,VariableDefinition,ArrowFunction(VariableName,BinaryExpression(VariableName,ArithOp,CallExpression(VariableName,VariableName)))))
+
+# Arrow functions with multiple params
+
+let add = (a, b) => a + b
+let greet = (name, age) => "Hello " ++ name
+
+==>
+
+Script(
+  LetBinding(let,VariableDefinition,ArrowFunction(ParamList(VariableName,VariableName),BinaryExpression(VariableName,ArithOp,VariableName))),
+  LetBinding(let,VariableDefinition,ArrowFunction(ParamList(VariableName,VariableName),BinaryExpression(String,StringOp,VariableName))))
+
+# Simple JSX
+
+let comp = <div><span>Hello</span></div>
+
+==>
+
+Script(LetBinding(let,VariableDefinition,JSXElement(JSXOpenTag(JSXStartTag,JSXIdentifier,JSXEndTag),JSXElement(JSXOpenTag(JSXStartTag,JSXIdentifier,JSXEndTag),JSXText,JSXCloseTag(JSXStartCloseTag,JSXIdentifier,JSXEndTag)),JSXCloseTag(JSXStartCloseTag,JSXIdentifier,JSXEndTag))))
+
+# Member access chain
+
+let value = obj.field1.field2.field3
+
+==>
+
+Script(LetBinding(let,VariableDefinition,MemberExpression(MemberExpression(MemberExpression(VariableName,PropertyName),PropertyName),PropertyName)))
+
+# Nested function calls
+
+let result = func1(func2(func3(x)))
+
+==>
+
+Script(LetBinding(let,VariableDefinition,CallExpression(VariableName,CallExpression(VariableName,CallExpression(VariableName,VariableName)))))
+
+# String concatenation
+
+let fullName = firstName ++ " " ++ lastName
+
+==>
+
+Script(LetBinding(let,VariableDefinition,BinaryExpression(BinaryExpression(VariableName,StringOp,String),StringOp,VariableName)))
+
+# Boolean operations
+
+let check = a && b || c && d
+
+==>
+
+Script(LetBinding(let,VariableDefinition,BinaryExpression(BinaryExpression(VariableName,LogicOp,VariableName),LogicOp,BinaryExpression(VariableName,LogicOp,VariableName))))
+
+# Comparisons
+
+let isGreater = x > y
+let isEqual = a == b
+let isLessOrEqual = m <= n
+
+==>
+
+Script(
+  LetBinding(let,VariableDefinition,BinaryExpression(VariableName,CompareOp,VariableName)),
+  LetBinding(let,VariableDefinition,BinaryExpression(VariableName,CompareOp,VariableName)),
+  LetBinding(let,VariableDefinition,BinaryExpression(VariableName,CompareOp,VariableName)))
+
+# Unary operators
+
+let negative = -5
+let notValue = !true
+
+==>
+
+Script(
+  LetBinding(let,VariableDefinition,UnaryExpression(ArithOp,Number)),
+  LetBinding(let,VariableDefinition,UnaryExpression(LogicOp,BooleanLiteral)))
+
+# Mixed expressions
+
+let complex = (a + b) * (c - d) / e
+
+==>
+
+Script(LetBinding(let,VariableDefinition,BinaryExpression(BinaryExpression(ParenthesizedExpression(BinaryExpression(VariableName,ArithOp,VariableName)),ArithOp,ParenthesizedExpression(BinaryExpression(VariableName,ArithOp,VariableName))),ArithOp,VariableName)))

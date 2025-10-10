@@ -1,3 +1,39 @@
+## 0.1.1 (2025-10-10)
+
+### Enhancements
+
+**ReScript-specific features:**
+- Added support for `list{...}` syntax for lists
+- Added support for `dict{"key": "value"}` syntax for dictionaries
+- Arrays use `[...]` syntax (ArrayExpression)
+- Added decorator syntax with `@`
+- Added extension expression syntax with `%` (e.g., `%raw()`)
+- Improved JSX support with nested elements
+
+**Documentation updates:**
+- Removed references to "JSX dialect" - JSX is always available in ReScript
+- Updated README to reflect current feature set
+- Added comprehensive test suite covering arrays, lists, dictionaries, objects, annotations, modules, and more
+
+**Breaking changes:**
+- `ListExpression` now refers to `list{...}` syntax
+- `ArrayExpression` now refers to `[...]` syntax
+
+### Test Coverage
+
+Added 35 comprehensive tests covering:
+- Arrays, lists, and dictionaries
+- Objects and records with type annotations
+- Decorators and extension expressions
+- Module member access (Belt.Option.map, etc.)
+- Pipe operators (`->`, `|>`)
+- Recursive functions
+- Arrow functions with multiple parameters
+- JSX with nested elements
+- Complex expression chains
+- String concatenation with `++`
+- Boolean and comparison operations
+
 ## 0.1.0 (2025-10-10)
 
 ### Initial ReScript Adaptation
