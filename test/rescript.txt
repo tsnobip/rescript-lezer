@@ -1,0 +1,136 @@
+# Let binding - simple
+
+let x = 5
+
+==>
+
+Script(VariableDeclaration(let,VariableDefinition,Equals,Number))
+
+# Let binding - expression
+
+let y = x + 1
+
+==>
+
+Script(VariableDeclaration(let,VariableDefinition,Equals,BinaryExpression(VariableName,ArithOp,Number)))
+
+# Let with type annotation
+
+let name: string = "John"
+
+==>
+
+Script(VariableDeclaration(let,VariableDefinition,TypeAnnotation(TypeName),Equals,String))
+
+# Function expression
+
+let add = (a, b) => a + b
+
+==>
+
+Script(VariableDeclaration(let,VariableDefinition,Equals,ArrowFunction(ParamList(VariableDefinition,VariableDefinition),Arrow,BinaryExpression(VariableName,ArithOp,VariableName))))
+
+# Boolean literals
+
+let isTrue = true
+let isFalse = false
+
+==>
+
+Script(VariableDeclaration(let,VariableDefinition,Equals,BooleanLiteral),VariableDeclaration(let,VariableDefinition,Equals,BooleanLiteral))
+
+# List expression
+
+let numbers = [1, 2, 3]
+
+==>
+
+Script(VariableDeclaration(let,VariableDefinition,Equals,ArrayExpression(Number,Number,Number)))
+
+# Record expression
+
+let point = {x: 1, y: 2}
+
+==>
+
+Script(VariableDeclaration(let,VariableDefinition,Equals,ObjectExpression(Property(PropertyDefinition,Number),Property(PropertyDefinition,Number))))
+
+# Function call
+
+log("Hello")
+
+==>
+
+Script(ExpressionStatement(CallExpression(VariableName,ArgList(String))))
+
+# Member expression
+
+Belt.Option.map
+
+==>
+
+Script(ExpressionStatement(MemberExpression(MemberExpression(VariableName,PropertyName),PropertyName)))
+
+# Parenthesized expression
+
+let result = (x + y) * z
+
+==>
+
+Script(VariableDeclaration(let,VariableDefinition,Equals,BinaryExpression(ParenthesizedExpression(BinaryExpression(VariableName,ArithOp,VariableName)),ArithOp,VariableName)))
+
+# String literal
+
+let greeting = "Hello, World!"
+
+==>
+
+Script(VariableDeclaration(let,VariableDefinition,Equals,String))
+
+# Number literal
+
+let pi = 3.14
+let hex = 0xFF
+let binary = 0b1010
+
+==>
+
+Script(
+  VariableDeclaration(let,VariableDefinition,Equals,Number),
+  VariableDeclaration(let,VariableDefinition,Equals,Number),
+  VariableDeclaration(let,VariableDefinition,Equals,Number))
+
+# Unary expressions
+
+let neg = -5
+let not = !true
+
+==>
+
+Script(
+  VariableDeclaration(let,VariableDefinition,Equals,UnaryExpression(ArithOp,Number)),
+  VariableDeclaration(let,VariableDefinition,Equals,UnaryExpression(LogicOp,BooleanLiteral)))
+
+# Binary expressions
+
+let sum = a + b
+let product = a * b
+let comparison = a < b
+
+==>
+
+Script(
+  VariableDeclaration(let,VariableDefinition,Equals,BinaryExpression(VariableName,ArithOp,VariableName)),
+  VariableDeclaration(let,VariableDefinition,Equals,BinaryExpression(VariableName,ArithOp,VariableName)),
+  VariableDeclaration(let,VariableDefinition,Equals,BinaryExpression(VariableName,CompareOp,VariableName)))
+
+# Logical expressions
+
+let and = a && b
+let or = a || b
+
+==>
+
+Script(
+  VariableDeclaration(let,VariableDefinition,Equals,BinaryExpression(VariableName,LogicOp,VariableName)),
+  VariableDeclaration(let,VariableDefinition,Equals,BinaryExpression(VariableName,LogicOp,VariableName)))

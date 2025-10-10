@@ -1,7 +1,7 @@
 {
-  "name": "@lezer/javascript",
-  "version": "1.5.4",
-  "description": "lezer-based JavaScript grammar",
+  "name": "@tsnobip/rescript-lezer",
+  "version": "0.1.0",
+  "description": "lezer-based ReScript grammar",
   "main": "dist/index.cjs",
   "type": "module",
   "exports": {
@@ -10,7 +10,7 @@
   },
   "module": "dist/index.js",
   "types": "dist/index.d.ts",
-  "author": "Marijn Haverbeke <marijn@haverbeke.berlin>",
+  "author": "tsnobip",
   "license": "MIT",
   "devDependencies": {
     "@lezer/generator": "^1.7.0",
@@ -25,11 +25,11 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/lezer-parser/javascript.git"
+    "url": "https://github.com/tsnobip/rescript-lezer.git"
   },
   "scripts": {
-    "build": "lezer-generator src/javascript.grammar -o src/parser && rollup -c",
-    "build-debug": "lezer-generator src/javascript.grammar --names -o src/parser && rollup -c",
+    "build": "lezer-generator src/rescript.grammar -o src/parser && rollup -c",
+    "build-debug": "lezer-generator src/rescript.grammar --names -o src/parser && rollup -c",
     "prepare": "npm run build",
     "test": "mocha test/test-*.js"
   }

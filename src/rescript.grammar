@@ -1,0 +1,249 @@
+@dialects { jsx }
+
+@precedence {
+  fun,
+  member,
+  call,
+  prefix,
+  times @left,
+  plus @left,
+  concat @left,
+  pipe @left,
+  rel @left,
+  and @left,
+  or @left,
+  statement @cut
+}
+
+@top Script { statement* }
+
+@top SingleExpression { expression }
+
+statement[@isGroup=Statement] {
+  LetBinding |
+  TypeDeclaration |
+  ModuleDeclaration |
+  OpenStatement |
+  ExternalDeclaration |
+  expression
+}
+
+LetBinding {
+  kw<"let"> (kw<"rec">)? VariableDefinition (":" type)? "=" expression
+}
+
+TypeDeclaration {
+  kw<"type"> (kw<"rec">)? TypeDefinition typeParams? ("=" typeBody)?
+}
+
+typeBody {
+  RecordType |
+  VariantType
+}
+
+RecordType {
+  "{" commaSep<(kw<"mutable">)? PropertyName ":" type> "}"
+}
+
+VariantType {
+  variantCase ("|" variantCase)*
+}
+
+variantCase {
+  "|" ConstructorName ("(" commaSep1<type> ")")?
+}
+
+ModuleDeclaration {
+  kw<"module"> (kw<"rec">)? (kw<"type">)? ModuleName "=" moduleExpr
+}
+
+moduleExpr {
+  ModuleName |
+  "{" statement* "}"
+}
+
+OpenStatement {
+  kw<"open"> ModuleName
+}
+
+ExternalDeclaration {
+  kw<"external"> VariableDefinition ":" type "=" String
+}
+
+expression[@isGroup=Expression] {
+  Number |
+  String |
+  Char |
+  boolean |
+  VariableName |
+  ConstructorName |
+  UnitLiteral { "(" ")" } |
+  ListExpression { "[" commaSep<expression> "]" } |
+  RecordExpression { "{" commaSep<PropertyName ":" expression> "}" } |
+  FunctionExpression[@dynamicPrecedence=1] { !fun ParamList "=>" expression } |
+  IfExpression { kw<"if"> expression Block (kw<"else"> Block)? } |
+  SwitchExpression { kw<"switch"> expression "{" switchCase* "}" } |
+  CallExpression { expression !call "(" commaSep<expression> ")" } |
+  MemberExpression { expression !member "." PropertyName } |
+  BinaryExpression {
+    expression !times (ArithOp<"*"> | ArithOp<"/"> | kw<"mod">) expression |
+    expression !plus (ArithOp<"+"> | ArithOp<"-">) expression |
+    expression !concat StringOp<"++"> expression |
+    expression !pipe PipeOp<"->" | "|>"> expression |
+    expression !rel (CompareOp<"<" | "<=" | ">" | ">=" | "==" | "!=">) expression |
+    expression !and LogicOp<"&&"> expression |
+    expression !or LogicOp<"||"> expression
+  } |
+  UnaryExpression { !prefix (ArithOp<"-"> | LogicOp<"!">) expression } |
+  ParenthesizedExpression { "(" expression ")" } |
+  JSXElement
+}
+
+ParamList {
+  "(" commaSep<VariableDefinition> ")"
+}
+
+switchCase {
+  "|" VariableDefinition "=>" expression
+}
+
+Block {
+  "{" expression "}"
+}
+
+typeParams {
+  "<" commaSep1<TypeParam> ">"
+}
+
+TypeParam {
+  "'" identifier
+}
+
+type[@isGroup=Type] {
+  TypeName |
+  "'" identifier |
+  FunctionType[@dynamicPrecedence=1] { "(" commaSep<type> ")" "=>" type } |
+  RecordType |
+  ParameterizedType { TypeName "<" commaSep1<type> ">" } |
+  ParenthesizedType { "(" type ")" }
+}
+
+commaSep<content> {
+  "" | content ("," content?)*
+}
+
+commaSep1<content> {
+  content ("," content)*
+}
+
+// Keywords
+kw<term> { @specialize[@name={term}]<identifier, term> }
+
+boolean { @specialize[@name=BooleanLiteral]<identifier, "true" | "false"> }
+
+VariableName { identifier }
+VariableDefinition { identifier }
+TypeDefinition { identifier }
+TypeName { identifier }
+ModuleName { uppercaseIdentifier }
+ConstructorName { uppercaseIdentifier }
+PropertyName { identifier }
+
+@skip { spaces | newline | LineComment | BlockComment }
+
+@context trackNewline from "./tokens.js"
+
+@skip {} {
+  String[isolate] {
+    '"' (stringContentDouble | Escape)* ('"' | "\n")
+  }
+  
+  BlockComment[isolate] { "/*" (blockCommentContent | blockCommentNewline)* blockCommentEnd }
+}
+
+@local tokens {
+  blockCommentEnd { "*/" }
+  blockCommentNewline { "\n" }
+  @else blockCommentContent
+}
+
+@tokens {
+  spaces { $[\u0009 \u000b\u00a0\u1680\u2000-\u200a\u202f\u205f\u3000\ufeff]+ }
+  newline { $[\r\n\u2028\u2029] }
+
+  LineComment[isolate] { "//" ![\n]* }
+
+  identifierChar { @asciiLetter | $[_$] }
+  
+  identifier { $[a-z_] (identifierChar | @digit)* }
+  
+  uppercaseIdentifier { $[A-Z] (identifierChar | @digit)* }
+
+  @precedence { spaces, newline, identifier }
+
+  Number {
+    (@digit ("_" | @digit)* ("." ("_" | @digit)*)? | "." @digit ("_" | @digit)*)
+      (("e" | "E") ("+" | "-")? ("_" | @digit)+)? |
+    @digit ("_" | @digit)* "n" |
+    "0x" $[0-9a-fA-F_]+ |
+    "0b" $[01_]+ |
+    "0o" $[0-7_]+
+  }
+
+  Char { "'" (![\\\n'] | "\\" _) "'" }
+
+  Escape {
+    "\\" ("x" $[0-9a-fA-F] $[0-9a-fA-F] | "u" ("{" $[0-9a-fA-F]+ "}" | $[0-9a-fA-F] $[0-9a-fA-F] $[0-9a-fA-F] $[0-9a-fA-F]) | ![xu])
+  }
+
+  stringContentDouble { ![\\\n"]+ }
+
+  ArithOp<expr> { expr }
+  LogicOp<expr> { expr }
+  CompareOp<expr> { expr }
+  StringOp<expr> { expr }
+  PipeOp<expr> { expr }
+
+  "=>"
+  "("  ")" "[" "]" "{" "}"
+  "." "," ":" ";"
+  "=" "?" "|" "~" "'"
+
+  JSXStartTag[@dialect=jsx] { "<" }
+  JSXEndTag[@dialect=jsx] { ">" }
+  JSXSelfCloseEndTag[@dialect=jsx] { "/>" }
+  JSXStartCloseTag[@dialect=jsx] { "</" }
+  JSXText[@dialect=jsx] { ![<]+ }
+  JSXIdentifier[@dialect=jsx] { identifier }
+}
+
+@skip {} {
+  JSXElement {
+    JSXSelfClosingTag |
+    JSXOpenTag JSXText* JSXCloseTag
+  }
+}
+
+JSXSelfClosingTag { JSXStartTag jsxElementName jsxAttribute* JSXSelfCloseEndTag }
+JSXOpenTag { JSXStartTag jsxElementName jsxAttribute* JSXEndTag }
+JSXCloseTag { JSXStartCloseTag jsxElementName? JSXEndTag }
+
+jsxElementName {
+  JSXIdentifier |
+  JSXMemberExpression
+}
+
+JSXMemberExpression { (JSXMemberExpression | JSXIdentifier) "." JSXIdentifier }
+
+jsxAttribute {
+  JSXAttribute { JSXIdentifier ("=" jsxAttributeValue)? }
+}
+
+jsxAttributeValue {
+  String |
+  "{" expression "}"
+}
+
+@external propSource rescriptHighlight from "./highlight"
+
+@detectDelim
