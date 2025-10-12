@@ -1,3 +1,49 @@
+## 0.1.4 (2025-10-12)
+
+### New Features
+
+**Module Declarations:**
+- Added support for module declarations: `module X = { ... }`
+- Nested modules fully supported: `module Outer = { module Inner = { ... } }`
+- Modules can contain let bindings, other modules, and all statement types
+
+**Labeled and Optional Parameters:**
+- Added support for labeled parameters: `(~param)`
+- Added support for optional parameters: `(~param=?)`
+- Parameters work in function definitions: `let make = (~count, ~name=?) => ...`
+- Parameters work with `parameterList` in let bindings
+
+**JSX Expression Children:**
+- JSX now supports expression children: `<div>{React.string("text")}</div>`
+- Fixed JSXText to properly exclude `{` character  
+- JSXExpressionContainer properly wraps expressions in JSX
+
+**Real-World Code Support:**
+- Tested with complex real-world ReScript code
+- Support for nested switch expressions in string interpolation
+- Support for constructor patterns in switch cases
+- Support for deeply nested modules and statements
+
+### Bug Fixes
+
+- Fixed JSXText pattern to exclude `{` character, preventing parsing errors with expression children
+- Updated ParamList to support labeled and optional parameters
+- Fixed grammar conflicts with GLR parsing for ambiguous cases
+
+### Test Coverage
+
+Added 4 new real-world tests (62 total passing):
+- **Complex string interpolation with nested switch**: Template strings containing switch expressions that themselves contain template strings
+- **JSX with expression children**: JSX elements with expressions wrapped in `{}`
+- **Switch with string interpolation**: Pattern matching with template string results  
+- **Nested modules**: Multiple levels of module nesting
+
+All 62 tests passing, covering comprehensive ReScript syntax including modules, labeled parameters, and complex real-world patterns.
+
+### Known Limitations
+
+- Single-parameter arrow functions with labeled parameters `(~param) => ...` have ambiguity issues with parenthesized expressions. Use multiple parameters or plain parameters as workaround.
+
 ## 0.1.3 (2025-10-10)
 
 ### New Features

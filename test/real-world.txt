@@ -1,0 +1,45 @@
+# Complex string interpolation with nested switch
+
+let bar = `res: ${switch a {
+  | "a" => "ok"
+  | _ =>
+    switch b {
+    | "b" => "b"
+    | _ => `ko: ${b}`
+    }
+  }}`
+
+==>
+
+Script(LetBinding(let,VariableDefinition,"=",TemplateString("`",TemplateContent,Interpolation("${",SwitchExpression(switch,VariableName,"{",SwitchCase("|",Pattern(String),"=>",String),SwitchCase("|",Pattern(VariableName),"=>",SwitchExpression(switch,VariableName,"{",SwitchCase("|",Pattern(String),"=>",String),SwitchCase("|",Pattern(VariableName),"=>",TemplateString("`",TemplateContent,Interpolation("${",VariableName,"}"),"`")),"}")),"}"),"}"),"`")))
+
+# JSX with expression children
+
+let component = <div> {React.string("Hello")} </div>
+
+==>
+
+Script(LetBinding(let,VariableDefinition,"=",JSXElement(JSXOpenTag(JSXStartTag,JSXIdentifier,JSXEndTag),JSXText,JSXExpressionContainer("{",CallExpression(MemberExpression(ConstructorName,".",PropertyName),"(",String,")"),"}"),JSXText,JSXCloseTag(JSXStartCloseTag,JSXIdentifier,JSXEndTag))))
+
+# Switch with string interpolation
+
+let status = switch result {
+| Ok(value) => `Success: ${value}`
+| Error(msg) => `Failed: ${msg}`
+}
+
+==>
+
+Script(LetBinding(let,VariableDefinition,"=",SwitchExpression(switch,VariableName,"{",SwitchCase("|",Pattern(ConstructorPattern(ConstructorName,"(",Pattern(VariableName),")")),"=>",TemplateString("`",TemplateContent,Interpolation("${",VariableName,"}"),"`")),SwitchCase("|",Pattern(ConstructorPattern(ConstructorName,"(",Pattern(VariableName),")")),"=>",TemplateString("`",TemplateContent,Interpolation("${",VariableName,"}"),"`")),"}")))
+
+# Nested modules
+
+module Outer = {
+  module Inner = {
+    let value = 42
+  }
+}
+
+==>
+
+Script(ModuleDeclaration(module,ConstructorName,"=",ModuleBody("{",ModuleDeclaration(module,ConstructorName,"=",ModuleBody("{",LetBinding(let,VariableDefinition,"=",Number),"}")),"}")))

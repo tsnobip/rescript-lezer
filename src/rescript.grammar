@@ -19,11 +19,38 @@
 
 statement[@isGroup=Statement] {
   LetBinding |
+  ModuleDeclaration |
   expression
 }
 
+ModuleDeclaration {
+  kw<"module"> ConstructorName "=" ModuleBody
+}
+
+ModuleBody {
+  "{" statement* "}"
+}
+
 LetBinding {
-  kw<"let"> (kw<"rec">)? VariableDefinition (":" type)? "=" expression
+  kw<"let"> (kw<"rec">)? VariableDefinition parameterList? (":" type)? "=" expression
+}
+
+parameterList {
+  "(" commaSep<parameter> ")"
+}
+
+parameter {
+  LabeledParameter |
+  OptionalParameter |
+  VariableName
+}
+
+LabeledParameter {
+  "~" VariableName
+}
+
+OptionalParameter {
+  "~" VariableName "=" "?"
 }
 
 SwitchExpression[@dynamicPrecedence=1] {
@@ -135,7 +162,7 @@ Property {
 }
 
 ParamList {
-  "(" VariableName ("," VariableName)+ ")"
+  "(" commaSep<parameter> ")"
 }
 
 type[@isGroup=Type] {
@@ -245,7 +272,7 @@ Interpolation {
   JSXEndTag { ">" }
   JSXSelfCloseEndTag { "/>" }
   JSXStartCloseTag { "</" }
-  JSXText { ![<]+ }
+  JSXText { ![<{]+ }
   JSXIdentifier { identifier }
 }
 
@@ -258,7 +285,12 @@ Interpolation {
 
 jsxChildren {
   JSXText |
-  JSXElement
+  JSXElement |
+  JSXExpressionContainer
+}
+
+JSXExpressionContainer {
+  "{" expression "}"
 }
 
 JSXSelfClosingTag { JSXStartTag jsxElementName jsxAttribute* JSXSelfCloseEndTag }

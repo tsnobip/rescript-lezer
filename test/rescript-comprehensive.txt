@@ -92,8 +92,8 @@ let greet = (name, age) => "Hello " ++ name
 ==>
 
 Script(
-  LetBinding(let,VariableDefinition,ArrowFunction(ParamList(VariableName,VariableName),BinaryExpression(VariableName,ArithOp,VariableName))),
-  LetBinding(let,VariableDefinition,ArrowFunction(ParamList(VariableName,VariableName),BinaryExpression(String,StringOp,VariableName))))
+  LetBinding(let,VariableDefinition,"=",ArrowFunction(ParamList("(",VariableName,",",VariableName,")"),"=>",BinaryExpression(VariableName,ArithOp,VariableName))),
+  LetBinding(let,VariableDefinition,"=",ArrowFunction(ParamList("(",VariableName,",",VariableName,")"),"=>",BinaryExpression(String,StringOp,VariableName))))
 
 # Simple JSX
 
