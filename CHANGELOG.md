@@ -1,3 +1,34 @@
+## 0.1.5 (2025-10-13)
+
+### Documentation
+
+Added comprehensive test suite for advanced ReScript features to verify parser capabilities and document limitations.
+
+**New Test Cases:**
+- Module declarations (simple and nested)
+- Complex string interpolation with nested switch expressions
+- JSX with expression children  
+- Pattern matching with template string interpolation
+
+### Known Limitations
+
+Documented the following limitations for advanced features requested by users:
+
+**Type System Features (Not Yet Supported):**
+- Module type signatures (`module type T = { ... }`)
+- Type declarations with variants and GADTs
+- Polymorphic variants with bounds (`[> #Tag]` and `[< #Tag]`)
+- Parameterized types (`type t<'a> = ...`)
+- First-class modules (`module(M: Sig)`)
+- Type constraints in modules (`with type`)
+
+**Parameter Syntax Limitations:**
+- Single labeled parameter arrow functions `(~param) => expr` don't parse correctly due to ambiguity with parenthesized expressions
+- Workaround: Use multiple parameters `(a, ~param) => expr` or avoid arrow functions for single labeled params
+- Labeled/optional parameters work correctly in let bindings: `let make = (~count, ~name=?) => ...`
+
+These advanced type system features require significant grammar restructuring to avoid reduce/reduce conflicts. They are planned for future releases.
+
 ## 0.1.4 (2025-10-12)
 
 ### New Features
