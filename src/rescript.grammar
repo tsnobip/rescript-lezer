@@ -20,19 +20,71 @@
 statement[@isGroup=Statement] {
   LetBinding |
   ModuleDeclaration |
+  ModuleTypeDeclaration |
+  TypeDeclaration |
   expression
 }
 
+ModuleTypeDeclaration {
+  kw<"module"> kw<"type"> ConstructorName "=" ModuleTypeBody
+}
+
+ModuleTypeBody {
+  "{" (TypeDeclaration | LetBinding)* "}"
+}
+
 ModuleDeclaration {
-  kw<"module"> ConstructorName "=" ModuleBody
+  kw<"module"> ConstructorName (":" typeConstraint)? "=" ModuleBody
 }
 
 ModuleBody {
   "{" statement* "}"
 }
 
+typeConstraint {
+  typePath (typeConstraintClause)*
+}
+
+typeConstraintClause {
+  kw<"with"> kw<"type"> typePath "=" type
+}
+
+typePath {
+  identifier ("." identifier)*
+}
+
+TypeDeclaration {
+  kw<"type"> (kw<"rec">)? TypeDefinition typeParams? "=" typeDefinition
+}
+
+typeParams {
+  "<" commaSep<typeParam> ">"
+}
+
+typeParam {
+  Wildcard { "_" } |
+  TypeParam { "'" identifier }
+}
+
+typeDefinition {
+  type |
+  VariantDeclaration { "|"? VariantConstructor ("|" VariantConstructor)* }
+}
+
+VariantConstructor[@dynamicPrecedence=1] {
+  ConstructorName (VariantConstructorArgs)? (":" type)?
+}
+
+VariantConstructorArgs {
+  "(" commaSep<type> ")"
+}
+
 LetBinding {
-  kw<"let"> (kw<"rec">)? VariableDefinition parameterList? (":" type)? "=" expression
+  kw<"let"> (kw<"rec">)? (ModuleUnpack | VariableDefinition) parameterList? (":" type)? "=" expression
+}
+
+ModuleUnpack {
+  kw<"module"> "(" ConstructorName ")"
 }
 
 parameterList {
@@ -46,7 +98,7 @@ parameter {
 }
 
 LabeledParameter {
-  "~" VariableName
+  "~" VariableName ("=" expression)?
 }
 
 OptionalParameter {
@@ -127,13 +179,15 @@ expression[@isGroup=Expression] {
   ArrayExpression { "[" commaSep<expression> "]" } |
   ListExpression { kw<"list"> "{" commaSep<expression> "}" } |
   DictExpression { kw<"dict"> "{" commaSep<DictEntry> "}" } |
-  RecordExpression { "{" commaSep<Property> "}" } |
+  RecordExpression { "{" commaSep<Property | statement> "}" } |
   Decorator { "@" VariableName } |
   ExtensionExpression { "%" VariableName "(" commaSep<expression> ")" } |
+  FirstClassModule { kw<"module"> "(" expression (":" typeConstraint)? ")" } |
   SwitchExpression |
   ArrowFunction[@dynamicPrecedence=1] {
     !arrow (
       VariableName |
+      LabeledParam |
       ParamList
     ) "=>" expression
   } |
@@ -153,6 +207,10 @@ expression[@isGroup=Expression] {
   JSXElement
 }
 
+LabeledParam {
+  "~" VariableName
+}
+
 DictEntry {
   String ":" expression
 }
@@ -167,8 +225,29 @@ ParamList {
 
 type[@isGroup=Type] {
   TypeName |
+  PolyVariantType { "[" PolyVariantBound commaSep<VariantTag> "]" (typeConstraintAs)? } |
+  FunctionType[@dynamicPrecedence=1] { !arrow type Arrow type } |
+  ParameterizedType { TypeName TypeArgList } |
   ParenthesizedType { "(" type ")" }
 }
+
+TypeArgList {
+  LessThan commaSep<type> GreaterThan
+}
+
+PolyVariantBound {
+  GreaterThan | LessThan
+}
+
+VariantTag {
+  "#" ConstructorName
+}
+
+typeConstraintAs {
+  kw<"as"> TypeParam
+}
+
+TypeParam { "'" identifier }
 
 commaSep<content> {
   "" | content ("," content?)*
@@ -267,7 +346,9 @@ Interpolation {
   "=>"
   "("  ")" "[" "]" "{" "}"
   "." "," ":" ";"
-  "=" "?" "|" "~" "'" "@" "%" "_" "`" "${"
+  "=" "?" "|" "~" "'" "@" "%" "_" "`" "${" "#"
+
+  Arrow { "=>" }
 
   JSXEndTag { ">" }
   JSXSelfCloseEndTag { "/>" }
@@ -317,6 +398,6 @@ jsxAttributeValue {
 
 @external tokens insertSemicolon from "./tokens" { insertSemi }
 
-@external tokens jsx from "./tokens" { JSXStartTag, LessThan[@name=CompareOp] }
+@external tokens jsx from "./tokens" { JSXStartTag, LessThan, GreaterThan }
 
 @detectDelim

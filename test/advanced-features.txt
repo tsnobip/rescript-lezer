@@ -1,0 +1,113 @@
+# Single labeled parameter arrow function
+
+(~param) => param + 1
+
+==>
+
+Script(ArrowFunction(LabeledParam(VariableName),Arrow,BinaryExpression(VariableName,ArithOp,Number)))
+
+# Module type declaration
+
+module type Console = {
+  type param
+}
+
+==>
+
+Script(ModuleTypeDeclaration(module,type,ConstructorName,Equals,ModuleTypeBody(
+  TypeDeclaration(type,TypeDefinition))))
+
+# Type declaration
+
+type myType = int
+
+==>
+
+Script(TypeDeclaration(type,TypeDefinition,Equals,TypeName))
+
+# Polymorphic variant with upper bound
+
+type polyVar = [> #Bar]
+
+==>
+
+Script(TypeDeclaration(type,TypeDefinition,Equals,
+  PolyVariantType(PolyVariantBound(GreaterThan),VariantTag(ConstructorName))))
+
+# Polymorphic variant with lower bound
+
+type t = [< #Foo | #Bar]
+
+==>
+
+Script(TypeDeclaration(type,TypeDefinition,Equals,
+  PolyVariantType(PolyVariantBound(LessThan),VariantTag(ConstructorName),VariantTag(ConstructorName))))
+
+# Function type annotation
+
+let log: string => unit = Console.log
+
+==>
+
+Script(LetBinding(let,VariableDefinition,TypeAnnotation(FunctionType(TypeName,Arrow,TypeName)),Equals,MemberExpression(VariableName,PropertyName)))
+
+# Module unpack in let binding
+
+let module(Console) = console
+
+==>
+
+Script(LetBinding(let,ModuleUnpack(module,ParenthesizedExpression(ConstructorName)),Equals,VariableName))
+
+# Type with parameters
+
+type result<'a, 'e> = Ok('a) | Error('e)
+
+==>
+
+Script(TypeDeclaration(type,TypeDefinition,typeParams(TypeParam,TypeParam),Equals,
+  VariantDeclaration(
+    VariantConstructor(ConstructorName,VariantConstructorArgs(ParenthesizedType(TypeParam))),
+    VariantConstructor(ConstructorName,VariantConstructorArgs(ParenthesizedType(TypeParam))))))
+
+# GADT-like declaration with type annotation
+
+type gadt = | Int: gadt | String: gadt
+
+==>
+
+Script(TypeDeclaration(type,TypeDefinition,Equals,
+  VariantDeclaration(
+    VariantConstructor(ConstructorName,TypeAnnotation(TypeName)),
+    VariantConstructor(ConstructorName,TypeAnnotation(TypeName)))))
+
+# Parameterized type usage
+
+type t = option<string>
+
+==>
+
+Script(TypeDeclaration(type,TypeDefinition,Equals,
+  ParameterizedType(TypeName,TypeArgList(LessThan,TypeName,GreaterThan))))
+
+# Module declaration with type constraint
+
+module Deps: DepsTypes.T = {
+  let value = 42
+}
+
+==>
+
+Script(ModuleDeclaration(module,ConstructorName,typePath(identifier),Equals,ModuleBody(
+  LetBinding(let,VariableDefinition,Equals,Number))))
+
+# First-class module
+
+let console = module(Deps.Console: DepsTypes.Console)
+
+==>
+
+Script(LetBinding(let,VariableDefinition,Equals,FirstClassModule(module,ParenthesizedExpression(
+  MemberExpression(VariableName,PropertyName),typePath(identifier)))))
+
+
