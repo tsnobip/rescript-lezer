@@ -31,11 +31,11 @@ statement[@isGroup=Statement] {
 }
 
 ModuleDeclaration {
-  kw<"module"> ConstructorName ModuleDeclarationBody
+  kw<"module"> ModuleName ModuleDeclarationBody
 }
 
 ModuleTypeDeclaration {
-  kw<"module"> kw<"type"> ConstructorName "=" ModuleTypeExpr
+  kw<"module"> kw<"type"> ModuleName "=" ModuleTypeExpr
 }
 
 ModuleDeclarationBody {
@@ -49,18 +49,8 @@ ModuleSpec {
 }
 
 ModuleWithConstraint {
-  kw<"with"> kw<"type"> TypeConstraintPath ConstraintOperator type |
+  kw<"with"> kw<"type"> ModulePrefix TypeName ConstraintOperator type |
   kw<"with"> kw<"type"> TypeName ConstraintOperator type
-}
-
-TypeConstraintPath {
-  ModulePrefix TypeConstraintTail |
-  ConstructorName "." TypeConstraintTail
-}
-
-TypeConstraintTail {
-  ConstructorName "." TypeConstraintTail |
-  TypeName
 }
 
 ConstraintOperator {
@@ -103,7 +93,7 @@ ModuleTypeStatement {
 }
 
 ModuleTypeModuleSpec {
-  kw<"module"> ConstructorName ModuleSpec
+  kw<"module"> ModuleName ModuleSpec
 }
 
 TypeSpec {
@@ -122,6 +112,8 @@ ModulePath {
 ModulePathTail {
   ConstructorName ("." ConstructorName)*
 }
+
+ModuleName { ConstructorName }
 
 OpenStatement {
   kw<"open"> ModulePath
@@ -152,7 +144,7 @@ LetValueBinding {
 }
 
 ModuleUnpackBinding {
-  "(" ConstructorName ")" "=" expression
+  "(" ModuleName ")" "=" expression
 }
 
 SwitchExpression[@dynamicPrecedence=1] {
@@ -581,7 +573,6 @@ Interpolation {
   identifier { $[a-z_] (identifierChar | @digit)* }
   
   ModulePrefix { $[A-Z] (identifierChar | @digit)* ("." $[A-Z] (identifierChar | @digit)*)* "." }
-  
   UnitToken { "()" }
   SpreadOperator { "..." }
   

@@ -7,6 +7,7 @@ export const rescriptHighlight = styleTags({
   VariableName: t.variableName,
   VariableDefinition: t.definition(t.variableName),
   TypeName: t.typeName,
+  ModuleName: t.namespace,
   ModulePrefix: t.namespace,
   ConstructorName: t.className,
   VariantConstructor: t.className,
