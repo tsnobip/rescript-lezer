@@ -1,0 +1,44 @@
+# If expression with else
+
+if isReady {
+  Stdlib.Array.length(items)
+} else {
+  Stdlib.Array.length(otherItems)
+}
+
+==>
+
+Script(IfExpression(if,VariableName,BlockExpression("{",CallExpression(MemberExpression(ModulePrefix,MemberLeaf(PropertyName)),"(",Argument(VariableName),")"),"}"),ElseClause(else,BlockExpression("{",CallExpression(MemberExpression(ModulePrefix,MemberLeaf(PropertyName)),"(",Argument(VariableName),")"),"}"))))
+
+# While loop
+
+while keepRunning {
+  performStep()
+}
+
+==>
+
+Script(WhileExpression(while,VariableName,BlockExpression("{",CallExpression(VariableName,UnitToken),"}")))
+
+# For loop
+
+for index in 0 to 2 {
+  Stdlib.List.length(values)
+}
+
+==>
+
+Script(ForExpression(for,Pattern(VariableName),in,Number,ForDirection(to),Number,BlockExpression("{",CallExpression(MemberExpression(ModulePrefix,MemberLeaf(PropertyName)),"(",Argument(VariableName),")"),"}")))
+
+# Try/catch with patterns
+
+try {
+  risky()
+} catch {
+  | Some(err) => handle(err)
+  | None => ()
+}
+
+==>
+
+Script(TryExpression(try,BlockExpression("{",CallExpression(VariableName,UnitToken),"}"),catch,"{",SwitchCase("|",Pattern(ConstructorPattern(VariantConstructor(ConstructorName),PatternArguments("(",Pattern(VariableName),")"))),"=>",CallExpression(VariableName,"(",Argument(VariableName),")")),SwitchCase("|",Pattern(ConstructorPattern(VariantConstructor(ConstructorName))),"=>",UnitLiteral(UnitToken)),"}"))

@@ -37,6 +37,11 @@ ModuleBody {
 }
 
 ModulePath {
+  ModulePrefix ModulePathTail |
+  ConstructorName ("." ConstructorName)*
+}
+
+ModulePathTail {
   ConstructorName ("." ConstructorName)*
 }
 
@@ -129,7 +134,7 @@ Pattern {
 UnitPattern { "(" ")" }
 
 ConstructorPattern {
-  ConstructorName PatternArguments?
+  VariantConstructor PatternArguments?
 }
 
 ArrayPattern {
@@ -149,7 +154,7 @@ PatternField {
 }
 
 PolyVariantPattern {
-  Hash (ConstructorName | VariableName) PatternArguments?
+  Hash (VariantConstructor | VariableName) PatternArguments?
 }
 
 PatternArguments {
@@ -172,6 +177,7 @@ expression[@isGroup=Expression] {
   TemplateString |
   Char |
   boolean |
+  UnitLiteral |
   VariableName |
   ConstructorName |
   ArrayExpression { "[" commaSep<expression> "]" } |
@@ -181,13 +187,11 @@ expression[@isGroup=Expression] {
   Decorator { "@" VariableName } |
   ExtensionExpression { "%" VariableName "(" commaSep<expression> ")" } |
   ArrowFunction[@dynamicPrecedence=1] {
-    (
-      VariableName |
-      ParamList
-    ) !arrow "=>" expression
+    VariableName !arrow "=>" expression |
+    ParamList !arrow "=>" expression
   } |
-  CallExpression { expression !call "(" commaSep<Argument> ")" } |
-  MemberExpression { expression !member "." (PropertyName | ConstructorName) } |
+  CallExpression |
+  MemberExpression |
   BinaryExpression {
     expression !times (ArithOp<"*"> | ArithOp<"/"> | ArithOp<"*."> | ArithOp<"/."> | kw<"mod">) expression |
     expression !plus (ArithOp<"+"> | ArithOp<"-"> | ArithOp<"+."> | ArithOp<"-.">) expression |
@@ -201,6 +205,23 @@ expression[@isGroup=Expression] {
   ParenthesizedExpression { "(" expression ~parenthesized ")" } |
   JSXElement
 }
+
+MemberExpression {
+  ModulePrefix MemberLeaf |
+  expression !member "." MemberLeaf
+}
+
+CallExpression {
+  expression !call "(" commaSep<Argument> ")" |
+  expression !call UnitToken
+}
+
+MemberLeaf {
+  VariantConstructor |
+  PropertyName
+}
+
+UnitLiteral { UnitToken }
 
 DictEntry {
   String ":" expression
@@ -225,7 +246,7 @@ ArgumentValue {
 }
 
 ParamList {
-  "(" DotUncurried? ParamItems? ")"
+  "(" DotUncurried? ParamItems ")"
 }
 
 DotUncurried { "." }
@@ -330,7 +351,15 @@ TypeBody {
 TypeAlias { type }
 
 SumType {
-  "|" ConstructorName ("|" ConstructorName)*
+  VariantArm VariantArm*
+}
+
+VariantArm {
+  "|" VariantConstructor VariantResult?
+}
+
+VariantResult {
+  ":" type
 }
 
 commaSep<content> {
@@ -350,6 +379,7 @@ VariableName { identifier }
 VariableDefinition { identifier }
 TypeName { identifier }
 ConstructorName { uppercaseIdentifier }
+VariantConstructor { ConstructorName }
 PropertyName { identifier }
 PropertyDefinition { identifier }
 LabelName { identifier }
@@ -394,7 +424,13 @@ Interpolation {
   
   identifier { $[a-z_] (identifierChar | @digit)* }
   
+  UnitToken { "()" }
+
+  ModulePrefix { $[A-Z] (identifierChar | @digit)* ("." $[A-Z] (identifierChar | @digit)*)* "." }
+  
   uppercaseIdentifier { $[A-Z] (identifierChar | @digit)* }
+
+  @precedence { ModulePrefix, uppercaseIdentifier }
 
   @precedence { spaces, newline, identifier, "_" }
 

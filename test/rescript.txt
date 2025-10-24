@@ -65,11 +65,11 @@ Script(CallExpression(VariableName,"(",Argument(String),")"))
 
 # Member expression
 
-Belt.Option.map
+Stdlib.Option.map
 
 ==>
 
-Script(MemberExpression(MemberExpression(ConstructorName,ConstructorName),PropertyName))
+Script(MemberExpression(ModulePrefix,MemberLeaf(PropertyName)))
 
 # Parenthesized expression
 

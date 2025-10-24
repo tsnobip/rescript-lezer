@@ -1,18 +1,18 @@
 # Open statement
 
-open Belt.Option
+open Stdlib.Option
 
 ==>
 
-Script(OpenStatement(open,ModulePath(ConstructorName,".",ConstructorName)))
+Script(OpenStatement(open,ModulePath(ModulePrefix,ModulePathTail(ConstructorName))))
 
 # Include statement
 
-include MyLib
+include Stdlib.List
 
 ==>
 
-Script(IncludeStatement(include,ModulePath(ConstructorName)))
+Script(IncludeStatement(include,ModulePath(ModulePrefix,ModulePathTail(ConstructorName))))
 
 # External declaration
 
@@ -38,12 +38,20 @@ type color =
 
 ==>
 
-Script(TypeDeclaration(type,TypeBinding(TypeName,"=",TypeBody(SumType("|",ConstructorName,"|",ConstructorName)))))
+Script(TypeDeclaration(type,TypeBinding(TypeName,"=",TypeBody(SumType(VariantArm("|",VariantConstructor(ConstructorName)),VariantArm("|",VariantConstructor(ConstructorName)))))))
 
 # Labeled call arguments
 
-makePerson(~name="Ada", ~data=?Some("ok"), unit)
+makePerson(~name="Ada", ~data=?Some("ok"), ())
 
 ==>
 
-Script(CallExpression(VariableName,"(",Argument(LabeledArgument("~",LabelName,"=",ArgumentValue(String))),",",Argument(LabeledArgument("~",LabelName,"=",ArgumentValue("?",CallExpression(ConstructorName,"(",Argument(String),")")))),",",Argument(VariableName),")"))
+Script(CallExpression(VariableName,"(",Argument(LabeledArgument("~",LabelName,"=",ArgumentValue(String))),",",Argument(LabeledArgument("~",LabelName,"=",ArgumentValue("?",CallExpression(ConstructorName,"(",Argument(String),")")))),",",Argument(UnitLiteral(UnitToken)),")"))
+
+# Module constructor expression
+
+Result.Ok("foo")
+
+==>
+
+Script(CallExpression(MemberExpression(ModulePrefix,MemberLeaf(VariantConstructor(ConstructorName))),"(",Argument(String),")"))
