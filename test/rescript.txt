@@ -28,7 +28,15 @@ let add = (a, b) => a + b
 
 ==>
 
-Script(LetBinding(let,VariableDefinition,"=",ArrowFunction(ArrowParam(ParamList("(",ParamItems(UnlabeledParameter(SimpleParameter(VariableName)),",",SimpleParameter(VariableName)),")")),"=>",BinaryExpression(VariableName,ArithOp,VariableName))))
+Script(LetBinding(let,VariableDefinition,"=",ArrowFunction(ParamList("(",ParamItems(UnlabeledParameter(SimpleParameter(VariableName)),",",SimpleParameter(VariableName)),")"),"=>",BinaryExpression(VariableName,ArithOp,VariableName))))
+
+# Unit-parameter function
+
+let noop = () => 1
+
+==>
+
+Script(LetBinding(let,VariableDefinition,"=",ArrowFunction(UnitToken,"=>",Number)))
 
 # Boolean literals
 

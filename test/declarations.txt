@@ -46,7 +46,7 @@ makePerson(~name="Ada", ~data=?Some("ok"), ())
 
 ==>
 
-Script(CallExpression(VariableName,"(",Argument(LabeledArgument("~",LabelName,"=",ArgumentValue(String))),",",Argument(LabeledArgument("~",LabelName,"=",ArgumentValue("?",CallExpression(ConstructorName,"(",Argument(String),")")))),",",Argument(UnitLiteral("(",")")),")"))
+Script(CallExpression(VariableName,"(",Argument(LabeledArgument("~",LabelName,"=",ArgumentValue(String))),",",Argument(LabeledArgument("~",LabelName,"=",ArgumentValue("?",CallExpression(ConstructorName,"(",Argument(String),")")))),",",Argument(UnitLiteral(UnitToken)),")"))
 
 # Module constructor expression
 

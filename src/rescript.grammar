@@ -177,9 +177,7 @@ expression[@isGroup=Expression] {
   TemplateString |
   Char |
   boolean |
-  ArrowFunction[@dynamicPrecedence=1] {
-    ArrowParam !arrow "=>" expression
-  } |
+  ArrowFunction |
   VariableName |
   ConstructorName |
   ArrayExpression { "[" commaSep<expression> "]" } |
@@ -205,13 +203,20 @@ expression[@isGroup=Expression] {
   JSXElement
 }
 
+ArrowFunction[@dynamicPrecedence=1] {
+  ParamList !arrow "=>" expression |
+  UnitToken !arrow "=>" expression |
+  VariableName !arrow "=>" expression
+}
+
 MemberExpression {
   ModulePrefix MemberLeaf |
   expression !member "." MemberLeaf
 }
 
 CallExpression {
-  expression !call "(" commaSep<Argument> ")"
+  expression !call "(" commaSep<Argument> ")" |
+  expression !call UnitToken
 }
 
 MemberLeaf {
@@ -219,7 +224,7 @@ MemberLeaf {
   PropertyName
 }
 
-UnitLiteral { "(" ")" }
+UnitLiteral[@dynamicPrecedence=-1] { UnitToken }
 
 DictEntry {
   String ":" expression
@@ -416,9 +421,11 @@ Interpolation {
   
   ModulePrefix { $[A-Z] (identifierChar | @digit)* ("." $[A-Z] (identifierChar | @digit)*)* "." }
   
+  UnitToken { "()" }
+  
   uppercaseIdentifier { $[A-Z] (identifierChar | @digit)* }
 
-  @precedence { ModulePrefix, uppercaseIdentifier }
+  @precedence { ModulePrefix, UnitToken, uppercaseIdentifier }
 
   @precedence { spaces, newline, identifier, "_" }
 
@@ -508,6 +515,3 @@ jsxAttributeValue {
 @external tokens jsx from "./tokens" { JSXStartTag, LessThan[@name=CompareOp] }
 
 @detectDelim
-ArrowParam {
-  ParamList
-}

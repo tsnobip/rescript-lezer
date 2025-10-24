@@ -18,7 +18,7 @@ while keepRunning {
 
 ==>
 
-Script(WhileExpression(while,VariableName,BlockExpression("{",CallExpression(VariableName,"(",")"),"}")))
+Script(WhileExpression(while,VariableName,BlockExpression("{",CallExpression(VariableName,UnitToken),"}")))
 
 # For loop
 
@@ -41,4 +41,4 @@ try {
 
 ==>
 
-Script(TryExpression(try,BlockExpression("{",CallExpression(VariableName,"(",")"),"}"),catch,"{",SwitchCase("|",Pattern(ConstructorPattern(VariantConstructor(ConstructorName),PatternArguments("(",Pattern(VariableName),")"))),"=>",CallExpression(VariableName,"(",Argument(VariableName),")")),SwitchCase("|",Pattern(ConstructorPattern(VariantConstructor(ConstructorName))),"=>",UnitLiteral("(",")")),"}"))
+Script(TryExpression(try,BlockExpression("{",CallExpression(VariableName,UnitToken),"}"),catch,"{",SwitchCase("|",Pattern(ConstructorPattern(VariantConstructor(ConstructorName),PatternArguments("(",Pattern(VariableName),")"))),"=>",CallExpression(VariableName,"(",Argument(VariableName),")")),SwitchCase("|",Pattern(ConstructorPattern(VariantConstructor(ConstructorName))),"=>",UnitLiteral(UnitToken)),"}"))
