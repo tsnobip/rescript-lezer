@@ -1,0 +1,58 @@
+# First-class modules and complex constructs
+
+module DepsTypes = {
+  module type Console = {
+    type param
+    let log: param => unit
+  }
+
+  module type T = {
+    module Console: Console
+  }
+}
+
+module Deps: DepsTypes.T with type Console.param = string = {
+  module Console: DepsTypes.Console with type param = string = {
+    type param = string
+    let log = Console.log
+  }
+}
+
+module File1 = {
+  let bar = (
+    a,
+    b,
+    ~console=module(Deps.Console: DepsTypes.Console with type param = string),
+  ) => {
+    let module(Console) = console
+    Console.log(Int.toString(a + b))
+  }
+}
+
+File1.bar(1, 2)
+
+module TestFile1 = {
+  module Console = {
+    type param = string
+    let logs = ref("")
+    let log = s => {logs := logs.contents + s}
+    let flushLog = () => {logs := ""}
+  }
+  let console = module(Console: DepsTypes.Console with type param = string)
+
+  let testBar = {
+    Console.flushLog()
+    File1.bar(1, 2, ~console)
+    assertEqual(Console.logs.contents, "3")
+  }
+}
+
+type rec gadt<_> =
+  | Int(int): gadt<int>
+  | String(string): gadt<string>
+
+type polyVar<'a> = [> #bar | #baz(string)] as 'a
+
+==>
+
+Script(ModuleDeclaration(module,ConstructorName,ModuleDeclarationBody("=",ModuleExpression(ModuleBody("{",ModuleTypeDeclaration(module,type,ConstructorName,"=",ModuleTypeExpr(ModuleTypeBody("{",ModuleTypeStatement(TypeSpec(type,TypeName)),ModuleTypeStatement(ValueSpec(let,VariableDefinition,":",FunctionType(TypeName,FunctionArrow("=>"),TypeName))),"}"))),ModuleTypeDeclaration(module,type,ConstructorName,"=",ModuleTypeExpr(ModuleTypeBody("{",ModuleTypeStatement(ModuleTypeModuleSpec(module,ConstructorName,ModuleSpec(":",ModuleTypeExpr(ModulePath(ConstructorName))))),"}"))),"}")))),ModuleDeclaration(module,ConstructorName,ModuleDeclarationBody(ModuleSpec(":",ModuleTypeExpr(ModulePath(ModulePrefix,ModulePathTail(ConstructorName))),ModuleWithConstraint(with,type,TypePath(ModulePrefix,TypePath(TypeName)),"=",TypeName)),"=",ModuleExpression(ModuleBody("{",ModuleDeclaration(module,ConstructorName,ModuleDeclarationBody(ModuleSpec(":",ModuleTypeExpr(ModulePath(ModulePrefix,ModulePathTail(ConstructorName))),ModuleWithConstraint(with,type,TypePath(TypeName),"=",TypeName)),"=",ModuleExpression(ModuleBody("{",TypeDeclaration(type,TypeBinding(TypeName,"=",TypeBody(TypeAlias(TypeName)))),LetBinding(let,LetValueBinding(VariableDefinition,"=",MemberExpression(ModulePrefix,MemberLeaf(PropertyName)))) ,"}")))),"}")))),ModuleDeclaration(module,ConstructorName,ModuleDeclarationBody("=",ModuleExpression(ModuleBody("{",LetBinding(let,LetValueBinding(VariableDefinition,"=",ArrowFunction(ParamList("(",ParamItems(UnlabeledParameter(SimpleParameter(VariableName)),",",SimpleParameter(VariableName),",",LabeledParameter("~",LabelName,ParameterDefault("=",ModulePackExpression(module,"(",ModulePackContent(ModulePath(ModulePrefix,ModulePathTail(ConstructorName)),ModuleSpec(":",ModuleTypeExpr(ModulePath(ModulePrefix,ModulePathTail(ConstructorName))),ModuleWithConstraint(with,type,TypePath(TypeName),"=",TypeName))),")"))),","),")"),"=>",BlockExpression("{",LetBinding(let,module,ModuleUnpackBinding("(",ConstructorName,")","=",VariableName)),CallExpression(MemberExpression(ModulePrefix,MemberLeaf(PropertyName)),"(",Argument(CallExpression(MemberExpression(ModulePrefix,MemberLeaf(PropertyName)),"(",Argument(BinaryExpression(VariableName,ArithOp,VariableName)),")")),")"),"}")))) ,"}")))),CallExpression(MemberExpression(ModulePrefix,MemberLeaf(PropertyName)),"(",Argument(Number),",",Argument(Number),")"),ModuleDeclaration(module,ConstructorName,ModuleDeclarationBody("=",ModuleExpression(ModuleBody("{",ModuleDeclaration(module,ConstructorName,ModuleDeclarationBody("=",ModuleExpression(ModuleBody("{",TypeDeclaration(type,TypeBinding(TypeName,"=",TypeBody(TypeAlias(TypeName)))),LetBinding(let,LetValueBinding(VariableDefinition,"=",CallExpression(VariableName,"(",Argument(String),")"))),LetBinding(let,LetValueBinding(VariableDefinition,"=",ArrowFunction(VariableName,"=>",BlockExpression("{",BinaryExpression(VariableName,":=",BinaryExpression(MemberExpression(VariableName,".",MemberLeaf(PropertyName)),ArithOp,VariableName)),"}")))),LetBinding(let,LetValueBinding(VariableDefinition,"=",ArrowFunction(UnitToken,"=>",BlockExpression("{",BinaryExpression(VariableName,":=",String),"}")))) ,"}")))),LetBinding(let,LetValueBinding(VariableDefinition,"=",ModulePackExpression(module,"(",ModulePackContent(ModulePath(ConstructorName),ModuleSpec(":",ModuleTypeExpr(ModulePath(ModulePrefix,ModulePathTail(ConstructorName))),ModuleWithConstraint(with,type,TypePath(TypeName),"=",TypeName))),")"))),LetBinding(let,LetValueBinding(VariableDefinition,"=",BlockExpression("{",CallExpression(MemberExpression(ModulePrefix,MemberLeaf(PropertyName)),UnitToken),CallExpression(MemberExpression(ModulePrefix,MemberLeaf(PropertyName)),"(",Argument(Number),",",Argument(Number),",",Argument(LabeledArgument("~",LabelName)),")"),CallExpression(VariableName,"(",Argument(MemberExpression(MemberExpression(ModulePrefix,MemberLeaf(PropertyName)),".",MemberLeaf(PropertyName))),",",Argument(String),")"),"}"))) ,"}")))),TypeDeclaration(type,rec,TypeBinding(TypeName,TypeParams(TypeAngleLeftNode(CompareOp),TypeParam(VariableDefinition),TypeAngleRightNode(CompareOp)),"=",TypeBody(VariantType("|",VariantConstructorCase(VariantConstructorArgsToken,VariantConstructorArgs("(",TypeName,")"),VariantConstructorResult(":",TypeApplication(TypeName,TypeAngleLeftNode(CompareOp),TypeName,TypeAngleRightNode(CompareOp)))),"|",VariantConstructorCase(VariantConstructorArgsToken,VariantConstructorArgs("(",TypeName,")"),VariantConstructorResult(":",TypeApplication(TypeName,TypeAngleLeftNode(CompareOp),TypeName,TypeAngleRightNode(CompareOp)))))))),TypeDeclaration(type,TypeBinding(TypeName,TypeParams(TypeAngleLeftNode(CompareOp),TypeParam(TypeParameter(Quote("'"),VariableName)),TypeAngleRightNode(CompareOp)),"=",TypeBody(TypeAlias(PolyVariantType("[",PolyVariantVarianceMarker(PolyVariantVarianceUpper(CompareOp)),PolyVariantCaseList(PolyVariantCase(PolyVariantTag(Hash,VariableName)),"|",PolyVariantCase(PolyVariantTag(Hash,VariableName),PolyVariantPayload("(",TypeName,")"))),"]",as,TypeParameter(Quote("'"),VariableName)))))))

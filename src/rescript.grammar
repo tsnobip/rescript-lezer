@@ -10,6 +10,7 @@
   and @left,
   or @left,
   typearg @left,
+  assign @right,
   arrow @right,
   statement @cut
 }
@@ -21,6 +22,7 @@
 statement[@isGroup=Statement] {
   LetBinding |
   ModuleDeclaration |
+  ModuleTypeDeclaration |
   TypeDeclaration |
   OpenStatement |
   IncludeStatement |
@@ -29,11 +31,77 @@ statement[@isGroup=Statement] {
 }
 
 ModuleDeclaration {
-  kw<"module"> ConstructorName "=" ModuleBody
+  kw<"module"> ConstructorName ModuleDeclarationBody
+}
+
+ModuleTypeDeclaration {
+  kw<"module"> kw<"type"> ConstructorName "=" ModuleTypeExpr
+}
+
+ModuleDeclarationBody {
+  ModuleSpec "=" ModuleExpression |
+  ModuleSpec |
+  "=" ModuleExpression
+}
+
+ModuleSpec {
+  ":" ModuleTypeExpr ModuleWithConstraint*
+}
+
+ModuleWithConstraint {
+  kw<"with"> kw<"type"> TypePath "=" type
+}
+
+TypePath {
+  ModulePrefix TypePath |
+  ConstructorName ("." ConstructorName)* "." TypeName |
+  TypeName
+}
+
+ModuleTypeExpr {
+  ModuleTypeBody |
+  ModulePath
+}
+
+ModuleExpression {
+  ModuleBody |
+  ModulePath |
+  ModulePackExpression
+}
+
+ModulePackExpression {
+  kw<"module"> "(" ModulePackContent ")"
+}
+
+ModulePackContent {
+  ModulePath ModuleSpec?
 }
 
 ModuleBody {
   "{" statement* "}"
+}
+
+ModuleTypeBody {
+  "{" ModuleTypeStatement* "}"
+}
+
+ModuleTypeStatement {
+  ModuleTypeDeclaration |
+  ModuleTypeModuleSpec |
+  TypeSpec |
+  ValueSpec
+}
+
+ModuleTypeModuleSpec {
+  kw<"module"> ConstructorName ModuleSpec
+}
+
+TypeSpec {
+  kw<"type"> TypeName (TypeParams)? ( "=" TypeBody)?
+}
+
+ValueSpec {
+  kw<"let"> VariableDefinition ":" type
 }
 
 ModulePath {
@@ -63,7 +131,18 @@ ExternalBody {
 }
 
 LetBinding {
-  kw<"let"> (kw<"rec">)? VariableDefinition ParamList? (":" type)? "=" expression
+  kw<"let"> (
+    kw<"module"> ModuleUnpackBinding |
+    LetValueBinding
+  )
+}
+
+LetValueBinding {
+  (kw<"rec">)? VariableDefinition ParamList? (":" type)? "=" expression
+}
+
+ModuleUnpackBinding {
+  "(" ConstructorName ")" "=" expression
 }
 
 SwitchExpression[@dynamicPrecedence=1] {
@@ -186,10 +265,12 @@ expression[@isGroup=Expression] {
   RecordExpression { "{" commaSep1<Property> "}" } |
   Decorator { "@" VariableName } |
   ExtensionExpression { "%" VariableName "(" commaSep<expression> ")" } |
+  ModulePackExpression |
   CallExpression |
   MemberExpression |
   UnitLiteral |
   BinaryExpression {
+    expression !assign ":=" expression |
     expression !times (ArithOp<"*"> | ArithOp<"/"> | ArithOp<"*."> | ArithOp<"/."> | kw<"mod">) expression |
     expression !plus (ArithOp<"+"> | ArithOp<"-"> | ArithOp<"+."> | ArithOp<"-.">) expression |
     expression !concat StringOp<"++"> expression |
@@ -358,40 +439,28 @@ TypeBinding {
 }
 
 TypeBody {
-  SumType |
+  VariantType |
   RecordType |
   TypeAlias
 }
 
 TypeAlias { type }
 
-SumType[@name=VariantType] {
-  "|" Constructor ("|" Constructor)*
+VariantType {
+  "|" VariantConstructorCase ("|" VariantConstructorCase)*
 }
 
-Constructor {
-  ConstructorWithArgs |
-  ConstructorWithResult |
-  ConstructorBare
+VariantConstructorCase {
+  VariantConstructorArgsToken VariantConstructorArgs VariantConstructorResult? |
+  VariantConstructorResultToken VariantConstructorResult |
+  VariantConstructor
 }
 
-ConstructorWithArgs[@dynamicPrecedence=1] {
-  VariantConstructorArgsToken ConstructorArguments ConstructorResult?
-}
-
-ConstructorWithResult {
-  VariantConstructorResultToken ConstructorResult
-}
-
-ConstructorBare[@dynamicPrecedence=-1] {
-  ConstructorName
-}
-
-ConstructorArguments {
+VariantConstructorArgs {
   "(" commaSep1<type> ")"
 }
 
-ConstructorResult {
+VariantConstructorResult {
   ":" type
 }
 
@@ -412,11 +481,7 @@ VariableName { identifier }
 VariableDefinition { identifier }
 TypeName { identifier }
 ConstructorName { uppercaseIdentifier }
-VariantConstructor {
-  VariantConstructorArgsToken |
-  VariantConstructorResultToken |
-  ConstructorName
-}
+VariantConstructor { ConstructorName }
 PropertyName { identifier }
 PropertyDefinition { identifier }
 LabelName { identifier }
@@ -505,7 +570,7 @@ Interpolation {
   "=>"
   "("  ")" "[" "]" "{" "}"
   "." "," ":" ";"
-  "=" "?" "|" "~" "'" "@" "%" "_" "`" "${"
+  "=" "?" "|" "~" "'" "@" "%" "_" "`" "${" ":="
 
   "+." "-." "*." "/."
 

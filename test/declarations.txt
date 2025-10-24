@@ -38,7 +38,7 @@ type color =
 
 ==>
 
-Script(TypeDeclaration(type,TypeBinding(TypeName,"=",TypeBody(VariantType("|",Constructor(ConstructorBare(ConstructorName)),"|",Constructor(ConstructorBare(ConstructorName)))))))
+Script(TypeDeclaration(type,TypeBinding(TypeName,"=",TypeBody(VariantType("|",VariantConstructorCase(VariantConstructor(ConstructorName)),"|",VariantConstructorCase(VariantConstructor(ConstructorName)))))))
 
 # Labeled call arguments
 
@@ -54,4 +54,4 @@ Result.Ok("foo")
 
 ==>
 
-Script(CallExpression(MemberExpression(ModulePrefix,MemberLeaf(VariantConstructor(VariantConstructorArgsToken))),"(",Argument(String),")"))
+Script(CallExpression(MemberExpression(ModulePrefix,MemberLeaf(VariantConstructor(ConstructorName))),"(",Argument(String),")"))

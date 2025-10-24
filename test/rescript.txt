@@ -4,7 +4,7 @@ let x = 5
 
 ==>
 
-Script(LetBinding(let,VariableDefinition,Number))
+Script(LetBinding(let,LetValueBinding(VariableDefinition,"=",Number)))
 
 # Let binding - expression
 
@@ -12,7 +12,7 @@ let y = x + 1
 
 ==>
 
-Script(LetBinding(let,VariableDefinition,BinaryExpression(VariableName,ArithOp,Number)))
+Script(LetBinding(let,LetValueBinding(VariableDefinition,"=",BinaryExpression(VariableName,ArithOp,Number))))
 
 # Let with type annotation
 
@@ -20,7 +20,7 @@ let name: string = "John"
 
 ==>
 
-Script(LetBinding(let,VariableDefinition,TypeName,String))
+Script(LetBinding(let,LetValueBinding(VariableDefinition,":",TypeName,"=",String)))
 
 # Function expression
 
@@ -28,7 +28,7 @@ let add = (a, b) => a + b
 
 ==>
 
-Script(LetBinding(let,VariableDefinition,"=",ArrowFunction(ParamList("(",ParamItems(UnlabeledParameter(SimpleParameter(VariableName)),",",SimpleParameter(VariableName)),")"),"=>",BinaryExpression(VariableName,ArithOp,VariableName))))
+Script(LetBinding(let,LetValueBinding(VariableDefinition,"=",ArrowFunction(ParamList("(",ParamItems(UnlabeledParameter(SimpleParameter(VariableName)),",",SimpleParameter(VariableName)),")"),"=>",BinaryExpression(VariableName,ArithOp,VariableName)))))
 
 # Unit-parameter function
 
@@ -36,7 +36,7 @@ let noop = () => 1
 
 ==>
 
-Script(LetBinding(let,VariableDefinition,"=",ArrowFunction(UnitToken,"=>",Number)))
+Script(LetBinding(let,LetValueBinding(VariableDefinition,"=",ArrowFunction(UnitToken,"=>",Number))))
 
 # Boolean literals
 
@@ -45,7 +45,7 @@ let isFalse = false
 
 ==>
 
-Script(LetBinding(let,VariableDefinition,BooleanLiteral),LetBinding(let,VariableDefinition,BooleanLiteral))
+Script(LetBinding(let,LetValueBinding(VariableDefinition,"=",BooleanLiteral)),LetBinding(let,LetValueBinding(VariableDefinition,"=",BooleanLiteral)))
 
 # Array expression
 
@@ -53,7 +53,7 @@ let numbers = [1, 2, 3]
 
 ==>
 
-Script(LetBinding(let,VariableDefinition,ArrayExpression(Number,Number,Number)))
+Script(LetBinding(let,LetValueBinding(VariableDefinition,"=",ArrayExpression("[",Number,",",Number,",",Number,"]"))))
 
 # Record expression
 
@@ -61,7 +61,7 @@ let point = {x: 1, y: 2}
 
 ==>
 
-Script(LetBinding(let,VariableDefinition,RecordExpression(Property(PropertyDefinition,Number),Property(PropertyDefinition,Number))))
+Script(LetBinding(let,LetValueBinding(VariableDefinition,"=",RecordExpression("{",Property(PropertyDefinition,":",Number),",",Property(PropertyDefinition,":",Number),"}"))))
 
 # Function call
 
@@ -85,7 +85,7 @@ let result = (x + y) * z
 
 ==>
 
-Script(LetBinding(let,VariableDefinition,BinaryExpression(ParenthesizedExpression(BinaryExpression(VariableName,ArithOp,VariableName)),ArithOp,VariableName)))
+Script(LetBinding(let,LetValueBinding(VariableDefinition,"=",BinaryExpression(ParenthesizedExpression("(",BinaryExpression(VariableName,ArithOp,VariableName),")"),ArithOp,VariableName))))
 
 # String literal
 
@@ -93,7 +93,7 @@ let greeting = "Hello, World!"
 
 ==>
 
-Script(LetBinding(let,VariableDefinition,String))
+Script(LetBinding(let,LetValueBinding(VariableDefinition,"=",String)))
 
 # Number literal
 
@@ -103,10 +103,7 @@ let binary = 0b1010
 
 ==>
 
-Script(
-  LetBinding(let,VariableDefinition,Number),
-  LetBinding(let,VariableDefinition,Number),
-  LetBinding(let,VariableDefinition,Number))
+Script(LetBinding(let,LetValueBinding(VariableDefinition,"=",Number)),LetBinding(let,LetValueBinding(VariableDefinition,"=",Number)),LetBinding(let,LetValueBinding(VariableDefinition,"=",Number)))
 
 # Unary expressions
 
@@ -115,9 +112,7 @@ let not = !true
 
 ==>
 
-Script(
-  LetBinding(let,VariableDefinition,UnaryExpression(ArithOp,Number)),
-  LetBinding(let,VariableDefinition,UnaryExpression(LogicOp,BooleanLiteral)))
+Script(LetBinding(let,LetValueBinding(VariableDefinition,"=",UnaryExpression(ArithOp,Number))),LetBinding(let,LetValueBinding(VariableDefinition,"=",UnaryExpression(LogicOp,BooleanLiteral))))
 
 # Binary expressions
 
@@ -127,7 +122,4 @@ let comparison = a < b
 
 ==>
 
-Script(
-  LetBinding(let,VariableDefinition,BinaryExpression(VariableName,ArithOp,VariableName)),
-  LetBinding(let,VariableDefinition,BinaryExpression(VariableName,ArithOp,VariableName)),
-  LetBinding(let,VariableDefinition,BinaryExpression(VariableName,CompareOp,VariableName)))
+Script(LetBinding(let,LetValueBinding(VariableDefinition,"=",BinaryExpression(VariableName,ArithOp,VariableName))),LetBinding(let,LetValueBinding(VariableDefinition,"=",BinaryExpression(VariableName,ArithOp,VariableName))),LetBinding(let,LetValueBinding(VariableDefinition,"=",BinaryExpression(VariableName,CompareOp,VariableName))))
