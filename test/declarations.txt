@@ -1,0 +1,57 @@
+# Open statement
+
+open Stdlib.Option
+
+==>
+
+Script(OpenStatement(open,ModulePath(ModulePrefix,ModulePathTail(ConstructorName))))
+
+# Include statement
+
+include Stdlib.List
+
+==>
+
+Script(IncludeStatement(include,ModulePath(ModulePrefix,ModulePathTail(ConstructorName))))
+
+# External declaration
+
+external log: string => unit = "log"
+
+==>
+
+Script(ExternalDeclaration(external,VariableDefinition,":",FunctionType(TypeName,FunctionArrow("=>"),TypeName),"=",ExternalBody(String)))
+
+# Type declaration with record body
+
+type person<'a> = {name: string, data: 'a}
+
+==>
+
+Script(TypeDeclaration(type,TypeBinding(TypeName,TypeParams(TypeAngleLeftNode(CompareOp),TypeParam(TypeParameter(Quote("'"),VariableName)),TypeAngleRightNode(CompareOp)),"=",TypeBody(RecordType("{",RecordTypeField(PropertyDefinition,":",TypeName),",",RecordTypeField(PropertyDefinition,":",TypeParameter(Quote("'"),VariableName)),"}")))))
+
+# Sum type declaration
+
+type color =
+  | Red
+  | Green
+
+==>
+
+Script(TypeDeclaration(type,TypeBinding(TypeName,"=",TypeBody(VariantType("|",VariantConstructorCase(VariantConstructor(ConstructorName)),"|",VariantConstructorCase(VariantConstructor(ConstructorName)))))))
+
+# Labeled call arguments
+
+makePerson(~name="Ada", ~data=?Some("ok"), ())
+
+==>
+
+Script(CallExpression(VariableName,"(",Argument(LabeledArgument("~",LabelName,"=",ArgumentValue(String))),",",Argument(LabeledArgument("~",LabelName,"=",ArgumentValue("?",CallExpression(ConstructorName,"(",Argument(String),")")))),",",Argument(UnitLiteral(UnitToken)),")"))
+
+# Module constructor expression
+
+Result.Ok("foo")
+
+==>
+
+Script(CallExpression(MemberExpression(ModulePrefix,MemberLeaf(VariantConstructor(ConstructorName))),"(",Argument(String),")"))

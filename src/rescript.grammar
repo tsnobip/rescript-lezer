@@ -1,0 +1,671 @@
+@precedence {
+  member,
+  call,
+  prefix,
+  times @left,
+  plus @left,
+  concat @left,
+  pipe @left,
+  rel @left,
+  and @left,
+  or @left,
+  typearg @left,
+  assign @right,
+  arrow @right,
+  statement @cut
+}
+
+@top Script { statement* }
+
+@top SingleExpression { expression }
+
+statement[@isGroup=Statement] {
+  LetBinding |
+  ModuleDeclaration |
+  ModuleTypeDeclaration |
+  TypeDeclaration |
+  OpenStatement |
+  IncludeStatement |
+  ExternalDeclaration |
+  expression
+}
+
+ModuleDeclaration {
+  kw<"module"> ModuleName ModuleDeclarationBody
+}
+
+ModuleTypeDeclaration {
+  kw<"module"> kw<"type"> ModuleName "=" ModuleTypeExpr
+}
+
+ModuleDeclarationBody {
+  ModuleSpec "=" ModuleExpression |
+  ModuleSpec |
+  "=" ModuleExpression
+}
+
+ModuleSpec {
+  ":" ModuleTypeExpr ModuleWithConstraint*
+}
+
+ModuleWithConstraint {
+  kw<"with"> kw<"type"> ModulePrefix TypeName ConstraintOperator type |
+  kw<"with"> kw<"type"> TypeName ConstraintOperator type
+}
+
+ConstraintOperator {
+  "=" |
+  ":="
+}
+
+ModuleTypeExpr {
+  ModuleTypeBody |
+  ModulePath
+}
+
+ModuleExpression {
+  ModuleBody |
+  ModulePath |
+  ModulePackExpression
+}
+
+ModulePackExpression {
+  kw<"module"> "(" ModulePackContent ")"
+}
+
+ModulePackContent {
+  ModulePath ModuleSpec?
+}
+
+ModuleBody {
+  "{" statement* "}"
+}
+
+ModuleTypeBody {
+  "{" ModuleTypeStatement* "}"
+}
+
+ModuleTypeStatement {
+  ModuleTypeDeclaration |
+  ModuleTypeModuleSpec |
+  TypeSpec |
+  ValueSpec
+}
+
+ModuleTypeModuleSpec {
+  kw<"module"> ModuleName ModuleSpec
+}
+
+TypeSpec {
+  kw<"type"> TypeName (TypeParams)? ( "=" TypeBody)?
+}
+
+ValueSpec {
+  kw<"let"> VariableDefinition ":" type
+}
+
+ModulePath {
+  ModulePrefix ModulePathTail |
+  ConstructorName ("." ConstructorName)*
+}
+
+ModulePathTail {
+  ConstructorName ("." ConstructorName)*
+}
+
+ModuleName { ConstructorName }
+
+OpenStatement {
+  kw<"open"> ModulePath
+}
+
+IncludeStatement {
+  kw<"include"> ModulePath
+}
+
+ExternalDeclaration {
+  kw<"external"> VariableDefinition ":" type "=" ExternalBody
+}
+
+ExternalBody {
+  String |
+  TemplateString
+}
+
+LetBinding {
+  kw<"let"> (
+    kw<"module"> ModuleUnpackBinding |
+    LetValueBinding
+  )
+}
+
+LetValueBinding {
+  (kw<"rec">)? VariableDefinition ParamList? (":" type)? "=" expression
+}
+
+ModuleUnpackBinding {
+  "(" ModuleName ")" "=" expression
+}
+
+SwitchExpression[@dynamicPrecedence=1] {
+  kw<"switch"> expression "{" SwitchCase* "}"
+}
+
+SwitchCase[@dynamicPrecedence=-1] {
+  "|" Pattern (PatternGuard)? "=>" expression
+}
+
+IfExpression {
+  kw<"if"> expression BlockExpression ElseClause?
+}
+
+ElseClause {
+  kw<"else"> (IfExpression | BlockExpression)
+}
+
+WhileExpression {
+  kw<"while"> expression BlockExpression
+}
+
+ForExpression {
+  kw<"for"> Pattern kw<"in"> expression ForDirection expression BlockExpression
+}
+
+ForDirection {
+  kw<"to"> |
+  kw<"downto">
+}
+
+TryExpression {
+  kw<"try"> BlockExpression kw<"catch"> "{" SwitchCase* "}"
+}
+
+BlockExpression {
+  "{" blockItem* "}"
+}
+
+blockItem {
+  statement |
+  ";"
+}
+
+// Pattern guards may start with `if` or `when`. Any expression is allowed
+// inside the guard, so we accept a bare `expression` here. `if` is preferred.
+PatternGuard {
+  kw<"if"> expression |
+  kw<"when"> expression
+}
+
+Pattern {
+  PatternPrimary PatternAlias?
+}
+
+PatternAlias {
+  kw<"as"> VariableName
+}
+
+PatternPrimary {
+  Wildcard { "_" } |
+  VariantSpreadPattern |
+  PolyVariantSpreadPattern |
+  VariableName |
+  Number |
+  String |
+  Char |
+  boolean |
+  UnitPattern |
+  ConstructorPattern |
+  ArrayPattern |
+  ListPattern |
+  RecordPattern |
+  PolyVariantPattern |
+  ParenthesizedPattern
+}
+
+VariantSpreadPattern {
+  SpreadOperator TypeName
+}
+
+UnitPattern { "(" ")" }
+
+ConstructorPattern {
+  VariantConstructor PatternArguments?
+}
+
+ArrayPattern {
+  "[" commaSep<Pattern> "]"
+}
+
+ListPattern {
+  kw<"list"> "{" commaSep<Pattern> "}"
+}
+
+RecordPattern {
+  "{" commaSep1<PatternField> "}"
+}
+
+PatternField {
+  PropertyName (":" Pattern)?
+}
+
+PolyVariantPattern {
+  Hash (ConstructorName | VariableName) PatternArguments?
+}
+
+PolyVariantSpreadPattern {
+  Hash SpreadOperator TypeName
+}
+
+PatternArguments {
+  "(" commaSep<Pattern> ")"
+}
+
+ParenthesizedPattern {
+  "(" Pattern ")"
+}
+
+expression[@isGroup=Expression] {
+  IfExpression |
+  WhileExpression |
+  ForExpression |
+  TryExpression |
+  SwitchExpression |
+  BlockExpression |
+  Number |
+  String |
+  TemplateString |
+  Char |
+  boolean |
+  ArrowFunction |
+  VariableName |
+  ConstructorName |
+  ArrayExpression { "[" commaSep<expression> "]" } |
+  ListExpression { kw<"list"> "{" commaSep<expression> "}" } |
+  DictExpression { kw<"dict"> "{" commaSep<DictEntry> "}" } |
+  RecordExpression { "{" commaSep1<Property> "}" } |
+  Decorator { "@" VariableName } |
+  ExtensionExpression { "%" VariableName "(" commaSep<expression> ")" } |
+  ModulePackExpression |
+  CallExpression |
+  MemberExpression |
+  UnitLiteral |
+  BinaryExpression {
+    expression !assign ":=" expression |
+    expression !times (ArithOp<"*"> | ArithOp<"/"> | ArithOp<"*."> | ArithOp<"/."> | kw<"mod">) expression |
+    expression !plus (ArithOp<"+"> | ArithOp<"-"> | ArithOp<"+."> | ArithOp<"-.">) expression |
+    expression !concat StringOp<"++"> expression |
+    expression !pipe PipeOp<"->" | "|>"> expression |
+    expression !rel (LessThan | CompareOp<"<=" | ">" | ">=" | "==" | "!=">) expression |
+    expression !and LogicOp<"&&"> expression |
+    expression !or LogicOp<"||"> expression
+  } |
+  UnaryExpression { !prefix (ArithOp<"-"> | LogicOp<"!">) expression } |
+  ParenthesizedExpression { "(" expression ~parenthesized ")" } |
+  JSXElement
+}
+
+ArrowFunction[@dynamicPrecedence=1] {
+  ParamList !arrow "=>" expression |
+  UnitToken !arrow "=>" expression |
+  VariableName !arrow "=>" expression
+}
+
+MemberExpression {
+  ModulePrefix MemberLeaf |
+  expression !member "." MemberLeaf
+}
+
+CallExpression {
+  expression !call "(" commaSep<Argument> ")" |
+  expression !call UnitToken
+}
+
+MemberLeaf {
+  VariantConstructor |
+  PropertyName
+}
+
+UnitLiteral[@dynamicPrecedence=-1] { UnitToken }
+
+DictEntry {
+  String ":" expression
+}
+
+Property {
+  PropertyDefinition ":" expression
+}
+
+Argument {
+  LabeledArgument |
+  expression
+}
+
+LabeledArgument {
+  "~" LabelName ("=" ArgumentValue)?
+}
+
+ArgumentValue {
+  "?" expression? |
+  expression
+}
+
+ParamList {
+  "(" DotUncurried? ParamItems ")"
+}
+
+DotUncurried { "." }
+
+ParamItems {
+  LabeledParameterList |
+  SingleAnnotatedParameter |
+  UnlabeledParameter "," parameter ("," parameter?)*
+}
+
+SingleAnnotatedParameter {
+  VariableName (ParameterAnnotation ParameterDefault? | ParameterDefault)
+}
+
+LabeledParameterList {
+  LabeledParameter ("," parameter?)*
+}
+
+UnlabeledParameter { SimpleParameter }
+
+parameter {
+  LabeledParameter |
+  SimpleParameter
+}
+
+LabeledParameter {
+  "~" LabelName ParameterAnnotation? ParameterDefault?
+}
+
+SimpleParameter {
+  VariableName ParameterAnnotation? ParameterDefault?
+}
+
+ParameterAnnotation {
+  ":" type
+}
+
+ParameterDefault {
+  "=" ("?" expression? | expression)
+}
+
+ParenthesizedType { "(" type ")" }
+
+Quote { "'" }
+Hash { "#" }
+
+TypeParameter { Quote VariableName }
+
+FunctionType { (TypeName | TypeParameter | ParenthesizedType) FunctionArrow type }
+
+FunctionArrow { "->" | "=>" }
+
+type[@isGroup=Type] {
+  TypeName |
+  TypeParameter |
+  PolyVariantType |
+  TypeApplication |
+  ParenthesizedType |
+  FunctionType
+}
+
+
+TypeAngleLeftNode { CompareOp<"<"> }
+TypeAngleRightNode { CompareOp<">"> }
+
+TypeApplication { TypeName TypeAngleLeftNode commaSep<type> TypeAngleRightNode }
+
+TypeParams { TypeAngleLeftNode commaSep<TypeParam> TypeAngleRightNode }
+
+TypeParam { "_" | VariableDefinition | TypeParameter }
+
+RecordType {
+  "{" commaSep1<RecordTypeField> "}"
+}
+
+RecordTypeField {
+  PropertyDefinition ":" type
+}
+
+PolyVariantTag { Hash (ConstructorName | VariableName) }
+
+// Variance marker for polymorphic variants: lower-bound '>' or upper-bound '<'
+PolyVariantVarianceLower { CompareOp<"<"> }
+PolyVariantVarianceUpper { CompareOp<">"> }
+PolyVariantVarianceMarker { PolyVariantVarianceUpper | PolyVariantVarianceLower }
+
+// PolyVariantType: one-or-more variant tags separated by pipe `|` (e.g. [#A | #B])
+PolyVariantType {
+  "[" PolyVariantVarianceMarker? PolyVariantCaseList "]" (kw<"as"> TypeParameter)?
+}
+
+PolyVariantCaseList {
+  ("|")? PolyVariantCase ("|" PolyVariantCase)*
+}
+
+PolyVariantCase {
+  PolyVariantSpreadCase |
+  PolyVariantTagCase |
+  PolyVariantTypeReference
+}
+
+PolyVariantPayload {
+  "(" commaSep1<type> ")"
+}
+
+PolyVariantTagCase {
+  PolyVariantTag PolyVariantPayload?
+}
+
+PolyVariantSpreadCase {
+  Hash SpreadOperator TypeName
+}
+
+PolyVariantTypeReference {
+  TypeName
+}
+
+// Type declaration supports optional `rec` and optional type parameters
+TypeDeclaration {
+  kw<"type"> (kw<"rec">)? TypeBinding (kw<"and"> TypeBinding)*
+}
+
+TypeBinding {
+  TypeName (TypeParams)? "=" TypeBody
+}
+
+TypeBody {
+  VariantType |
+  RecordType |
+  TypeAlias
+}
+
+TypeAlias { type }
+
+VariantType {
+  "|" VariantConstructorCase ("|" VariantConstructorCase)*
+}
+
+VariantConstructorCase {
+  VariantSpreadCase |
+  VariantConstructorArgsToken VariantConstructorArgs VariantConstructorResult? |
+  VariantConstructorResultToken VariantConstructorResult |
+  VariantConstructor
+}
+
+VariantSpreadCase {
+  SpreadOperator TypeName
+}
+
+VariantConstructorArgs {
+  "(" commaSep1<type> ")"
+}
+
+VariantConstructorResult {
+  ":" type
+}
+
+commaSep<content> {
+  "" | content ("," content?)*
+}
+
+commaSep1<content> {
+  content ("," content?)*
+}
+
+// Keywords
+kw<term> { @specialize[@name={term}]<identifier, term> }
+
+boolean { @specialize[@name=BooleanLiteral]<identifier, "true" | "false"> }
+
+VariableName { identifier }
+VariableDefinition { identifier }
+TypeName { identifier }
+ConstructorName { uppercaseIdentifier }
+VariantConstructor { ConstructorName }
+PropertyName { identifier }
+PropertyDefinition { identifier }
+LabelName { identifier }
+
+@skip { spaces | newline | LineComment | BlockComment }
+
+@context trackNewline from "./tokens.js"
+
+@external tokens variant from "./tokens" { VariantConstructorArgsToken, VariantConstructorResultToken }
+
+@skip {} {
+  String[isolate] {
+    '"' (stringContentDouble | Escape)* ('"' | "\n")
+  }
+  
+  TemplateString[isolate] {
+    "`" (TemplateContent | Interpolation)* "`"
+  }
+  
+  BlockComment[isolate] { "/*" (blockCommentContent | blockCommentNewline)* blockCommentEnd }
+}
+
+TemplateContent {
+  templateText
+}
+
+Interpolation {
+  "${" expression "}"
+}
+
+@local tokens {
+  blockCommentEnd { "*/" }
+  blockCommentNewline { "\n" }
+  @else blockCommentContent
+}
+
+@tokens {
+  spaces[@export] { $[\u0009 \u000b\u00a0\u1680\u2000-\u200a\u202f\u205f\u3000\ufeff]+ }
+  newline[@export] { $[\r\n\u2028\u2029] }
+
+  LineComment[isolate] { "//" ![\n]* }
+
+  identifierChar { @asciiLetter | $[_$] }
+  
+  identifier { $[a-z_] (identifierChar | @digit)* }
+  
+  ModulePrefix { $[A-Z] (identifierChar | @digit)* ("." $[A-Z] (identifierChar | @digit)*)* "." }
+  UnitToken { "()" }
+  SpreadOperator { "..." }
+  
+  uppercaseIdentifier { $[A-Z] (identifierChar | @digit)* }
+
+  @precedence { ModulePrefix, UnitToken, SpreadOperator, uppercaseIdentifier }
+
+  @precedence { spaces, newline, identifier, "_" }
+
+  Number {
+    (@digit ("_" | @digit)* ("." ("_" | @digit)*)? | "." @digit ("_" | @digit)*)
+      (("e" | "E") ("+" | "-")? ("_" | @digit)+)? |
+    @digit ("_" | @digit)* "n" |
+    "0x" $[0-9a-fA-F_]+ |
+    "0b" $[01_]+ |
+    "0o" $[0-7_]+
+  }
+
+  @precedence { Number, "." }
+
+  Char { "'" (![\\\n'] | "\\" _) "'" }
+
+  Escape {
+    "\\" ("x" $[0-9a-fA-F] $[0-9a-fA-F] | "u" ("{" $[0-9a-fA-F]+ "}" | $[0-9a-fA-F] $[0-9a-fA-F] $[0-9a-fA-F] $[0-9a-fA-F]) | ![xu])
+  }
+
+  stringContentDouble { ![\\\n"]+ }
+
+  ArithOp<expr> { expr }
+  LogicOp<expr> { expr }
+  CompareOp<expr> { expr }
+  StringOp<expr> { expr }
+  PipeOp<expr> { expr }
+  
+  templateText { ![\`$]+ | "$" ![\{] }
+
+  @precedence { LineComment, ArithOp }
+
+  "=>"
+  "..."
+  "("  ")" "[" "]" "{" "}"
+  "." "," ":" ";"
+  "=" "?" "|" "~" "'" "@" "%" "_" "`" "${" ":="
+
+  "+." "-." "*." "/."
+
+  JSXEndTag { ">" }
+  
+  JSXSelfCloseEndTag { "/>" }
+  JSXStartCloseTag { "</" }
+  JSXText { ![<{]+ }
+  JSXIdentifier { identifier }
+}
+
+@skip {} {
+  JSXElement {
+    JSXSelfClosingTag |
+    JSXOpenTag jsxChildren* JSXCloseTag
+  }
+}
+
+jsxChildren {
+  JSXText |
+  JSXElement |
+  JSXExpressionContainer
+}
+
+JSXExpressionContainer {
+  "{" expression "}"
+}
+
+JSXSelfClosingTag { JSXStartTag jsxElementName jsxAttribute* JSXSelfCloseEndTag }
+JSXOpenTag { JSXStartTag jsxElementName jsxAttribute* JSXEndTag }
+JSXCloseTag { JSXStartCloseTag jsxElementName? JSXEndTag }
+
+jsxElementName {
+  JSXIdentifier |
+  JSXMemberExpression
+}
+
+JSXMemberExpression { (JSXMemberExpression | JSXIdentifier) "." JSXIdentifier }
+
+jsxAttribute {
+  JSXAttribute { JSXIdentifier ("=" jsxAttributeValue)? }
+}
+
+jsxAttributeValue {
+  String |
+  "{" expression "}"
+}
+
+@external propSource rescriptHighlight from "./highlight"
+
+@external tokens jsx from "./tokens" { JSXStartTag, LessThan[@name=CompareOp] }
+
+@detectDelim
