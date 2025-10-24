@@ -333,7 +333,19 @@ VarianceMarker { VarianceRightNode | VarianceLeftNode }
 
 // VariantType: one-or-more variant tags separated by pipe `|` (e.g. [#A | #B])
 VariantType {
-  "[" VarianceMarker? VariantTag ("|" VariantTag)* "]" (kw<"as"> TypeParameter)?
+  "[" VarianceMarker? VariantVariantList "]" (kw<"as"> TypeParameter)?
+}
+
+VariantVariantList {
+  ("|")? VariantVariant ("|" VariantVariant)*
+}
+
+VariantVariant {
+  VariantTag VariantPayloadType?
+}
+
+VariantPayloadType {
+  "(" commaSep1<type> ")"
 }
 
 // Type declaration supports optional `rec` and optional type parameters
@@ -354,7 +366,33 @@ TypeBody {
 TypeAlias { type }
 
 SumType {
-  "|" VariantConstructor ("|" VariantConstructor)*
+  "|" Constructor ("|" Constructor)*
+}
+
+Constructor {
+  ConstructorWithArgs |
+  ConstructorWithResult |
+  ConstructorBare
+}
+
+ConstructorWithArgs[@dynamicPrecedence=1] {
+  VariantConstructorArgsToken ConstructorArguments ConstructorResult?
+}
+
+ConstructorWithResult {
+  VariantConstructorResultToken ConstructorResult
+}
+
+ConstructorBare[@dynamicPrecedence=-1] {
+  ConstructorName
+}
+
+ConstructorArguments {
+  "(" commaSep1<type> ")"
+}
+
+ConstructorResult {
+  ":" type
 }
 
 commaSep<content> {
@@ -374,7 +412,11 @@ VariableName { identifier }
 VariableDefinition { identifier }
 TypeName { identifier }
 ConstructorName { uppercaseIdentifier }
-VariantConstructor { ConstructorName }
+VariantConstructor {
+  VariantConstructorArgsToken |
+  VariantConstructorResultToken |
+  ConstructorName
+}
 PropertyName { identifier }
 PropertyDefinition { identifier }
 LabelName { identifier }
@@ -382,6 +424,8 @@ LabelName { identifier }
 @skip { spaces | newline | LineComment | BlockComment }
 
 @context trackNewline from "./tokens.js"
+
+@external tokens variant from "./tokens" { VariantConstructorArgsToken, VariantConstructorResultToken }
 
 @skip {} {
   String[isolate] {

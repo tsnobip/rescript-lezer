@@ -1,0 +1,22 @@
+# Nominal variants
+
+type color =
+  | Red
+  | Rgb(int, int, int)
+  | Hex: string
+
+==>
+
+Script(TypeDeclaration(type,TypeBinding(TypeName,"=",TypeBody(SumType("|",Constructor(ConstructorBare(ConstructorName)),"|",Constructor(ConstructorWithArgs(VariantConstructorArgsToken,ConstructorArguments("(",TypeName,",",TypeName,",",TypeName,")"))),"|",Constructor(ConstructorWithResult(VariantConstructorResultToken,ConstructorResult(":",TypeName))))))))
+
+# Polymorphic variants
+
+type t = [
+  | #Foo
+  | #Bar(string, int)
+  | #Baz(baz)
+]
+
+==>
+
+Script(TypeDeclaration(type,TypeBinding(TypeName,"=",TypeBody(TypeAlias(VariantType("[",VariantVariantList("|",VariantVariant(VariantTag(Hash,ConstructorName)),"|",VariantVariant(VariantTag(Hash,ConstructorName),VariantPayloadType("(",TypeName,",",TypeName,")")),"|",VariantVariant(VariantTag(Hash,ConstructorName),VariantPayloadType("(",TypeName,")"))),"]"))))))

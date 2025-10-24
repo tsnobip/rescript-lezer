@@ -9,6 +9,8 @@ import {
   LineComment,
   JSXStartTag,
   LessThan,
+  VariantConstructorArgsToken,
+  VariantConstructorResultToken,
 } from "./parser.terms.js";
 
 const space = [
@@ -19,7 +21,10 @@ const space = [
 const braceR = 125,
   slash = 47,
   star = 42,
-  lt = 60;
+  lt = 60,
+  parenL = 40,
+  colon = 58,
+  dot = 46;
 
 export const trackNewline = new ContextTracker({
   start: false,
@@ -64,3 +69,22 @@ export const jsx = new ExternalTokenizer((input, stack) => {
     input.acceptToken(LessThan);
   }
 });
+
+export const variant = new ExternalTokenizer((input) => {
+  let ch = input.next;
+  if (ch < 65 || ch > 90) return;
+
+  let len = 1;
+  while (identifierChar(input.peek(len), false)) len++;
+
+  let next = input.peek(len);
+  if (next == dot) return;
+
+  let term = null;
+  if (next == parenL) term = VariantConstructorArgsToken;
+  else if (next == colon) term = VariantConstructorResultToken;
+  else return;
+
+  for (let i = 0; i < len; i++) input.advance();
+  input.acceptToken(term);
+}, { contextual: true });
