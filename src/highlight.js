@@ -10,7 +10,7 @@ export const rescriptHighlight = styleTags({
   ModuleName: t.namespace,
   ConstructorName: t.className,
   PropertyName: t.propertyName,
-  Label: t.labelName,
+  LabelName: t.labelName,
   Number: t.number,
   String: t.string,
   Char: t.character,

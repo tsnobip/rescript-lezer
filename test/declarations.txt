@@ -1,0 +1,49 @@
+# Open statement
+
+open Belt.Option
+
+==>
+
+Script(OpenStatement(open,ModulePath(ConstructorName,".",ConstructorName)))
+
+# Include statement
+
+include MyLib
+
+==>
+
+Script(IncludeStatement(include,ModulePath(ConstructorName)))
+
+# External declaration
+
+external log: string => unit = "log"
+
+==>
+
+Script(ExternalDeclaration(external,VariableDefinition,":",FunctionType(TypeName,FunctionArrow("=>"),TypeName),"=",ExternalBody(String)))
+
+# Type declaration with record body
+
+type person<'a> = {name: string, data: 'a}
+
+==>
+
+Script(TypeDeclaration(type,TypeBinding(TypeName,TypeParams(TypeAngleLeftNode(CompareOp),TypeParam(TypeParameter(Quote("'"),VariableName)),TypeAngleRightNode(CompareOp)),"=",TypeBody(RecordType("{",RecordTypeField(PropertyDefinition,":",TypeName),",",RecordTypeField(PropertyDefinition,":",TypeParameter(Quote("'"),VariableName)),"}")))))
+
+# Sum type declaration
+
+type color =
+  | Red
+  | Green
+
+==>
+
+Script(TypeDeclaration(type,TypeBinding(TypeName,"=",TypeBody(SumType("|",ConstructorName,"|",ConstructorName)))))
+
+# Labeled call arguments
+
+makePerson(~name="Ada", ~data=?Some("ok"), unit)
+
+==>
+
+Script(CallExpression(VariableName,"(",Argument(LabeledArgument("~",LabelName,"=",ArgumentValue(String))),",",Argument(LabeledArgument("~",LabelName,"=",ArgumentValue("?",CallExpression(ConstructorName,"(",Argument(String),")")))),",",Argument(VariableName),")"))

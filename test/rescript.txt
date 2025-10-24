@@ -28,7 +28,7 @@ let add = (a, b) => a + b
 
 ==>
 
-Script(LetBinding(let,VariableDefinition,"=",ArrowFunction(ParamList("(",VariableName,",",VariableName,")"),"=>",BinaryExpression(VariableName,ArithOp,VariableName))))
+Script(LetBinding(let,VariableDefinition,"=",ArrowFunction(ParamList("(",ParamItems(UnlabeledParameter(SimpleParameter(VariableName)),",",SimpleParameter(VariableName)),")"),"=>",BinaryExpression(VariableName,ArithOp,VariableName))))
 
 # Boolean literals
 
@@ -61,7 +61,7 @@ log("Hello")
 
 ==>
 
-Script(CallExpression(VariableName,String))
+Script(CallExpression(VariableName,"(",Argument(String),")"))
 
 # Member expression
 

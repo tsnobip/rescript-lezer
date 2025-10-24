@@ -22,6 +22,9 @@ statement[@isGroup=Statement] {
   LetBinding |
   ModuleDeclaration |
   TypeDeclaration |
+  OpenStatement |
+  IncludeStatement |
+  ExternalDeclaration |
   expression
 }
 
@@ -33,26 +36,29 @@ ModuleBody {
   "{" statement* "}"
 }
 
+ModulePath {
+  ConstructorName ("." ConstructorName)*
+}
+
+OpenStatement {
+  kw<"open"> ModulePath
+}
+
+IncludeStatement {
+  kw<"include"> ModulePath
+}
+
+ExternalDeclaration {
+  kw<"external"> VariableDefinition ":" type "=" ExternalBody
+}
+
+ExternalBody {
+  String |
+  TemplateString
+}
+
 LetBinding {
-  kw<"let"> (kw<"rec">)? VariableDefinition parameterList? (":" type)? "=" expression
-}
-
-parameterList {
-  "(" commaSep<parameter> ")"
-}
-
-parameter {
-  LabeledParameter |
-  OptionalParameter |
-  VariableName
-}
-
-LabeledParameter {
-  "~" VariableName
-}
-
-OptionalParameter {
-  "~" VariableName "=" "?"
+  kw<"let"> (kw<"rec">)? VariableDefinition ParamList? (":" type)? "=" expression
 }
 
 SwitchExpression[@dynamicPrecedence=1] {
@@ -109,27 +115,45 @@ Pattern {
   VariableName |
   Number |
   String |
+  Char |
   boolean |
+  UnitPattern |
   ConstructorPattern |
   ArrayPattern |
+  ListPattern |
   RecordPattern |
+  PolyVariantPattern |
   ParenthesizedPattern
 }
 
+UnitPattern { "(" ")" }
+
 ConstructorPattern {
-  ConstructorName ("(" commaSep<Pattern> ")")?
+  ConstructorName PatternArguments?
 }
 
 ArrayPattern {
   "[" commaSep<Pattern> "]"
 }
 
+ListPattern {
+  kw<"list"> "{" commaSep<Pattern> "}"
+}
+
 RecordPattern {
-  "{" commaSep<PatternField> "}"
+  "{" commaSep1<PatternField> "}"
 }
 
 PatternField {
   PropertyName (":" Pattern)?
+}
+
+PolyVariantPattern {
+  Hash (ConstructorName | VariableName) PatternArguments?
+}
+
+PatternArguments {
+  "(" commaSep<Pattern> ")"
 }
 
 ParenthesizedPattern {
@@ -162,7 +186,7 @@ expression[@isGroup=Expression] {
       ParamList
     ) !arrow "=>" expression
   } |
-  CallExpression { expression !call "(" commaSep<expression> ")" } |
+  CallExpression { expression !call "(" commaSep<Argument> ")" } |
   MemberExpression { expression !member "." (PropertyName | ConstructorName) } |
   BinaryExpression {
     expression !times (ArithOp<"*"> | ArithOp<"/"> | ArithOp<"*."> | ArithOp<"/."> | kw<"mod">) expression |
@@ -186,8 +210,56 @@ Property {
   PropertyDefinition ":" expression
 }
 
+Argument {
+  LabeledArgument |
+  expression
+}
+
+LabeledArgument {
+  "~" LabelName ("=" ArgumentValue)?
+}
+
+ArgumentValue {
+  "?" expression? |
+  expression
+}
+
 ParamList {
-   "(" commaSep<parameter> ~parenthesized ")"
+  "(" DotUncurried? ParamItems? ")"
+}
+
+DotUncurried { "." }
+
+ParamItems {
+  LabeledParameterList |
+  UnlabeledParameter "," parameter ("," parameter?)*
+}
+
+LabeledParameterList {
+  LabeledParameter ("," parameter?)*
+}
+
+UnlabeledParameter { SimpleParameter }
+
+parameter {
+  LabeledParameter |
+  SimpleParameter
+}
+
+LabeledParameter {
+  "~" LabelName ParameterAnnotation? ParameterDefault?
+}
+
+SimpleParameter {
+  VariableName ParameterAnnotation? ParameterDefault?
+}
+
+ParameterAnnotation {
+  ":" type
+}
+
+ParameterDefault {
+  "=" ("?" expression? | expression)
 }
 
 ParenthesizedType { "(" type ")" }
@@ -197,7 +269,9 @@ Hash { "#" }
 
 TypeParameter { Quote VariableName }
 
-FunctionType { (TypeName | TypeParameter | ParenthesizedType) "->" type }
+FunctionType { (TypeName | TypeParameter | ParenthesizedType) FunctionArrow type }
+
+FunctionArrow { "->" | "=>" }
 
 type[@isGroup=Type] {
   TypeName |
@@ -218,7 +292,15 @@ TypeParams { TypeAngleLeftNode commaSep<TypeParam> TypeAngleRightNode }
 
 TypeParam { "_" | VariableDefinition | TypeParameter }
 
-VariantTag { Hash ConstructorName }
+RecordType {
+  "{" commaSep1<RecordTypeField> "}"
+}
+
+RecordTypeField {
+  PropertyDefinition ":" type
+}
+
+VariantTag { Hash (ConstructorName | VariableName) }
 
 // Variance marker for polymorphic variants: lower-bound '>' or upper-bound '<'
 VarianceLeftNode { CompareOp<"<"> }
@@ -232,15 +314,23 @@ VariantType {
 
 // Type declaration supports optional `rec` and optional type parameters
 TypeDeclaration {
-  kw<"type"> (kw<"rec">)? TypeName (TypeParams)? "=" (SumType | type)
+  kw<"type"> (kw<"rec">)? TypeBinding (kw<"and"> TypeBinding)*
 }
+
+TypeBinding {
+  TypeName (TypeParams)? "=" TypeBody
+}
+
+TypeBody {
+  SumType |
+  RecordType |
+  TypeAlias
+}
+
+TypeAlias { type }
 
 SumType {
-  "|" Constructor ("|" Constructor)*
-}
-
-Constructor {
-  ConstructorName !typearg ("(" type ")" ":" type | ":" type)?
+  "|" ConstructorName ("|" ConstructorName)*
 }
 
 commaSep<content> {
@@ -262,6 +352,7 @@ TypeName { identifier }
 ConstructorName { uppercaseIdentifier }
 PropertyName { identifier }
 PropertyDefinition { identifier }
+LabelName { identifier }
 
 @skip { spaces | newline | LineComment | BlockComment }
 
