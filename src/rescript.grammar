@@ -300,7 +300,7 @@ FunctionArrow { "->" | "=>" }
 type[@isGroup=Type] {
   TypeName |
   TypeParameter |
-  VariantType |
+  PolyVariantType |
   TypeApplication |
   ParenthesizedType |
   FunctionType
@@ -324,27 +324,27 @@ RecordTypeField {
   PropertyDefinition ":" type
 }
 
-VariantTag { Hash (ConstructorName | VariableName) }
+PolyVariantTag { Hash (ConstructorName | VariableName) }
 
 // Variance marker for polymorphic variants: lower-bound '>' or upper-bound '<'
-VarianceLeftNode { CompareOp<"<"> }
-VarianceRightNode { CompareOp<">"> }
-VarianceMarker { VarianceRightNode | VarianceLeftNode }
+PolyVariantVarianceLower { CompareOp<"<"> }
+PolyVariantVarianceUpper { CompareOp<">"> }
+PolyVariantVarianceMarker { PolyVariantVarianceUpper | PolyVariantVarianceLower }
 
-// VariantType: one-or-more variant tags separated by pipe `|` (e.g. [#A | #B])
-VariantType {
-  "[" VarianceMarker? VariantVariantList "]" (kw<"as"> TypeParameter)?
+// PolyVariantType: one-or-more variant tags separated by pipe `|` (e.g. [#A | #B])
+PolyVariantType {
+  "[" PolyVariantVarianceMarker? PolyVariantCaseList "]" (kw<"as"> TypeParameter)?
 }
 
-VariantVariantList {
-  ("|")? VariantVariant ("|" VariantVariant)*
+PolyVariantCaseList {
+  ("|")? PolyVariantCase ("|" PolyVariantCase)*
 }
 
-VariantVariant {
-  VariantTag VariantPayloadType?
+PolyVariantCase {
+  PolyVariantTag PolyVariantPayload?
 }
 
-VariantPayloadType {
+PolyVariantPayload {
   "(" commaSep1<type> ")"
 }
 
@@ -365,7 +365,7 @@ TypeBody {
 
 TypeAlias { type }
 
-SumType {
+SumType[@name=VariantType] {
   "|" Constructor ("|" Constructor)*
 }
 
