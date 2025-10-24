@@ -177,7 +177,9 @@ expression[@isGroup=Expression] {
   TemplateString |
   Char |
   boolean |
-  UnitLiteral |
+  ArrowFunction[@dynamicPrecedence=1] {
+    ArrowParam !arrow "=>" expression
+  } |
   VariableName |
   ConstructorName |
   ArrayExpression { "[" commaSep<expression> "]" } |
@@ -186,12 +188,9 @@ expression[@isGroup=Expression] {
   RecordExpression { "{" commaSep1<Property> "}" } |
   Decorator { "@" VariableName } |
   ExtensionExpression { "%" VariableName "(" commaSep<expression> ")" } |
-  ArrowFunction[@dynamicPrecedence=1] {
-    VariableName !arrow "=>" expression |
-    ParamList !arrow "=>" expression
-  } |
   CallExpression |
   MemberExpression |
+  UnitLiteral |
   BinaryExpression {
     expression !times (ArithOp<"*"> | ArithOp<"/"> | ArithOp<"*."> | ArithOp<"/."> | kw<"mod">) expression |
     expression !plus (ArithOp<"+"> | ArithOp<"-"> | ArithOp<"+."> | ArithOp<"-.">) expression |
@@ -212,8 +211,7 @@ MemberExpression {
 }
 
 CallExpression {
-  expression !call "(" commaSep<Argument> ")" |
-  expression !call UnitToken
+  expression !call "(" commaSep<Argument> ")"
 }
 
 MemberLeaf {
@@ -221,7 +219,7 @@ MemberLeaf {
   PropertyName
 }
 
-UnitLiteral { UnitToken }
+UnitLiteral { "(" ")" }
 
 DictEntry {
   String ":" expression
@@ -351,15 +349,7 @@ TypeBody {
 TypeAlias { type }
 
 SumType {
-  VariantArm VariantArm*
-}
-
-VariantArm {
-  "|" VariantConstructor VariantResult?
-}
-
-VariantResult {
-  ":" type
+  "|" VariantConstructor ("|" VariantConstructor)*
 }
 
 commaSep<content> {
@@ -424,8 +414,6 @@ Interpolation {
   
   identifier { $[a-z_] (identifierChar | @digit)* }
   
-  UnitToken { "()" }
-
   ModulePrefix { $[A-Z] (identifierChar | @digit)* ("." $[A-Z] (identifierChar | @digit)*)* "." }
   
   uppercaseIdentifier { $[A-Z] (identifierChar | @digit)* }
@@ -520,3 +508,6 @@ jsxAttributeValue {
 @external tokens jsx from "./tokens" { JSXStartTag, LessThan[@name=CompareOp] }
 
 @detectDelim
+ArrowParam {
+  ParamList
+}
