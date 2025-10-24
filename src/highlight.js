@@ -2,7 +2,7 @@ import { styleTags, tags as t } from "@lezer/highlight";
 
 export const rescriptHighlight = styleTags({
   "let rec module type open external exception mutable": t.definitionKeyword,
-  "if else switch when while for in to mod": t.controlKeyword,
+  "if else switch when while for in to downto try catch": t.controlKeyword,
   "true false": t.bool,
   VariableName: t.variableName,
   VariableDefinition: t.definition(t.variableName),

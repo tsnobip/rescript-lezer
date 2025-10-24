@@ -63,6 +63,40 @@ SwitchCase[@dynamicPrecedence=-1] {
   "|" Pattern (PatternGuard)? "=>" expression
 }
 
+IfExpression {
+  kw<"if"> expression BlockExpression ElseClause?
+}
+
+ElseClause {
+  kw<"else"> (IfExpression | BlockExpression)
+}
+
+WhileExpression {
+  kw<"while"> expression BlockExpression
+}
+
+ForExpression {
+  kw<"for"> Pattern kw<"in"> expression ForDirection expression BlockExpression
+}
+
+ForDirection {
+  kw<"to"> |
+  kw<"downto">
+}
+
+TryExpression {
+  kw<"try"> BlockExpression kw<"catch"> "{" SwitchCase* "}"
+}
+
+BlockExpression {
+  "{" blockItem* "}"
+}
+
+blockItem {
+  statement |
+  ";"
+}
+
 // Pattern guards may start with `if` or `when`. Any expression is allowed
 // inside the guard, so we accept a bare `expression` here. `if` is preferred.
 PatternGuard {
@@ -103,6 +137,12 @@ ParenthesizedPattern {
 }
 
 expression[@isGroup=Expression] {
+  IfExpression |
+  WhileExpression |
+  ForExpression |
+  TryExpression |
+  SwitchExpression |
+  BlockExpression |
   Number |
   String |
   TemplateString |
@@ -113,10 +153,9 @@ expression[@isGroup=Expression] {
   ArrayExpression { "[" commaSep<expression> "]" } |
   ListExpression { kw<"list"> "{" commaSep<expression> "}" } |
   DictExpression { kw<"dict"> "{" commaSep<DictEntry> "}" } |
-  RecordExpression { "{" commaSep<Property> "}" } |
+  RecordExpression { "{" commaSep1<Property> "}" } |
   Decorator { "@" VariableName } |
   ExtensionExpression { "%" VariableName "(" commaSep<expression> ")" } |
-  SwitchExpression |
   ArrowFunction[@dynamicPrecedence=1] {
     (
       VariableName |
@@ -206,6 +245,10 @@ Constructor {
 
 commaSep<content> {
   "" | content ("," content?)*
+}
+
+commaSep1<content> {
+  content ("," content?)*
 }
 
 // Keywords
