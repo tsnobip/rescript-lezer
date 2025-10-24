@@ -1,0 +1,23 @@
+# Simple JSX
+
+let el = <div>Hello</div>
+
+==>
+
+Script(LetBinding(let,LetValueBinding(VariableDefinition,"=",JSXElement(JSXOpenTag(JSXStartTag,JSXIdentifier,JSXEndTag),JSXText,JSXCloseTag(JSXStartCloseTag,JSXIdentifier,JSXEndTag)))))
+
+# Nested JSX with expression
+
+let nested = <div><span>Hi</span>{expr}</div>
+
+==>
+
+Script(LetBinding(let,LetValueBinding(VariableDefinition,"=",JSXElement(JSXOpenTag(JSXStartTag,JSXIdentifier,JSXEndTag),JSXElement(JSXOpenTag(JSXStartTag,JSXIdentifier,JSXEndTag),JSXText,JSXCloseTag(JSXStartCloseTag,JSXIdentifier,JSXEndTag)),JSXExpressionContainer("{",VariableName,"}"),JSXCloseTag(JSXStartCloseTag,JSXIdentifier,JSXEndTag)))))
+
+# Self-closing JSX
+
+let selfClosing = <img src="url" />
+
+==>
+
+Script(LetBinding(let,LetValueBinding(VariableDefinition,"=",JSXElement(JSXSelfClosingTag(JSXStartTag,JSXIdentifier,JSXAttribute(JSXIdentifier,"=",String),JSXSelfCloseEndTag)))))

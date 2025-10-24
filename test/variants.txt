@@ -9,14 +9,40 @@ type color =
 
 Script(TypeDeclaration(type,TypeBinding(TypeName,"=",TypeBody(VariantType("|",VariantConstructorCase(VariantConstructor(ConstructorName)),"|",VariantConstructorCase(VariantConstructorArgsToken,VariantConstructorArgs("(",TypeName,",",TypeName,",",TypeName,")")),"|",VariantConstructorCase(VariantConstructorResultToken,VariantConstructorResult(":",TypeName)))))))
 
-# Polymorphic variants
+# Nominal variants with spread
 
-type t = [
-  | #Foo
-  | #Bar(string, int)
-  | #Baz(baz)
-]
+type a =
+  | One
+  | Two
+  | Three
+
+type b =
+  | ...a
+  | Four
+  | Five
+
+let matchA = (b: b) =>
+  switch b {
+  | ...a as a => Some(a)
+  | _ => None
+  }
 
 ==>
 
-Script(TypeDeclaration(type,TypeBinding(TypeName,"=",TypeBody(TypeAlias(PolyVariantType("[",PolyVariantCaseList("|",PolyVariantCase(PolyVariantTag(Hash,ConstructorName)),"|",PolyVariantCase(PolyVariantTag(Hash,ConstructorName),PolyVariantPayload("(",TypeName,",",TypeName,")")),"|",PolyVariantCase(PolyVariantTag(Hash,ConstructorName),PolyVariantPayload("(",TypeName,")"))),"]"))))))
+Script(TypeDeclaration(type,TypeBinding(TypeName,"=",TypeBody(VariantType("|",VariantConstructorCase(VariantConstructor(ConstructorName)),"|",VariantConstructorCase(VariantConstructor(ConstructorName)),"|",VariantConstructorCase(VariantConstructor(ConstructorName)))))),TypeDeclaration(type,TypeBinding(TypeName,"=",TypeBody(VariantType("|",VariantConstructorCase(VariantSpreadCase(SpreadOperator,TypeName)),"|",VariantConstructorCase(VariantConstructor(ConstructorName)),"|",VariantConstructorCase(VariantConstructor(ConstructorName)))))),LetBinding(let,LetValueBinding(VariableDefinition,"=",ArrowFunction(ParamList("(",ParamItems(SingleAnnotatedParameter(VariableName,ParameterAnnotation(":",TypeName))),")"),"=>",SwitchExpression(switch,VariableName,"{",SwitchCase("|",Pattern(PatternPrimary(VariantSpreadPattern(SpreadOperator,TypeName)),PatternAlias(as,VariableName)),"=>",CallExpression(ConstructorName,"(",Argument(VariableName),")")),SwitchCase("|",Pattern(PatternPrimary(VariableName)),"=>",ConstructorName),"}")))))
+
+# Polymorphic variants
+
+type c = [#One | #Two | #Three]
+
+type d = [c | #Four | #Five]
+
+let matchC = (d: d) =>
+  switch d {
+  | #...c as c => Some(c)
+  | _ => None
+  }
+
+==>
+
+Script(TypeDeclaration(type,TypeBinding(TypeName,"=",TypeBody(TypeAlias(PolyVariantType("[",PolyVariantCaseList(PolyVariantCase(PolyVariantTagCase(PolyVariantTag(Hash,ConstructorName))),"|",PolyVariantCase(PolyVariantTagCase(PolyVariantTag(Hash,ConstructorName))),"|",PolyVariantCase(PolyVariantTagCase(PolyVariantTag(Hash,ConstructorName)))),"]"))))),TypeDeclaration(type,TypeBinding(TypeName,"=",TypeBody(TypeAlias(PolyVariantType("[",PolyVariantCaseList(PolyVariantCase(PolyVariantTypeReference(TypeName)),"|",PolyVariantCase(PolyVariantTagCase(PolyVariantTag(Hash,ConstructorName))),"|",PolyVariantCase(PolyVariantTagCase(PolyVariantTag(Hash,ConstructorName)))),"]"))))),LetBinding(let,LetValueBinding(VariableDefinition,"=",ArrowFunction(ParamList("(",ParamItems(SingleAnnotatedParameter(VariableName,ParameterAnnotation(":",TypeName))),")"),"=>",SwitchExpression(switch,VariableName,"{",SwitchCase("|",Pattern(PatternPrimary(PolyVariantSpreadPattern(Hash,SpreadOperator,TypeName)),PatternAlias(as,VariableName)),"=>",CallExpression(ConstructorName,"(",Argument(VariableName),")")),SwitchCase("|",Pattern(PatternPrimary(VariableName)),"=>",ConstructorName),"}")))))

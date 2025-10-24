@@ -49,13 +49,22 @@ ModuleSpec {
 }
 
 ModuleWithConstraint {
-  kw<"with"> kw<"type"> TypePath "=" type
+  kw<"with"> kw<"type"> TypeConstraintPath ConstraintOperator type |
+  kw<"with"> kw<"type"> TypeName ConstraintOperator type
 }
 
-TypePath {
-  ModulePrefix TypePath |
-  ConstructorName ("." ConstructorName)* "." TypeName |
-  TypeName
+TypeConstraintPath {
+  ConstructorName "." TypeConstraintRest
+}
+
+TypeConstraintRest {
+  TypeName |
+  ConstructorName "." TypeConstraintRest
+}
+
+ConstraintOperator {
+  "=" |
+  ":="
 }
 
 ModuleTypeExpr {
@@ -195,7 +204,17 @@ PatternGuard {
 }
 
 Pattern {
+  PatternPrimary PatternAlias?
+}
+
+PatternAlias {
+  kw<"as"> VariableName
+}
+
+PatternPrimary {
   Wildcard { "_" } |
+  VariantSpreadPattern |
+  PolyVariantSpreadPattern |
   VariableName |
   Number |
   String |
@@ -208,6 +227,10 @@ Pattern {
   RecordPattern |
   PolyVariantPattern |
   ParenthesizedPattern
+}
+
+VariantSpreadPattern {
+  SpreadOperator TypeName
 }
 
 UnitPattern { "(" ")" }
@@ -233,7 +256,11 @@ PatternField {
 }
 
 PolyVariantPattern {
-  Hash (VariantConstructor | VariableName) PatternArguments?
+  Hash (ConstructorName | VariableName) PatternArguments?
+}
+
+PolyVariantSpreadPattern {
+  Hash SpreadOperator TypeName
 }
 
 PatternArguments {
@@ -337,7 +364,12 @@ DotUncurried { "." }
 
 ParamItems {
   LabeledParameterList |
+  SingleAnnotatedParameter |
   UnlabeledParameter "," parameter ("," parameter?)*
+}
+
+SingleAnnotatedParameter {
+  VariableName (ParameterAnnotation ParameterDefault? | ParameterDefault)
 }
 
 LabeledParameterList {
@@ -422,11 +454,25 @@ PolyVariantCaseList {
 }
 
 PolyVariantCase {
-  PolyVariantTag PolyVariantPayload?
+  PolyVariantSpreadCase |
+  PolyVariantTagCase |
+  PolyVariantTypeReference
 }
 
 PolyVariantPayload {
   "(" commaSep1<type> ")"
+}
+
+PolyVariantTagCase {
+  PolyVariantTag PolyVariantPayload?
+}
+
+PolyVariantSpreadCase {
+  Hash SpreadOperator TypeName
+}
+
+PolyVariantTypeReference {
+  TypeName
 }
 
 // Type declaration supports optional `rec` and optional type parameters
@@ -451,9 +497,14 @@ VariantType {
 }
 
 VariantConstructorCase {
+  VariantSpreadCase |
   VariantConstructorArgsToken VariantConstructorArgs VariantConstructorResult? |
   VariantConstructorResultToken VariantConstructorResult |
   VariantConstructor
+}
+
+VariantSpreadCase {
+  SpreadOperator TypeName
 }
 
 VariantConstructorArgs {
@@ -531,10 +582,11 @@ Interpolation {
   ModulePrefix { $[A-Z] (identifierChar | @digit)* ("." $[A-Z] (identifierChar | @digit)*)* "." }
   
   UnitToken { "()" }
+  SpreadOperator { "..." }
   
   uppercaseIdentifier { $[A-Z] (identifierChar | @digit)* }
 
-  @precedence { ModulePrefix, UnitToken, uppercaseIdentifier }
+  @precedence { ModulePrefix, UnitToken, SpreadOperator, uppercaseIdentifier }
 
   @precedence { spaces, newline, identifier, "_" }
 
@@ -568,6 +620,7 @@ Interpolation {
   @precedence { LineComment, ArithOp }
 
   "=>"
+  "..."
   "("  ")" "[" "]" "{" "}"
   "." "," ":" ";"
   "=" "?" "|" "~" "'" "@" "%" "_" "`" "${" ":="
