@@ -54,12 +54,13 @@ ModuleWithConstraint {
 }
 
 TypeConstraintPath {
-  ConstructorName "." TypeConstraintRest
+  ModulePrefix TypeConstraintTail |
+  ConstructorName "." TypeConstraintTail
 }
 
-TypeConstraintRest {
-  TypeName |
-  ConstructorName "." TypeConstraintRest
+TypeConstraintTail {
+  ConstructorName "." TypeConstraintTail |
+  TypeName
 }
 
 ConstraintOperator {
