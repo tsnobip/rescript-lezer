@@ -276,7 +276,7 @@ ParenthesizedPattern {
   "(" Pattern ")"
 }
 
-expression[@isGroup=Expression] {
+expression {
   IfExpression |
   WhileExpression |
   ForExpression |
@@ -292,6 +292,7 @@ expression[@isGroup=Expression] {
   VariableName |
   VariantLiteral |
   PolyVariantLiteral |
+  UnitToken |
   ArrayExpression { "[" commaSep<expression> "]" } |
   ListExpression { kw<"list"> "{" commaSep<expression> "}" } |
   DictExpression { kw<"dict"> "{" commaSep<DictEntry> "}" } |
@@ -301,7 +302,6 @@ expression[@isGroup=Expression] {
   ModulePackExpression |
   CallExpression |
   MemberExpression |
-  UnitLiteral |
   BinaryExpression {
     expression !assign ":=" expression |
     expression !times (ArithOp<"*"> | ArithOp<"/"> | ArithOp<"*."> | ArithOp<"/."> | kw<"mod">) expression |
@@ -338,7 +338,6 @@ MemberLeaf {
   PropertyName
 }
 
-UnitLiteral[@dynamicPrecedence=-1] { UnitToken }
 
 DictEntry {
   String ":" expression
