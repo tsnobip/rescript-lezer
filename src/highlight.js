@@ -46,6 +46,7 @@ export const rescriptHighlight = styleTags({
   VariantConstructorCase: t.atom,
   VariantConstructor: t.atom,
   VariantSpreadCase: t.operator,
+  VariantLiteral: t.atom,
 
   PolyVariantType: t.typeName,
   PolyVariantCaseList: t.typeName,
@@ -56,6 +57,7 @@ export const rescriptHighlight = styleTags({
   PolyVariantVarianceMarker: t.operator,
   PolyVariantLiteral: t.atom,
   PolyVariantTag: t.atom,
+  PolyVariantName: t.atom,
 
   PatternGuard: t.controlKeyword,
   VariantSpreadPattern: t.operator,

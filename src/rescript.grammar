@@ -1,5 +1,6 @@
 @precedence {
   member,
+  variant,
   polyvariant,
   call,
   prefix,
@@ -255,6 +256,14 @@ PatternArguments {
   "(" commaSep<Pattern> ")"
 }
 
+VariantLiteral {
+  VariantConstructor VariantArguments?
+}
+
+VariantArguments {
+  !variant "(" commaSep<expression> ")"
+}
+
 PolyVariantLiteral {
   PolyVariantTag PolyVariantArguments?
 }
@@ -281,7 +290,7 @@ expression[@isGroup=Expression] {
   boolean |
   ArrowFunction |
   VariableName |
-  VariantConstructor |
+  VariantLiteral |
   PolyVariantLiteral |
   ArrayExpression { "[" commaSep<expression> "]" } |
   ListExpression { kw<"list"> "{" commaSep<expression> "}" } |
@@ -542,7 +551,7 @@ LabelName { identifier }
 
 @skip {} {
   String[isolate] {
-    '"' (stringContentDouble | Escape)* ('"' | "\n")
+    '"' (stringContentDouble | Escape)* '"'
   }
   
   TemplateString[isolate] {
@@ -577,7 +586,7 @@ Interpolation {
   identifier { $[a-z_] (identifierChar | @digit)* }
   
   ModulePrefix { $[A-Z] (identifierChar | @digit)* ("." $[A-Z] (identifierChar | @digit)*)* "." }
-  exoticIdentifier { "\\\"" (!["\\\n] | Escape)* "\"" }
+  exoticIdentifier { "\\\"" (!["\\\n] | ExoticEscape)* "\"" }
   UnitToken { "()" }
   SpreadOperator { "..." }
   
@@ -604,7 +613,11 @@ Interpolation {
     "\\" ("x" $[0-9a-fA-F] $[0-9a-fA-F] | "u" ("{" $[0-9a-fA-F]+ "}" | $[0-9a-fA-F] $[0-9a-fA-F] $[0-9a-fA-F] $[0-9a-fA-F]) | ![xu])
   }
 
-  stringContentDouble { ![\\\n"]+ }
+  ExoticEscape {
+    "\\" ("x" $[0-9a-fA-F] $[0-9a-fA-F] | "u" ("{" $[0-9a-fA-F]+ "}" | $[0-9a-fA-F] $[0-9a-fA-F] $[0-9a-fA-F] $[0-9a-fA-F]) | ![xu\n])
+  }
+
+  stringContentDouble { ![\\"]+ }
 
   ArithOp<expr> { expr }
   LogicOp<expr> { expr }

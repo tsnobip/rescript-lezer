@@ -95,6 +95,15 @@ let greeting = "Hello, World!"
 
 Script(LetBinding(let,LetValueBinding(VariableDefinition,"=",String)))
 
+# Multiline string
+
+let multiline = "Hello
+World"
+
+==>
+
+Script(LetBinding(let,LetValueBinding(VariableDefinition,"=",String)))
+
 # Number literal
 
 let pi = 3.14
