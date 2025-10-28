@@ -41,4 +41,4 @@ try {
 
 ==>
 
-Script(TryExpression(try,BlockExpression("{",CallExpression(VariableName,UnitToken),"}"),catch,"{",SwitchCase("|",Pattern(PatternPrimary(ConstructorPattern(VariantConstructor(ConstructorName),PatternArguments("(",Pattern(PatternPrimary(VariableName)),")")))),"=>",CallExpression(VariableName,"(",Argument(VariableName),")")),SwitchCase("|",Pattern(PatternPrimary(ConstructorPattern(VariantConstructor(ConstructorName)))),"=>",UnitLiteral(UnitToken)),"}"))
+Script(TryExpression(try,BlockExpression("{",CallExpression(VariableName,UnitToken),"}"),catch,"{",SwitchCase("|",Pattern(PatternPrimary(ConstructorPattern(VariantConstructor,PatternArguments("(",Pattern(PatternPrimary(VariableName)),")")))),"=>",CallExpression(VariableName,"(",Argument(VariableName),")")),SwitchCase("|",Pattern(PatternPrimary(ConstructorPattern(VariantConstructor))),"=>",UnitLiteral(UnitToken)),"}"))

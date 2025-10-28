@@ -123,3 +123,11 @@ let comparison = a < b
 ==>
 
 Script(LetBinding(let,LetValueBinding(VariableDefinition,"=",BinaryExpression(VariableName,ArithOp,VariableName))),LetBinding(let,LetValueBinding(VariableDefinition,"=",BinaryExpression(VariableName,ArithOp,VariableName))),LetBinding(let,LetValueBinding(VariableDefinition,"=",BinaryExpression(VariableName,CompareOp,VariableName))))
+
+# Exotic variable name
+
+let \"🚀" = "bar"
+
+==>
+
+Script(LetBinding(let,LetValueBinding(VariableDefinition,"=",String)))

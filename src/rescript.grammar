@@ -1,5 +1,6 @@
 @precedence {
   member,
+  polyvariant,
   call,
   prefix,
   times @left,
@@ -243,7 +244,7 @@ PatternField {
 }
 
 PolyVariantPattern {
-  Hash (uppercaseIdentifier | identifier) PatternArguments?
+  PolyVariantTag PatternArguments?
 }
 
 PolyVariantSpreadPattern {
@@ -252,6 +253,14 @@ PolyVariantSpreadPattern {
 
 PatternArguments {
   "(" commaSep<Pattern> ")"
+}
+
+PolyVariantLiteral {
+  PolyVariantTag PolyVariantArguments?
+}
+
+PolyVariantArguments {
+  !polyvariant "(" commaSep<expression> ")"
 }
 
 ParenthesizedPattern {
@@ -272,7 +281,8 @@ expression[@isGroup=Expression] {
   boolean |
   ArrowFunction |
   VariableName |
-  ConstructorName |
+  VariantConstructor |
+  PolyVariantLiteral |
   ArrayExpression { "[" commaSep<expression> "]" } |
   ListExpression { kw<"list"> "{" commaSep<expression> "}" } |
   DictExpression { kw<"dict"> "{" commaSep<DictEntry> "}" } |
@@ -424,7 +434,8 @@ RecordTypeField {
   PropertyDefinition ":" type
 }
 
-PolyVariantTag { Hash (ConstructorName | VariableName) }
+PolyVariantName { uppercaseIdentifier | identifier | String }
+PolyVariantTag { Hash PolyVariantName }
 
 // Variance marker for polymorphic variants: lower-bound '>' or upper-bound '<'
 PolyVariantVarianceLower { CompareOp<"<"> }
@@ -515,11 +526,10 @@ kw<term> { @specialize[@name={term}]<identifier, term> }
 
 boolean { @specialize[@name=BooleanLiteral]<identifier, "true" | "false"> }
 
-VariableName { identifier }
-VariableDefinition { identifier }
+VariableName { identifier | exoticIdentifier }
+VariableDefinition { identifier | exoticIdentifier }
 TypeName { identifier }
-ConstructorName { uppercaseIdentifier }
-VariantConstructor { ConstructorName }
+VariantConstructor { uppercaseIdentifier }
 PropertyName { identifier }
 PropertyDefinition { identifier }
 LabelName { identifier }
@@ -567,6 +577,7 @@ Interpolation {
   identifier { $[a-z_] (identifierChar | @digit)* }
   
   ModulePrefix { $[A-Z] (identifierChar | @digit)* ("." $[A-Z] (identifierChar | @digit)*)* "." }
+  exoticIdentifier { "\\\"" (!["\\\n] | Escape)* "\"" }
   UnitToken { "()" }
   SpreadOperator { "..." }
   

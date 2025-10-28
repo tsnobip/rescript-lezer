@@ -7,7 +7,7 @@ type color =
 
 ==>
 
-Script(TypeDeclaration(type,TypeBinding(TypeName,"=",TypeBody(VariantType("|",VariantConstructorCase(VariantConstructor(ConstructorName)),"|",VariantConstructorCase(VariantConstructorArgsToken,VariantConstructorArgs("(",TypeName,",",TypeName,",",TypeName,")")),"|",VariantConstructorCase(VariantConstructorResultToken,VariantConstructorResult(":",TypeName)))))))
+Script(TypeDeclaration(type,TypeBinding(TypeName,"=",TypeBody(VariantType("|",VariantConstructorCase(VariantConstructor),"|",VariantConstructorCase(VariantConstructorArgsToken,VariantConstructorArgs("(",TypeName,",",TypeName,",",TypeName,")")),"|",VariantConstructorCase(VariantConstructorResultToken,VariantConstructorResult(":",TypeName)))))))
 
 # Nominal variants with spread
 
@@ -29,7 +29,7 @@ let matchA = (b: b) =>
 
 ==>
 
-Script(TypeDeclaration(type,TypeBinding(TypeName,"=",TypeBody(VariantType("|",VariantConstructorCase(VariantConstructor(ConstructorName)),"|",VariantConstructorCase(VariantConstructor(ConstructorName)),"|",VariantConstructorCase(VariantConstructor(ConstructorName)))))),TypeDeclaration(type,TypeBinding(TypeName,"=",TypeBody(VariantType("|",VariantConstructorCase(VariantSpreadCase(SpreadOperator,TypeName)),"|",VariantConstructorCase(VariantConstructor(ConstructorName)),"|",VariantConstructorCase(VariantConstructor(ConstructorName)))))),LetBinding(let,LetValueBinding(VariableDefinition,"=",ArrowFunction(ParamList("(",ParamItems(SingleAnnotatedParameter(VariableName,ParameterAnnotation(":",TypeName))),")"),"=>",SwitchExpression(switch,VariableName,"{",SwitchCase("|",Pattern(PatternPrimary(VariantSpreadPattern(SpreadOperator,TypeName)),PatternAlias(as,VariableName)),"=>",CallExpression(ConstructorName,"(",Argument(VariableName),")")),SwitchCase("|",Pattern(PatternPrimary(VariableName)),"=>",ConstructorName),"}")))))
+Script(TypeDeclaration(type,TypeBinding(TypeName,"=",TypeBody(VariantType("|",VariantConstructorCase(VariantConstructor),"|",VariantConstructorCase(VariantConstructor),"|",VariantConstructorCase(VariantConstructor))))),TypeDeclaration(type,TypeBinding(TypeName,"=",TypeBody(VariantType("|",VariantConstructorCase(VariantSpreadCase(SpreadOperator,TypeName)),"|",VariantConstructorCase(VariantConstructor),"|",VariantConstructorCase(VariantConstructor))))),LetBinding(let,LetValueBinding(VariableDefinition,"=",ArrowFunction(ParamList("(",ParamItems(SingleAnnotatedParameter(VariableName,ParameterAnnotation(":",TypeName))),")"),"=>",SwitchExpression(switch,VariableName,"{",SwitchCase("|",Pattern(PatternPrimary(VariantSpreadPattern(SpreadOperator,TypeName)),PatternAlias(as,VariableName)),"=>",CallExpression(VariantConstructor,"(",Argument(VariableName),")")),SwitchCase("|",Pattern(PatternPrimary(VariableName)),"=>",VariantConstructor),"}")))))
 
 # Polymorphic variants
 
@@ -45,4 +45,12 @@ let matchC = (d: d) =>
 
 ==>
 
-Script(TypeDeclaration(type,TypeBinding(TypeName,"=",TypeBody(TypeAlias(PolyVariantType("[",PolyVariantCaseList(PolyVariantCase(PolyVariantTagCase(PolyVariantTag(Hash,ConstructorName))),"|",PolyVariantCase(PolyVariantTagCase(PolyVariantTag(Hash,ConstructorName))),"|",PolyVariantCase(PolyVariantTagCase(PolyVariantTag(Hash,ConstructorName)))),"]"))))),TypeDeclaration(type,TypeBinding(TypeName,"=",TypeBody(TypeAlias(PolyVariantType("[",PolyVariantCaseList(PolyVariantCase(PolyVariantTypeReference(TypeName)),"|",PolyVariantCase(PolyVariantTagCase(PolyVariantTag(Hash,ConstructorName))),"|",PolyVariantCase(PolyVariantTagCase(PolyVariantTag(Hash,ConstructorName)))),"]"))))),LetBinding(let,LetValueBinding(VariableDefinition,"=",ArrowFunction(ParamList("(",ParamItems(SingleAnnotatedParameter(VariableName,ParameterAnnotation(":",TypeName))),")"),"=>",SwitchExpression(switch,VariableName,"{",SwitchCase("|",Pattern(PatternPrimary(PolyVariantSpreadPattern(Hash,SpreadOperator,TypeName)),PatternAlias(as,VariableName)),"=>",CallExpression(ConstructorName,"(",Argument(VariableName),")")),SwitchCase("|",Pattern(PatternPrimary(VariableName)),"=>",ConstructorName),"}")))))
+Script(TypeDeclaration(type,TypeBinding(TypeName,"=",TypeBody(TypeAlias(PolyVariantType("[",PolyVariantCaseList(PolyVariantCase(PolyVariantTagCase(PolyVariantTag(Hash,PolyVariantName))),"|",PolyVariantCase(PolyVariantTagCase(PolyVariantTag(Hash,PolyVariantName))),"|",PolyVariantCase(PolyVariantTagCase(PolyVariantTag(Hash,PolyVariantName)))),"]"))))),TypeDeclaration(type,TypeBinding(TypeName,"=",TypeBody(TypeAlias(PolyVariantType("[",PolyVariantCaseList(PolyVariantCase(PolyVariantTypeReference(TypeName)),"|",PolyVariantCase(PolyVariantTagCase(PolyVariantTag(Hash,PolyVariantName))),"|",PolyVariantCase(PolyVariantTagCase(PolyVariantTag(Hash,PolyVariantName)))),"]"))))),LetBinding(let,LetValueBinding(VariableDefinition,"=",ArrowFunction(ParamList("(",ParamItems(SingleAnnotatedParameter(VariableName,ParameterAnnotation(":",TypeName))),")"),"=>",SwitchExpression(switch,VariableName,"{",SwitchCase("|",Pattern(PatternPrimary(PolyVariantSpreadPattern(Hash,SpreadOperator,TypeName)),PatternAlias(as,VariableName)),"=>",CallExpression(VariantConstructor,"(",Argument(VariableName),")")),SwitchCase("|",Pattern(PatternPrimary(VariableName)),"=>",VariantConstructor),"}")))))
+
+# Exotic polymorphic variant tag
+
+let tag = #"🚀"
+
+==>
+
+Script(LetBinding(let,LetValueBinding(VariableDefinition,"=",PolyVariantLiteral(PolyVariantTag(Hash,PolyVariantName(String))))))

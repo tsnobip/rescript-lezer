@@ -38,7 +38,7 @@ type color =
 
 ==>
 
-Script(TypeDeclaration(type,TypeBinding(TypeName,"=",TypeBody(VariantType("|",VariantConstructorCase(VariantConstructor(ConstructorName)),"|",VariantConstructorCase(VariantConstructor(ConstructorName)))))))
+Script(TypeDeclaration(type,TypeBinding(TypeName,"=",TypeBody(VariantType("|",VariantConstructorCase(VariantConstructor),"|",VariantConstructorCase(VariantConstructor))))))
 
 # Labeled call arguments
 
@@ -46,7 +46,7 @@ makePerson(~name="Ada", ~data=?Some("ok"), ())
 
 ==>
 
-Script(CallExpression(VariableName,"(",Argument(LabeledArgument("~",LabelName,"=",ArgumentValue(String))),",",Argument(LabeledArgument("~",LabelName,"=",ArgumentValue("?",CallExpression(ConstructorName,"(",Argument(String),")")))),",",Argument(UnitLiteral(UnitToken)),")"))
+Script(CallExpression(VariableName,"(",Argument(LabeledArgument("~",LabelName,"=",ArgumentValue(String))),",",Argument(LabeledArgument("~",LabelName,"=",ArgumentValue("?",CallExpression(VariantConstructor,"(",Argument(String),")")))),",",Argument(UnitLiteral(UnitToken)),")"))
 
 # Module constructor expression
 
@@ -54,4 +54,4 @@ Result.Ok("foo")
 
 ==>
 
-Script(CallExpression(MemberExpression(ModulePrefix,MemberLeaf(VariantConstructor(ConstructorName))),"(",Argument(String),")"))
+Script(CallExpression(MemberExpression(ModulePrefix,MemberLeaf(VariantConstructor)),"(",Argument(String),")"))
