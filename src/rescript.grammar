@@ -292,6 +292,7 @@ expression {
   VariableName |
   VariantLiteral |
   PolyVariantLiteral |
+  RegExpLiteral |
   UnitToken |
   ArrayExpression { "[" commaSep<expression> "]" } |
   ListExpression { kw<"list"> "{" commaSep<expression> "}" } |
@@ -617,6 +618,40 @@ Interpolation {
   }
 
   stringContentDouble { ![\\"]+ }
+  
+  RegExpLiteral {
+    "/" RegExpFirstChunk RegExpBody "/" RegExpFlags?
+  }
+
+  RegExpFirstChunk {
+    RegExpClass |
+    RegExpBackslash |
+    RegExpStartChar
+  }
+
+  RegExpStartChar { ![*/\n[] }
+
+  RegExpBody { RegExpChunk* }
+
+  RegExpChunk {
+    RegExpBackslash |
+    RegExpClass |
+    RegExpChar
+  }
+
+  RegExpBackslash { "\\" _ }
+
+  RegExpClass { "[" RegExpClassChunk* "]" }
+
+  RegExpClassChunk { RegExpClassBackslash | RegExpClassChar }
+
+  RegExpClassBackslash { "\\" _ }
+
+  RegExpClassChar { ![\]\n] }
+
+  RegExpChar { ![\\/\n[] }
+
+  RegExpFlags { $[a-zA-Z]+ }
 
   ArithOp<expr> { expr }
   LogicOp<expr> { expr }
@@ -626,7 +661,7 @@ Interpolation {
   
   templateText { ![\`$]+ | "$" ![\{] }
 
-  @precedence { LineComment, ArithOp }
+  @precedence { LineComment, RegExpLiteral, ArithOp }
 
   "=>"
   "..."

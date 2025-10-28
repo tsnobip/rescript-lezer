@@ -140,3 +140,12 @@ let \"🚀" = "bar"
 ==>
 
 Script(LetBinding(let,LetValueBinding(VariableDefinition,"=",String)))
+
+# RegExp literals
+
+let matcher = /\w+/g
+let escaped = /a\/b/i
+
+==>
+
+Script(LetBinding(let,LetValueBinding(VariableDefinition,"=",RegExpLiteral)),LetBinding(let,LetValueBinding(VariableDefinition,"=",RegExpLiteral)))
