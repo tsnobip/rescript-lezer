@@ -49,8 +49,7 @@ ModuleSpec {
 }
 
 ModuleWithConstraint {
-  kw<"with"> kw<"type"> ModulePrefix TypeName ConstraintOperator type |
-  kw<"with"> kw<"type"> TypeName ConstraintOperator type
+  kw<"with"> kw<"type"> ModulePrefix? TypeName ConstraintOperator type
 }
 
 ConstraintOperator {
@@ -68,6 +67,8 @@ ModuleExpression {
   ModulePath |
   ModulePackExpression
 }
+
+ModuleName { uppercaseIdentifier }
 
 ModulePackExpression {
   kw<"module"> "(" ModulePackContent ")"
@@ -105,15 +106,8 @@ ValueSpec {
 }
 
 ModulePath {
-  ModulePrefix ModulePathTail |
-  ConstructorName ("." ConstructorName)*
+  ModulePrefix? ModuleName
 }
-
-ModulePathTail {
-  ConstructorName ("." ConstructorName)*
-}
-
-ModuleName { ConstructorName }
 
 OpenStatement {
   kw<"open"> ModulePath

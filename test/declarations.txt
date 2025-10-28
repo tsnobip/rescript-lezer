@@ -4,7 +4,7 @@ open Stdlib.Option
 
 ==>
 
-Script(OpenStatement(open,ModulePath(ModulePrefix,ModulePathTail(ConstructorName))))
+Script(OpenStatement(open,ModulePath(ModulePrefix,ModuleName)))
 
 # Include statement
 
@@ -12,7 +12,7 @@ include Stdlib.List
 
 ==>
 
-Script(IncludeStatement(include,ModulePath(ModulePrefix,ModulePathTail(ConstructorName))))
+Script(IncludeStatement(include,ModulePath(ModulePrefix,ModuleName)))
 
 # External declaration
 
