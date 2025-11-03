@@ -1,5 +1,7 @@
 @precedence {
   member,
+  variant,
+  polyvariant,
   call,
   prefix,
   times @left,
@@ -49,8 +51,7 @@ ModuleSpec {
 }
 
 ModuleWithConstraint {
-  kw<"with"> kw<"type"> ModulePrefix TypeName ConstraintOperator type |
-  kw<"with"> kw<"type"> TypeName ConstraintOperator type
+  kw<"with"> kw<"type"> ModulePrefix? TypeName ConstraintOperator type
 }
 
 ConstraintOperator {
@@ -68,6 +69,8 @@ ModuleExpression {
   ModulePath |
   ModulePackExpression
 }
+
+ModuleName { uppercaseIdentifier }
 
 ModulePackExpression {
   kw<"module"> "(" ModulePackContent ")"
@@ -105,15 +108,8 @@ ValueSpec {
 }
 
 ModulePath {
-  ModulePrefix ModulePathTail |
-  ConstructorName ("." ConstructorName)*
+  ModulePrefix? ModuleName
 }
-
-ModulePathTail {
-  ConstructorName ("." ConstructorName)*
-}
-
-ModuleName { ConstructorName }
 
 OpenStatement {
   kw<"open"> ModulePath
@@ -249,7 +245,7 @@ PatternField {
 }
 
 PolyVariantPattern {
-  Hash (ConstructorName | VariableName) PatternArguments?
+  PolyVariantTag PatternArguments?
 }
 
 PolyVariantSpreadPattern {
@@ -260,11 +256,27 @@ PatternArguments {
   "(" commaSep<Pattern> ")"
 }
 
+VariantLiteral {
+  VariantConstructor VariantArguments?
+}
+
+VariantArguments {
+  !variant "(" commaSep<expression> ")"
+}
+
+PolyVariantLiteral {
+  PolyVariantTag PolyVariantArguments?
+}
+
+PolyVariantArguments {
+  !polyvariant "(" commaSep<expression> ")"
+}
+
 ParenthesizedPattern {
   "(" Pattern ")"
 }
 
-expression[@isGroup=Expression] {
+expression {
   IfExpression |
   WhileExpression |
   ForExpression |
@@ -278,7 +290,10 @@ expression[@isGroup=Expression] {
   boolean |
   ArrowFunction |
   VariableName |
-  ConstructorName |
+  VariantLiteral |
+  PolyVariantLiteral |
+  RegExpLiteral |
+  UnitToken |
   ArrayExpression { "[" commaSep<expression> "]" } |
   ListExpression { kw<"list"> "{" commaSep<expression> "}" } |
   DictExpression { kw<"dict"> "{" commaSep<DictEntry> "}" } |
@@ -288,7 +303,6 @@ expression[@isGroup=Expression] {
   ModulePackExpression |
   CallExpression |
   MemberExpression |
-  UnitLiteral |
   BinaryExpression {
     expression !assign ":=" expression |
     expression !times (ArithOp<"*"> | ArithOp<"/"> | ArithOp<"*."> | ArithOp<"/."> | kw<"mod">) expression |
@@ -325,7 +339,6 @@ MemberLeaf {
   PropertyName
 }
 
-UnitLiteral[@dynamicPrecedence=-1] { UnitToken }
 
 DictEntry {
   String ":" expression
@@ -430,7 +443,8 @@ RecordTypeField {
   PropertyDefinition ":" type
 }
 
-PolyVariantTag { Hash (ConstructorName | VariableName) }
+PolyVariantName { uppercaseIdentifier | identifier | String }
+PolyVariantTag { Hash PolyVariantName }
 
 // Variance marker for polymorphic variants: lower-bound '>' or upper-bound '<'
 PolyVariantVarianceLower { CompareOp<"<"> }
@@ -521,11 +535,10 @@ kw<term> { @specialize[@name={term}]<identifier, term> }
 
 boolean { @specialize[@name=BooleanLiteral]<identifier, "true" | "false"> }
 
-VariableName { identifier }
-VariableDefinition { identifier }
+VariableName { identifier | exoticIdentifier }
+VariableDefinition { identifier | exoticIdentifier }
 TypeName { identifier }
-ConstructorName { uppercaseIdentifier }
-VariantConstructor { ConstructorName }
+VariantConstructor { uppercaseIdentifier }
 PropertyName { identifier }
 PropertyDefinition { identifier }
 LabelName { identifier }
@@ -538,7 +551,7 @@ LabelName { identifier }
 
 @skip {} {
   String[isolate] {
-    '"' (stringContentDouble | Escape)* ('"' | "\n")
+    '"' (stringContentDouble | Escape)* '"'
   }
   
   TemplateString[isolate] {
@@ -573,6 +586,7 @@ Interpolation {
   identifier { $[a-z_] (identifierChar | @digit)* }
   
   ModulePrefix { $[A-Z] (identifierChar | @digit)* ("." $[A-Z] (identifierChar | @digit)*)* "." }
+  exoticIdentifier { "\\\"" (!["\\\n] | ExoticEscape)* "\"" }
   UnitToken { "()" }
   SpreadOperator { "..." }
   
@@ -599,7 +613,45 @@ Interpolation {
     "\\" ("x" $[0-9a-fA-F] $[0-9a-fA-F] | "u" ("{" $[0-9a-fA-F]+ "}" | $[0-9a-fA-F] $[0-9a-fA-F] $[0-9a-fA-F] $[0-9a-fA-F]) | ![xu])
   }
 
-  stringContentDouble { ![\\\n"]+ }
+  ExoticEscape {
+    "\\" ("x" $[0-9a-fA-F] $[0-9a-fA-F] | "u" ("{" $[0-9a-fA-F]+ "}" | $[0-9a-fA-F] $[0-9a-fA-F] $[0-9a-fA-F] $[0-9a-fA-F]) | ![xu\n])
+  }
+
+  stringContentDouble { ![\\"]+ }
+  
+  RegExpLiteral {
+    "/" RegExpFirstChunk RegExpBody "/" RegExpFlags?
+  }
+
+  RegExpFirstChunk {
+    RegExpClass |
+    RegExpBackslash |
+    RegExpStartChar
+  }
+
+  RegExpStartChar { ![*/\n[] }
+
+  RegExpBody { RegExpChunk* }
+
+  RegExpChunk {
+    RegExpBackslash |
+    RegExpClass |
+    RegExpChar
+  }
+
+  RegExpBackslash { "\\" _ }
+
+  RegExpClass { "[" RegExpClassChunk* "]" }
+
+  RegExpClassChunk { RegExpClassBackslash | RegExpClassChar }
+
+  RegExpClassBackslash { "\\" _ }
+
+  RegExpClassChar { ![\]\n] }
+
+  RegExpChar { ![\\/\n[] }
+
+  RegExpFlags { $[a-zA-Z]+ }
 
   ArithOp<expr> { expr }
   LogicOp<expr> { expr }
@@ -609,7 +661,7 @@ Interpolation {
   
   templateText { ![\`$]+ | "$" ![\{] }
 
-  @precedence { LineComment, ArithOp }
+  @precedence { LineComment, RegExpLiteral, ArithOp }
 
   "=>"
   "..."

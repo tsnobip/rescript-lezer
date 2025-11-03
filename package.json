@@ -1,6 +1,6 @@
 {
   "name": "@tsnobip/rescript-lezer",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "lezer-based ReScript grammar",
   "main": "dist/index.cjs",
   "type": "module",
