@@ -1,18 +1,18 @@
 # Simple JSX
 
-let el = <div>Hello</div>
+let el = <div>{hello}</div>
 
 ==>
 
-Script(LetBinding(let,LetValueBinding(VariableDefinition,"=",JSXElement(JSXOpenTag(JSXStartTag,JSXIntrinsicElementName(JSXIdentifier),JSXEndTag),JSXText,JSXCloseTag(JSXStartCloseTag,JSXIntrinsicElementName(JSXIdentifier),JSXEndTag)))))
+Script(LetBinding(let,LetValueBinding(VariableDefinition,"=",JSXElement(JSXOpenTag(JSXStartTag,JSXIntrinsicElementName(JSXIdentifier),JSXEndTag),JSXExpressionContainer(VariableName),JSXCloseTag(JSXStartCloseTag,JSXIntrinsicElementName(JSXIdentifier),JSXEndTag)))))
 
 # Nested JSX with expression
 
-let nested = <div><span>Hi</span>{expr}</div>
+let nested = <div><span>{React.string("Hi")}</span>{expr}</div>
 
 ==>
 
-Script(LetBinding(let,LetValueBinding(VariableDefinition,"=",JSXElement(JSXOpenTag(JSXStartTag,JSXIntrinsicElementName(JSXIdentifier),JSXEndTag),JSXElement(JSXOpenTag(JSXStartTag,JSXIntrinsicElementName(JSXIdentifier),JSXEndTag),JSXText,JSXCloseTag(JSXStartCloseTag,JSXIntrinsicElementName(JSXIdentifier),JSXEndTag)),JSXExpressionContainer("{",VariableName,"}"),JSXCloseTag(JSXStartCloseTag,JSXIntrinsicElementName(JSXIdentifier),JSXEndTag)))))
+Script(LetBinding(let,LetValueBinding(VariableDefinition,"=",JSXElement(JSXOpenTag(JSXStartTag,JSXIntrinsicElementName(JSXIdentifier),JSXEndTag),JSXElement(JSXOpenTag(JSXStartTag,JSXIntrinsicElementName(JSXIdentifier),JSXEndTag),JSXExpressionContainer("{",CallExpression(MemberExpression(ModulePrefix,MemberLeaf(VariableName)),"(",Argument(String),")"),"}"),JSXCloseTag(JSXStartCloseTag,JSXIntrinsicElementName(JSXIdentifier),JSXEndTag)),JSXExpressionContainer("{",VariableName,"}"),JSXCloseTag(JSXStartCloseTag,JSXIntrinsicElementName(JSXIdentifier),JSXEndTag)))))
 
 # Self-closing JSX
 
@@ -24,11 +24,11 @@ Script(LetBinding(let,LetValueBinding(VariableDefinition,"=",JSXElement(JSXSelfC
 
 # Uppercase JSX component
 
-let comp = <MyComponent>Hello</MyComponent>
+let comp = <MyComponent>{hello}</MyComponent>
 
 ==>
 
-Script(LetBinding(let,LetValueBinding(VariableDefinition,"=",JSXElement(JSXOpenTag(JSXStartTag,JSXCustomComponentName(ModulePath(ModuleName)),JSXEndTag),JSXText,JSXCloseTag(JSXStartCloseTag,JSXCustomComponentName(ModulePath(ModuleName)),JSXEndTag)))))
+Script(LetBinding(let,LetValueBinding(VariableDefinition,"=",JSXElement(JSXOpenTag(JSXStartTag,JSXCustomComponentName(ModulePath(ModuleName)),JSXEndTag),JSXExpressionContainer(VariableName),JSXCloseTag(JSXStartCloseTag,JSXCustomComponentName(ModulePath(ModuleName)),JSXEndTag)))))
 
 # Uppercase JSX member expression
 
