@@ -1,9 +1,9 @@
 import { styleTags, tags as t } from "@lezer/highlight";
 
 export const rescriptHighlight = styleTags({
-  "let type external exception": t.definitionKeyword,
+  "let type external exception :=": t.definitionKeyword,
   "if else switch when while for in to downto try catch": t.controlKeyword,
-  "module open include": t.moduleKeyword,
+  "module open include with": t.moduleKeyword,
   "private rec mutable": t.typeOperator,
   await: t.operatorKeyword,
 
@@ -27,6 +27,7 @@ export const rescriptHighlight = styleTags({
 
   TypeDeclaration: t.definition(t.typeName),
   TypeBinding: t.definition(t.typeName),
+  "TypeBinding/TypeName": t.definition(t.typeName),
   TypeSpec: t.definition(t.typeName),
   TypeAlias: t.typeName,
   TypeBody: t.typeName,
@@ -67,11 +68,13 @@ export const rescriptHighlight = styleTags({
   PolyVariantPattern: t.atom,
   PolyVariantSpreadPattern: t.operator,
 
-  Decorator: t.annotation,
-  ExtensionExpression: t.annotation,
+  "Decorator Decorator/@ Decorator/@@": t.annotation,
+  "AttributeIdentifier AttributeArguments/( AttributeArguments/)": t.annotation,
+  "ExtensionExpression ExtensionExpression/% ExtensionExpression/%%":
+    t.annotation,
   MemberLeaf: t.propertyName,
   Property: t.propertyName,
-  PropertyDefinition: t.propertyName,
+  PropertyDefinition: t.definition(t.propertyName),
   PropertyName: t.propertyName,
 
   LabeledParameter: t.labelName,
