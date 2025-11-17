@@ -16,6 +16,9 @@ export const rescriptHighlight = styleTags({
   ModulePath: t.namespace,
   ModulePrefix: t.namespace,
   ModuleName: t.namespace,
+  "ModuleDeclaration/ModuleName ModuleTypeDeclaration/ModuleName": t.definition(
+    t.namespace
+  ),
   ModuleUnpackBinding: t.definition(t.variableName),
 
   OpenStatement: t.moduleKeyword,
