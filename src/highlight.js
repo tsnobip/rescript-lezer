@@ -4,9 +4,10 @@ export const rescriptHighlight = styleTags({
   "let type external exception": t.definitionKeyword,
   "if else switch when while for in to downto try catch": t.controlKeyword,
   "module open include": t.moduleKeyword,
-  "true false": t.bool,
   "private rec mutable": t.typeOperator,
   await: t.operatorKeyword,
+
+  BooleanLiteral: t.bool,
 
   ModuleDeclaration: t.namespace,
   ModuleTypeDeclaration: t.namespace,
