@@ -687,7 +687,7 @@ Interpolation {
   JSXSelfCloseEndTag { "/>" }
   JSXStartCloseTag { "</" }
   JSXText { ![<{]+ }
-  JSXIdentifier { identifier | uppercaseIdentifier }
+  JSXIdentifier { identifier }
 
   AttributeIdentifier {
     identifier ("." identifier)* 
@@ -715,12 +715,13 @@ JSXSelfClosingTag { JSXStartTag jsxElementName jsxAttribute* JSXSelfCloseEndTag 
 JSXOpenTag { JSXStartTag jsxElementName jsxAttribute* JSXEndTag }
 JSXCloseTag { JSXStartCloseTag jsxElementName? JSXEndTag }
 
-jsxElementName {
-  JSXIdentifier |
-  JSXMemberExpression
-}
+JSXIntrinsicElementName { JSXIdentifier }
+JSXCustomComponentName { ModulePath }
 
-JSXMemberExpression { (JSXMemberExpression | JSXIdentifier) "." JSXIdentifier }
+jsxElementName {
+  JSXIntrinsicElementName |
+  JSXCustomComponentName
+}
 
 jsxAttribute {
   JSXAttribute { JSXIdentifier ("=" jsxAttributeValue)? }

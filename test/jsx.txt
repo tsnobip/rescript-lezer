@@ -4,7 +4,7 @@ let el = <div>Hello</div>
 
 ==>
 
-Script(LetBinding(let,LetValueBinding(VariableDefinition,"=",JSXElement(JSXOpenTag(JSXStartTag,JSXIdentifier,JSXEndTag),JSXText,JSXCloseTag(JSXStartCloseTag,JSXIdentifier,JSXEndTag)))))
+Script(LetBinding(let,LetValueBinding(VariableDefinition,"=",JSXElement(JSXOpenTag(JSXStartTag,JSXIntrinsicElementName(JSXIdentifier),JSXEndTag),JSXText,JSXCloseTag(JSXStartCloseTag,JSXIntrinsicElementName(JSXIdentifier),JSXEndTag)))))
 
 # Nested JSX with expression
 
@@ -12,7 +12,7 @@ let nested = <div><span>Hi</span>{expr}</div>
 
 ==>
 
-Script(LetBinding(let,LetValueBinding(VariableDefinition,"=",JSXElement(JSXOpenTag(JSXStartTag,JSXIdentifier,JSXEndTag),JSXElement(JSXOpenTag(JSXStartTag,JSXIdentifier,JSXEndTag),JSXText,JSXCloseTag(JSXStartCloseTag,JSXIdentifier,JSXEndTag)),JSXExpressionContainer("{",VariableName,"}"),JSXCloseTag(JSXStartCloseTag,JSXIdentifier,JSXEndTag)))))
+Script(LetBinding(let,LetValueBinding(VariableDefinition,"=",JSXElement(JSXOpenTag(JSXStartTag,JSXIntrinsicElementName(JSXIdentifier),JSXEndTag),JSXElement(JSXOpenTag(JSXStartTag,JSXIntrinsicElementName(JSXIdentifier),JSXEndTag),JSXText,JSXCloseTag(JSXStartCloseTag,JSXIntrinsicElementName(JSXIdentifier),JSXEndTag)),JSXExpressionContainer("{",VariableName,"}"),JSXCloseTag(JSXStartCloseTag,JSXIntrinsicElementName(JSXIdentifier),JSXEndTag)))))
 
 # Self-closing JSX
 
@@ -20,7 +20,7 @@ let selfClosing = <img src="url" />
 
 ==>
 
-Script(LetBinding(let,LetValueBinding(VariableDefinition,"=",JSXElement(JSXSelfClosingTag(JSXStartTag,JSXIdentifier,JSXAttribute(JSXIdentifier,"=",String),JSXSelfCloseEndTag)))))
+Script(LetBinding(let,LetValueBinding(VariableDefinition,"=",JSXElement(JSXSelfClosingTag(JSXStartTag,JSXIntrinsicElementName(JSXIdentifier),JSXAttribute(JSXIdentifier,"=",String),JSXSelfCloseEndTag)))))
 
 # Uppercase JSX component
 
@@ -28,7 +28,7 @@ let comp = <MyComponent>Hello</MyComponent>
 
 ==>
 
-Script(LetBinding(let,LetValueBinding(VariableDefinition,"=",JSXElement(JSXOpenTag(JSXStartTag,JSXIdentifier,JSXEndTag),JSXText,JSXCloseTag(JSXStartCloseTag,JSXIdentifier,JSXEndTag)))))
+Script(LetBinding(let,LetValueBinding(VariableDefinition,"=",JSXElement(JSXOpenTag(JSXStartTag,JSXCustomComponentName(ModulePath(ModuleName)),JSXEndTag),JSXText,JSXCloseTag(JSXStartCloseTag,JSXCustomComponentName(ModulePath(ModuleName)),JSXEndTag)))))
 
 # Uppercase JSX member expression
 
@@ -36,4 +36,4 @@ let frag = <React.Fragment><span /></React.Fragment>
 
 ==>
 
-Script(LetBinding(let,LetValueBinding(VariableDefinition,"=",JSXElement(JSXOpenTag(JSXStartTag,JSXMemberExpression(JSXIdentifier,".",JSXIdentifier),JSXEndTag),JSXElement(JSXSelfClosingTag(JSXStartTag,JSXIdentifier,JSXSelfCloseEndTag)),JSXCloseTag(JSXStartCloseTag,JSXMemberExpression(JSXIdentifier,".",JSXIdentifier),JSXEndTag)))))
+Script(LetBinding(let,LetValueBinding(VariableDefinition,"=",JSXElement(JSXOpenTag(JSXStartTag,JSXCustomComponentName(ModulePath(ModulePrefix,ModuleName)),JSXEndTag),JSXElement(JSXSelfClosingTag(JSXStartTag,JSXIntrinsicElementName(JSXIdentifier),JSXSelfCloseEndTag)),JSXCloseTag(JSXStartCloseTag,JSXCustomComponentName(ModulePath(ModulePrefix,ModuleName)),JSXEndTag)))))
