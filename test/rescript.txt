@@ -154,9 +154,10 @@ Script(LetBinding(let,LetValueBinding(VariableDefinition,"=",RegExpLiteral)),Let
 
 @react.component
 @@heavy
+@as("foo")
 %client.call(value)
 %%client.call(value)
 
 ==>
 
-Script(Decorator("@",AttributeIdentifier),Decorator("@@",AttributeIdentifier),ExtensionExpression("%",AttributeIdentifier,"(",VariableName,")"),ExtensionExpression("%%",AttributeIdentifier,"(",VariableName,")"))
+Script(Decorator("@",AttributeIdentifier),Decorator("@@",AttributeIdentifier),Decorator("@",AttributeIdentifier,AttributeArguments("(",String,")")),ExtensionExpression("%",AttributeIdentifier,AttributeArguments("(",VariableName,")")),ExtensionExpression("%%",AttributeIdentifier,AttributeArguments("(",VariableName,")")))

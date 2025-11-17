@@ -14,6 +14,7 @@
   typearg @left,
   assign @right,
   arrow @right,
+  decorator,
   statement @cut
 }
 
@@ -29,7 +30,6 @@ statement[@isGroup=Statement] {
   OpenStatement |
   IncludeStatement |
   ExternalDeclaration |
-  Decorator |
   expression
 }
 
@@ -202,7 +202,12 @@ PatternAlias {
 }
 
 Decorator {
-  ("@" | "@@") AttributeIdentifier
+  ("@" | "@@") AttributeIdentifier |
+  ("@" | "@@") AttributeIdentifier !decorator AttributeArguments
+}
+
+AttributeArguments {
+  "(" commaSep<expression> ")"
 }
 
 PatternPrimary {
@@ -303,7 +308,8 @@ expression {
   ListExpression { kw<"list"> "{" commaSep<expression> "}" } |
   DictExpression { kw<"dict"> "{" commaSep<DictEntry> "}" } |
   RecordExpression { "{" commaSep1<Property> "}" } |
-  ExtensionExpression { ("%" | "%%") AttributeIdentifier "(" commaSep<expression> ")" } |
+  Decorator |
+  ExtensionExpression { ("%" | "%%") AttributeIdentifier AttributeArguments } |
   ModulePackExpression |
   CallExpression |
   MemberExpression |
