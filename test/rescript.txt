@@ -149,3 +149,14 @@ let escaped = /a\/b/i
 ==>
 
 Script(LetBinding(let,LetValueBinding(VariableDefinition,"=",RegExpLiteral)),LetBinding(let,LetValueBinding(VariableDefinition,"=",RegExpLiteral)))
+
+# Annotations and extensions
+
+@react.component
+@@heavy
+%client.call(value)
+%%client.call(value)
+
+==>
+
+Script(Decorator("@",AttributeIdentifier),Decorator("@@",AttributeIdentifier),ExtensionExpression("%",AttributeIdentifier,"(",VariableName,")"),ExtensionExpression("%%",AttributeIdentifier,"(",VariableName,")"))

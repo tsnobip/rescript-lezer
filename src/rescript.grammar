@@ -29,6 +29,7 @@ statement[@isGroup=Statement] {
   OpenStatement |
   IncludeStatement |
   ExternalDeclaration |
+  Decorator |
   expression
 }
 
@@ -200,6 +201,10 @@ PatternAlias {
   kw<"as"> VariableName
 }
 
+Decorator {
+  ("@" | "@@") AttributeIdentifier
+}
+
 PatternPrimary {
   Wildcard { "_" } |
   VariantSpreadPattern |
@@ -298,8 +303,7 @@ expression {
   ListExpression { kw<"list"> "{" commaSep<expression> "}" } |
   DictExpression { kw<"dict"> "{" commaSep<DictEntry> "}" } |
   RecordExpression { "{" commaSep1<Property> "}" } |
-  Decorator { "@" VariableName } |
-  ExtensionExpression { "%" VariableName "(" commaSep<expression> ")" } |
+  ExtensionExpression { ("%" | "%%") AttributeIdentifier "(" commaSep<expression> ")" } |
   ModulePackExpression |
   CallExpression |
   MemberExpression |
@@ -668,6 +672,7 @@ Interpolation {
   "("  ")" "[" "]" "{" "}"
   "." "," ":" ";"
   "=" "?" "|" "~" "'" "@" "%" "_" "`" "${" ":="
+  "@@" "%%"
 
   "+." "-." "*." "/."
 
@@ -677,6 +682,10 @@ Interpolation {
   JSXStartCloseTag { "</" }
   JSXText { ![<{]+ }
   JSXIdentifier { identifier }
+
+  AttributeIdentifier {
+    identifier ("." identifier)* 
+  }
 }
 
 @skip {} {
