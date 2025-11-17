@@ -77,7 +77,7 @@ Stdlib.Option.map
 
 ==>
 
-Script(MemberExpression(ModulePrefix,MemberLeaf(PropertyName)))
+Script(MemberExpression(ModulePrefix,MemberLeaf(VariableName)))
 
 # Parenthesized expression
 

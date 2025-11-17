@@ -8,7 +8,7 @@ if isReady {
 
 ==>
 
-Script(IfExpression(if,VariableName,BlockExpression("{",CallExpression(MemberExpression(ModulePrefix,MemberLeaf(PropertyName)),"(",Argument(VariableName),")"),"}"),ElseClause(else,BlockExpression("{",CallExpression(MemberExpression(ModulePrefix,MemberLeaf(PropertyName)),"(",Argument(VariableName),")"),"}"))))
+Script(IfExpression(if,VariableName,BlockExpression("{",CallExpression(MemberExpression(ModulePrefix,MemberLeaf(VariableName)),"(",Argument(VariableName),")"),"}"),ElseClause(else,BlockExpression("{",CallExpression(MemberExpression(ModulePrefix,MemberLeaf(VariableName)),"(",Argument(VariableName),")"),"}"))))
 
 # While loop
 
@@ -28,7 +28,7 @@ for index in 0 to 2 {
 
 ==>
 
-Script(ForExpression(for,Pattern(PatternPrimary(VariableName)),in,Number,ForDirection(to),Number,BlockExpression("{",CallExpression(MemberExpression(ModulePrefix,MemberLeaf(PropertyName)),"(",Argument(VariableName),")"),"}")))
+Script(ForExpression(for,Pattern(PatternPrimary(VariableName)),in,Number,ForDirection(to),Number,BlockExpression("{",CallExpression(MemberExpression(ModulePrefix,MemberLeaf(VariableName)),"(",Argument(VariableName),")"),"}")))
 
 # Try/catch with patterns
 
