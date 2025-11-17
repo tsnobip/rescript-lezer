@@ -687,7 +687,7 @@ Interpolation {
   JSXSelfCloseEndTag { "/>" }
   JSXStartCloseTag { "</" }
   JSXText { ![<{]+ }
-  JSXIdentifier { identifier }
+  JSXIdentifier { identifier | uppercaseIdentifier }
 
   AttributeIdentifier {
     identifier ("." identifier)* 

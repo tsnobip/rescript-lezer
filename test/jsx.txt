@@ -21,3 +21,19 @@ let selfClosing = <img src="url" />
 ==>
 
 Script(LetBinding(let,LetValueBinding(VariableDefinition,"=",JSXElement(JSXSelfClosingTag(JSXStartTag,JSXIdentifier,JSXAttribute(JSXIdentifier,"=",String),JSXSelfCloseEndTag)))))
+
+# Uppercase JSX component
+
+let comp = <MyComponent>Hello</MyComponent>
+
+==>
+
+Script(LetBinding(let,LetValueBinding(VariableDefinition,"=",JSXElement(JSXOpenTag(JSXStartTag,JSXIdentifier,JSXEndTag),JSXText,JSXCloseTag(JSXStartCloseTag,JSXIdentifier,JSXEndTag)))))
+
+# Uppercase JSX member expression
+
+let frag = <React.Fragment><span /></React.Fragment>
+
+==>
+
+Script(LetBinding(let,LetValueBinding(VariableDefinition,"=",JSXElement(JSXOpenTag(JSXStartTag,JSXMemberExpression(JSXIdentifier,".",JSXIdentifier),JSXEndTag),JSXElement(JSXSelfClosingTag(JSXStartTag,JSXIdentifier,JSXSelfCloseEndTag)),JSXCloseTag(JSXStartCloseTag,JSXMemberExpression(JSXIdentifier,".",JSXIdentifier),JSXEndTag)))))
