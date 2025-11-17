@@ -81,6 +81,7 @@ export const rescriptHighlight = styleTags({
   PropertyName: t.propertyName,
 
   LabeledParameter: t.labelName,
+  "SimpleParameter/VariableName": t.labelName,
   LabelName: t.labelName,
   ParameterAnnotation: t.typeName,
 
