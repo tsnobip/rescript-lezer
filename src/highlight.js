@@ -117,7 +117,7 @@ export const rescriptHighlight = styleTags({
   JSXElement: t.content,
   "JSXStartTag JSXEndTag JSXSelfCloseEndTag JSXStartCloseTag": t.angleBracket,
   JSXIdentifier: t.tagName,
-  JSXMemberExpression: t.tagName,
+  "JSXCustomComponentName/ModulePath/ModuleName": t.special(t.tagName),
   JSXAttribute: t.attributeName,
   JSXAttributeValue: t.attributeValue,
   JSXExpressionContainer: t.content,
