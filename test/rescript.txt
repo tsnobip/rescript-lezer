@@ -77,7 +77,7 @@ Stdlib.Option.map
 
 ==>
 
-Script(MemberExpression(ModulePrefix,MemberLeaf(PropertyName)))
+Script(MemberExpression(ModulePrefix,MemberLeaf(VariableName)))
 
 # Parenthesized expression
 
@@ -149,3 +149,15 @@ let escaped = /a\/b/i
 ==>
 
 Script(LetBinding(let,LetValueBinding(VariableDefinition,"=",RegExpLiteral)),LetBinding(let,LetValueBinding(VariableDefinition,"=",RegExpLiteral)))
+
+# Annotations and extensions
+
+@react.component
+@@heavy
+@as("foo")
+%client.call(value)
+%%client.call(value)
+
+==>
+
+Script(Decorator("@",AttributeIdentifier),Decorator("@@",AttributeIdentifier),Decorator("@",AttributeIdentifier,AttributeArguments("(",String,")")),ExtensionExpression("%",AttributeIdentifier,AttributeArguments("(",VariableName,")")),ExtensionExpression("%%",AttributeIdentifier,AttributeArguments("(",VariableName,")")))

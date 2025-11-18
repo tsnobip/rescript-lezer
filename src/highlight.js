@@ -1,12 +1,13 @@
 import { styleTags, tags as t } from "@lezer/highlight";
 
 export const rescriptHighlight = styleTags({
-  "let type external exception": t.definitionKeyword,
+  "let type external exception :=": t.definitionKeyword,
   "if else switch when while for in to downto try catch": t.controlKeyword,
-  "module open include": t.moduleKeyword,
-  "true false": t.bool,
+  "module open include with": t.moduleKeyword,
   "private rec mutable": t.typeOperator,
   await: t.operatorKeyword,
+
+  BooleanLiteral: t.bool,
 
   ModuleDeclaration: t.namespace,
   ModuleTypeDeclaration: t.namespace,
@@ -15,6 +16,9 @@ export const rescriptHighlight = styleTags({
   ModulePath: t.namespace,
   ModulePrefix: t.namespace,
   ModuleName: t.namespace,
+  "ModuleDeclaration/ModuleName ModuleTypeDeclaration/ModuleName": t.definition(
+    t.namespace
+  ),
   ModuleUnpackBinding: t.definition(t.variableName),
 
   OpenStatement: t.moduleKeyword,
@@ -26,6 +30,7 @@ export const rescriptHighlight = styleTags({
 
   TypeDeclaration: t.definition(t.typeName),
   TypeBinding: t.definition(t.typeName),
+  "TypeBinding/TypeName": t.definition(t.typeName),
   TypeSpec: t.definition(t.typeName),
   TypeAlias: t.typeName,
   TypeBody: t.typeName,
@@ -66,14 +71,17 @@ export const rescriptHighlight = styleTags({
   PolyVariantPattern: t.atom,
   PolyVariantSpreadPattern: t.operator,
 
-  Decorator: t.annotation,
-  ExtensionExpression: t.annotation,
+  "Decorator Decorator/@ Decorator/@@": t.annotation,
+  "AttributeIdentifier AttributeArguments/( AttributeArguments/)": t.annotation,
+  "ExtensionExpression ExtensionExpression/% ExtensionExpression/%%":
+    t.annotation,
   MemberLeaf: t.propertyName,
   Property: t.propertyName,
-  PropertyDefinition: t.propertyName,
+  PropertyDefinition: t.definition(t.propertyName),
   PropertyName: t.propertyName,
 
   LabeledParameter: t.labelName,
+  "SimpleParameter/VariableName": t.labelName,
   LabelName: t.labelName,
   ParameterAnnotation: t.typeName,
 
@@ -110,7 +118,7 @@ export const rescriptHighlight = styleTags({
   JSXElement: t.content,
   "JSXStartTag JSXEndTag JSXSelfCloseEndTag JSXStartCloseTag": t.angleBracket,
   JSXIdentifier: t.tagName,
-  JSXMemberExpression: t.tagName,
+  "JSXCustomComponentName/ModulePath/ModuleName": t.special(t.tagName),
   JSXAttribute: t.attributeName,
   JSXAttributeValue: t.attributeValue,
   JSXExpressionContainer: t.content,

@@ -14,6 +14,7 @@
   typearg @left,
   assign @right,
   arrow @right,
+  decorator,
   statement @cut
 }
 
@@ -200,6 +201,15 @@ PatternAlias {
   kw<"as"> VariableName
 }
 
+Decorator {
+  ("@" | "@@") AttributeIdentifier |
+  ("@" | "@@") AttributeIdentifier !decorator AttributeArguments
+}
+
+AttributeArguments {
+  "(" commaSep<expression> ")"
+}
+
 PatternPrimary {
   Wildcard { "_" } |
   VariantSpreadPattern |
@@ -298,8 +308,8 @@ expression {
   ListExpression { kw<"list"> "{" commaSep<expression> "}" } |
   DictExpression { kw<"dict"> "{" commaSep<DictEntry> "}" } |
   RecordExpression { "{" commaSep1<Property> "}" } |
-  Decorator { "@" VariableName } |
-  ExtensionExpression { "%" VariableName "(" commaSep<expression> ")" } |
+  Decorator |
+  ExtensionExpression { ("%" | "%%") AttributeIdentifier AttributeArguments } |
   ModulePackExpression |
   CallExpression |
   MemberExpression |
@@ -336,7 +346,7 @@ CallExpression {
 
 MemberLeaf {
   VariantConstructor |
-  PropertyName
+  VariableName
 }
 
 
@@ -668,6 +678,7 @@ Interpolation {
   "("  ")" "[" "]" "{" "}"
   "." "," ":" ";"
   "=" "?" "|" "~" "'" "@" "%" "_" "`" "${" ":="
+  "@@" "%%"
 
   "+." "-." "*." "/."
 
@@ -677,6 +688,10 @@ Interpolation {
   JSXStartCloseTag { "</" }
   JSXText { ![<{]+ }
   JSXIdentifier { identifier }
+
+  AttributeIdentifier {
+    identifier ("." identifier)* 
+  }
 }
 
 @skip {} {
@@ -700,12 +715,13 @@ JSXSelfClosingTag { JSXStartTag jsxElementName jsxAttribute* JSXSelfCloseEndTag 
 JSXOpenTag { JSXStartTag jsxElementName jsxAttribute* JSXEndTag }
 JSXCloseTag { JSXStartCloseTag jsxElementName? JSXEndTag }
 
-jsxElementName {
-  JSXIdentifier |
-  JSXMemberExpression
-}
+JSXIntrinsicElementName { JSXIdentifier }
+JSXCustomComponentName { ModulePath }
 
-JSXMemberExpression { (JSXMemberExpression | JSXIdentifier) "." JSXIdentifier }
+jsxElementName {
+  JSXIntrinsicElementName |
+  JSXCustomComponentName
+}
 
 jsxAttribute {
   JSXAttribute { JSXIdentifier ("=" jsxAttributeValue)? }
