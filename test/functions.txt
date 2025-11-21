@@ -1,0 +1,55 @@
+# Function with typed unlabeled parameters
+
+let sum = (a: int, b: int) => a + b
+
+==>
+
+Script(LetBinding(let,LetValueBinding(VariableDefinition,"=",ArrowFunction(ParamList("(",ParamItems(UnlabeledParameter(SimpleParameter(VariableName,ParameterAnnotation(":",TypeName))),",",SimpleParameter(VariableName,ParameterAnnotation(":",TypeName))),")"),"=>",BinaryExpression(VariableName,ArithOp,VariableName)))))
+
+# Function with labeled typed parameters
+
+let greet = (~name: string, ~age: int=?, active) => name
+
+==>
+
+Script(LetBinding(let,LetValueBinding(VariableDefinition,"=",ArrowFunction(ParamList("(",ParamItems(LabeledParameterList(LabeledParameter("~",LabelName,ParameterAnnotation(":",TypeName)),",",LabeledParameter("~",LabelName,ParameterAnnotation(":",TypeName),ParameterDefault("=","?")),",",SimpleParameter(VariableName))),")"),"=>",VariableName))))
+
+# Call with labeled arguments and optional values
+
+greet(~name="Ada", ~age=?42, true)
+
+==>
+
+Script(CallExpression(VariableName,"(",Argument(LabeledArgument("~",LabelName,"=",ArgumentValue(String))),",",Argument(LabeledArgument("~",LabelName,"=",ArgumentValue("?",Number))),",",Argument(BooleanLiteral),")"))
+
+# Function with mixed typed parameters and defaults
+
+let scale = (value: float, ~factor: float=2.5) => value *. factor
+
+==>
+
+Script(LetBinding(let,LetValueBinding(VariableDefinition,"=",ArrowFunction(ParamList("(",ParamItems(UnlabeledParameter(SimpleParameter(VariableName,ParameterAnnotation(":",TypeName))),",",LabeledParameter("~",LabelName,ParameterAnnotation(":",TypeName),ParameterDefault("=",Number))),")"),"=>",BinaryExpression(VariableName,ArithOp,VariableName)))))
+
+# Function using module-qualified type
+
+let wrap = (value: MyModule.t) => value
+
+==>
+
+Script(LetBinding(let,LetValueBinding(VariableDefinition,"=",ArrowFunction(ParamList("(",ParamItems(SingleAnnotatedParameter(VariableName,ParameterAnnotation(":",TypePath(ModulePrefix,TypeName)))),")"),"=>",VariableName))))
+
+# Function type annotation with module-qualified types
+
+let wrapValue: MyModule.t => MyModule.t = value => value
+
+==>
+
+Script(LetBinding(let,LetValueBinding(VariableDefinition,":",FunctionType(TypePath(ModulePrefix,TypeName),FunctionArrow("=>"),TypePath(ModulePrefix,TypeName)),"=",ArrowFunction(VariableName,"=>",VariableName))))
+
+# Function types that include module-scoped generics
+
+let runWrapped = (fn: MyModule.t<string> => MyModule.t<string>, value: MyModule.t<string>) => fn(value)
+
+==>
+
+Script(LetBinding(let,LetValueBinding(VariableDefinition,"=",ArrowFunction(ParamList("(",ParamItems(UnlabeledParameter(SimpleParameter(VariableName,ParameterAnnotation(":",FunctionType(TypeApplication(TypePath(ModulePrefix,TypeName),TypeAngleLeftNode(CompareOp),TypeName,TypeAngleRightNode(CompareOp)),FunctionArrow("=>"),TypeApplication(TypePath(ModulePrefix,TypeName),TypeAngleLeftNode(CompareOp),TypeName,TypeAngleRightNode(CompareOp)))))),",",SimpleParameter(VariableName,ParameterAnnotation(":",TypeApplication(TypePath(ModulePrefix,TypeName),TypeAngleLeftNode(CompareOp),TypeName,TypeAngleRightNode(CompareOp))))),")"),"=>",CallExpression(VariableName,"(",Argument(VariableName),")")))))

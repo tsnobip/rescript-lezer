@@ -37,7 +37,7 @@ export const rescriptHighlight = styleTags({
   TypeApplication: t.typeName,
   TypeParams: t.typeName,
   TypeParam: t.typeName,
-  TypeParameter: t.typeName,
+  "TypeParameter!": t.typeName,
   TypeAngleLeftNode: t.angleBracket,
   TypeAngleRightNode: t.angleBracket,
   FunctionType: t.typeName,

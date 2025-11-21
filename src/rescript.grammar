@@ -422,11 +422,12 @@ Hash { "#" }
 
 TypeParameter { Quote VariableName }
 
-FunctionType { (TypeName | TypeParameter | ParenthesizedType) FunctionArrow type }
+FunctionType { (TypeName | TypePath | TypeParameter | TypeApplication | ParenthesizedType) FunctionArrow type }
 
 FunctionArrow { "->" | "=>" }
 
 type[@isGroup=Type] {
+  TypePath |
   TypeName |
   TypeParameter |
   PolyVariantType |
@@ -439,7 +440,7 @@ type[@isGroup=Type] {
 TypeAngleLeftNode { CompareOp<"<"> }
 TypeAngleRightNode { CompareOp<">"> }
 
-TypeApplication { TypeName TypeAngleLeftNode commaSep<type> TypeAngleRightNode }
+TypeApplication { (TypeName | TypePath) TypeAngleLeftNode commaSep<type> TypeAngleRightNode }
 
 TypeParams { TypeAngleLeftNode commaSep<TypeParam> TypeAngleRightNode }
 
@@ -547,6 +548,9 @@ boolean { @specialize[@name=BooleanLiteral]<identifier, "true" | "false"> }
 
 VariableName { identifier | exoticIdentifier }
 VariableDefinition { identifier | exoticIdentifier }
+TypePath {
+  ModulePrefix TypeName
+}
 TypeName { identifier }
 VariantConstructor { uppercaseIdentifier }
 PropertyName { identifier }
