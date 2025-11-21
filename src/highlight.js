@@ -116,11 +116,12 @@ export const rescriptHighlight = styleTags({
   BlockComment: t.blockComment,
 
   JSXElement: t.content,
-  "JSXStartTag JSXEndTag JSXSelfCloseEndTag JSXStartCloseTag": t.angleBracket,
-  JSXIdentifier: t.tagName,
+  "JSXStartTag JSXEndTag JSXSelfCloseEndTag JSXStartCloseTag": t.special(
+    t.angleBracket
+  ),
+  "JSXIntrinsicElementName/JSXIdentifier": t.tagName,
   "JSXCustomComponentName/ModulePath/ModuleName": t.special(t.tagName),
-  JSXAttribute: t.attributeName,
-  JSXAttributeValue: t.attributeValue,
+  "JSXAttribute/JSXIdentifier": t.attributeName,
   JSXExpressionContainer: t.content,
   JSXText: t.content,
 });
