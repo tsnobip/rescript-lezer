@@ -380,19 +380,16 @@ DotUncurried { "." }
 
 ParamItems {
   LabeledParameterList |
-  SingleAnnotatedParameter |
   UnlabeledParameter "," parameter ("," parameter?)*
 }
 
-SingleAnnotatedParameter {
+UnlabeledParameter {
   VariableName (ParameterAnnotation ParameterDefault? | ParameterDefault)
 }
 
 LabeledParameterList {
   LabeledParameter ("," parameter?)*
 }
-
-UnlabeledParameter { SimpleParameter }
 
 parameter {
   LabeledParameter |
