@@ -44,7 +44,7 @@ let wrapValue: MyModule.t => MyModule.t = value => value
 
 ==>
 
-Script(LetBinding(let,LetValueBinding(VariableDefinition,":",FunctionType(TypePath(ModulePrefix,TypeName),FunctionArrow("=>"),TypePath(ModulePrefix,TypeName)),"=",ArrowFunction(VariableName,"=>",VariableName))))
+Script(LetBinding(let,LetValueBinding(VariableDefinition,":",FunctionType(TypePath(ModulePrefix,TypeName),FunctionArrow("=>"),TypePath(ModulePrefix,TypeName)),"=",ArrowFunction(SingleParam(VariableName),"=>",VariableName))))
 
 # Function types that include module-scoped generics
 

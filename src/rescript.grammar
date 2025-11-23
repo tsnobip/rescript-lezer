@@ -299,7 +299,7 @@ expression {
   Char |
   boolean |
   ArrowFunction |
-  VariableName |
+  VariableName !arrow |
   VariantLiteral |
   PolyVariantLiteral |
   RegExpLiteral |
@@ -331,8 +331,10 @@ expression {
 ArrowFunction[@dynamicPrecedence=1] {
   ParamList !arrow "=>" expression |
   UnitToken !arrow "=>" expression |
-  VariableName !arrow "=>" expression
+  SingleParam !arrow "=>" expression
 }
+
+SingleParam { VariableName }
 
 MemberExpression {
   ModulePrefix MemberLeaf |
@@ -379,29 +381,20 @@ ParamList {
 DotUncurried { "." }
 
 ParamItems {
-  LabeledParameterList |
-  UnlabeledParameter "," parameter ("," parameter?)*
-}
-
-UnlabeledParameter {
-  VariableName (ParameterAnnotation ParameterDefault? | ParameterDefault)
-}
-
-LabeledParameterList {
-  LabeledParameter ("," parameter?)*
+  parameter ("," parameter)* ","?
 }
 
 parameter {
   LabeledParameter |
-  SimpleParameter
+  UnlabeledParameter
 }
 
 LabeledParameter {
   "~" LabelName ParameterAnnotation? ParameterDefault?
 }
 
-SimpleParameter {
-  VariableName ParameterAnnotation? ParameterDefault?
+UnlabeledParameter {
+  VariableName ParameterAnnotation?
 }
 
 ParameterAnnotation {

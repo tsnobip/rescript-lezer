@@ -83,6 +83,12 @@ export const rescriptHighlight = styleTags({
   LabeledParameter: t.labelName,
   "SimpleParameter/VariableName": t.labelName,
   LabelName: t.labelName,
+  "ArrowFunction/UnitToken": t.labelName,
+  "ArrowFunction/SingleParam/VariableName": t.labelName,
+  "ArrowFunction/ParamList/ParamItems/UnlabeledParameter/VariableName":
+    t.labelName,
+  "ArrowFunction/ParamList/ParamItems/LabelParameter/VariableName": t.labelName,
+
   ParameterAnnotation: t.typeName,
 
   Quote: t.string,
