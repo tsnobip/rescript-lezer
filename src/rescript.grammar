@@ -137,7 +137,9 @@ LetBinding {
 }
 
 LetValueBinding {
-  (kw<"rec">)? VariableDefinition ParamList? (":" type)? "=" expression
+  kw<"rec"> VariableDefinition ParamList? (":" type)? "=" expression |
+  DestructuringPattern "=" expression |
+  VariableDefinition ParamList? (":" type)? "=" expression
 }
 
 ModuleUnpackBinding {
@@ -210,10 +212,13 @@ AttributeArguments {
   "(" commaSep<expression> ")"
 }
 
+Wildcard { "_" }
+
 PatternPrimary {
-  Wildcard { "_" } |
+  Wildcard |
   VariantSpreadPattern |
   PolyVariantSpreadPattern |
+  TuplePattern |
   VariableName |
   Number |
   String |
@@ -244,6 +249,23 @@ ArrayPattern {
 
 ListPattern {
   kw<"list"> "{" commaSep<Pattern> "}"
+}
+
+TuplePattern {
+  "(" Pattern "," commaSep1<Pattern> ")"
+}
+
+DestructuringPattern {
+  TuplePattern |
+  ArrayPattern |
+  ListPattern |
+  RecordPattern |
+  ConstructorPattern |
+  PolyVariantPattern |
+  UnitPattern |
+  VariantSpreadPattern |
+  PolyVariantSpreadPattern |
+  Wildcard
 }
 
 RecordPattern {
@@ -324,11 +346,14 @@ expression {
     expression !or LogicOp<"||"> expression
   } |
   UnaryExpression { !prefix (ArithOp<"-"> | LogicOp<"!">) expression } |
-  ParenthesizedExpression { "(" expression ~parenthesized ")" } |
+  ParenthesizedExpression |
   JSXElement
 }
 
+ParenthesizedExpression[@dynamicPrecedence=-1] { "(" expression ~parenthesized ")" !arrow }
+
 ArrowFunction[@dynamicPrecedence=1] {
+  ParenthesizedExpression !arrow "=>" expression |
   ParamList !arrow "=>" expression |
   UnitToken !arrow "=>" expression |
   SingleParam !arrow "=>" expression
@@ -381,20 +406,30 @@ ParamList {
 DotUncurried { "." }
 
 ParamItems {
-  parameter ("," parameter)* ","?
+  LabeledParameterList |
+  SingleParameter |
+  UnlabeledParameter "," parameter ("," parameter?)*
 }
+
+LabeledParameterList {
+  LabeledParameter ("," parameter?)*
+}
+
+SingleParameter { SimpleParameter }
 
 parameter {
   LabeledParameter |
-  UnlabeledParameter
+  SimpleParameter
 }
 
 LabeledParameter {
   "~" LabelName ParameterAnnotation? ParameterDefault?
 }
 
-UnlabeledParameter {
-  VariableName ParameterAnnotation?
+UnlabeledParameter { SimpleParameter }
+
+SimpleParameter {
+  VariableName ParameterAnnotation? ParameterDefault?
 }
 
 ParameterAnnotation {

@@ -1,0 +1,15 @@
+# Tuple destructuring binding
+
+let (bar, baz) = foo()
+
+==>
+
+Script(LetBinding(let,LetValueBinding(DestructuringPattern(TuplePattern("(",Pattern(PatternPrimary(VariableName)),",",Pattern(PatternPrimary(VariableName)),")")),"=",CallExpression(VariableName,UnitToken))))
+
+# Tuple destructuring with constructor pattern
+
+let (bzz, foo, Id(id)) = baaaz()
+
+==>
+
+Script(LetBinding(let,LetValueBinding(DestructuringPattern(TuplePattern("(",Pattern(PatternPrimary(VariableName)),",",Pattern(PatternPrimary(VariableName)),",",Pattern(PatternPrimary(ConstructorPattern(VariantConstructor,PatternArguments("(",Pattern(PatternPrimary(VariableName)),")")))),")")),"=",CallExpression(VariableName,UnitToken))))

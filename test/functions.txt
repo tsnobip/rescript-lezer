@@ -36,7 +36,7 @@ let wrap = (value: MyModule.t) => value
 
 ==>
 
-Script(LetBinding(let,LetValueBinding(VariableDefinition,"=",ArrowFunction(ParamList("(",ParamItems(SingleAnnotatedParameter(VariableName,ParameterAnnotation(":",TypePath(ModulePrefix,TypeName)))),")"),"=>",VariableName))))
+Script(LetBinding(let,LetValueBinding(VariableDefinition,"=",ArrowFunction(ParamList("(",ParamItems(SingleParameter(SimpleParameter(VariableName,ParameterAnnotation(":",TypePath(ModulePrefix,TypeName))))),")"),"=>",VariableName))))
 
 # Function type annotation with module-qualified types
 
@@ -53,3 +53,11 @@ let runWrapped = (fn: MyModule.t<string> => MyModule.t<string>, value: MyModule.
 ==>
 
 Script(LetBinding(let,LetValueBinding(VariableDefinition,"=",ArrowFunction(ParamList("(",ParamItems(UnlabeledParameter(SimpleParameter(VariableName,ParameterAnnotation(":",FunctionType(TypeApplication(TypePath(ModulePrefix,TypeName),TypeAngleLeftNode(CompareOp),TypeName,TypeAngleRightNode(CompareOp)),FunctionArrow("=>"),TypeApplication(TypePath(ModulePrefix,TypeName),TypeAngleLeftNode(CompareOp),TypeName,TypeAngleRightNode(CompareOp)))))),",",SimpleParameter(VariableName,ParameterAnnotation(":",TypeApplication(TypePath(ModulePrefix,TypeName),TypeAngleLeftNode(CompareOp),TypeName,TypeAngleRightNode(CompareOp))))),")"),"=>",CallExpression(VariableName,"(",Argument(VariableName),")")))))
+
+# Parenthesized single parameter
+
+let identity = (value) => value
+
+==>
+
+Script(LetBinding(let,LetValueBinding(VariableDefinition,"=",ArrowFunction(ParenthesizedExpression("(",VariableName,")"),"=>",VariableName))))
