@@ -37,7 +37,7 @@ export const rescriptHighlight = styleTags({
   TypeApplication: t.typeName,
   TypeParams: t.typeName,
   TypeParam: t.typeName,
-  TypeParameter: t.typeName,
+  "TypeParameter!": t.typeName,
   TypeAngleLeftNode: t.angleBracket,
   TypeAngleRightNode: t.angleBracket,
   FunctionType: t.typeName,
@@ -83,6 +83,13 @@ export const rescriptHighlight = styleTags({
   LabeledParameter: t.labelName,
   "SimpleParameter/VariableName": t.labelName,
   LabelName: t.labelName,
+  "ArrowFunction/UnitToken": t.labelName,
+  "ArrowFunction/SingleParam/VariableName": t.labelName,
+  "ArrowFunction/ParenthesizedExpression/VariableName": t.labelName,
+  "ArrowFunction/ParamList/ParamItems/UnlabeledParameter/VariableName":
+    t.labelName,
+  "ArrowFunction/ParamList/ParamItems/LabelParameter/VariableName": t.labelName,
+
   ParameterAnnotation: t.typeName,
 
   Quote: t.string,
@@ -116,11 +123,12 @@ export const rescriptHighlight = styleTags({
   BlockComment: t.blockComment,
 
   JSXElement: t.content,
-  "JSXStartTag JSXEndTag JSXSelfCloseEndTag JSXStartCloseTag": t.angleBracket,
-  JSXIdentifier: t.tagName,
+  "JSXStartTag JSXEndTag JSXSelfCloseEndTag JSXStartCloseTag": t.special(
+    t.angleBracket
+  ),
+  "JSXIntrinsicElementName/JSXIdentifier": t.tagName,
   "JSXCustomComponentName/ModulePath/ModuleName": t.special(t.tagName),
-  JSXAttribute: t.attributeName,
-  JSXAttributeValue: t.attributeValue,
+  "JSXAttribute/JSXIdentifier": t.attributeName,
   JSXExpressionContainer: t.content,
   JSXText: t.content,
 });

@@ -137,7 +137,9 @@ LetBinding {
 }
 
 LetValueBinding {
-  (kw<"rec">)? VariableDefinition ParamList? (":" type)? "=" expression
+  kw<"rec"> VariableDefinition ParamList? (":" type)? "=" expression |
+  DestructuringPattern "=" expression |
+  VariableDefinition ParamList? (":" type)? "=" expression
 }
 
 ModuleUnpackBinding {
@@ -210,10 +212,13 @@ AttributeArguments {
   "(" commaSep<expression> ")"
 }
 
+Wildcard { "_" }
+
 PatternPrimary {
-  Wildcard { "_" } |
+  Wildcard |
   VariantSpreadPattern |
   PolyVariantSpreadPattern |
+  TuplePattern |
   VariableName |
   Number |
   String |
@@ -244,6 +249,23 @@ ArrayPattern {
 
 ListPattern {
   kw<"list"> "{" commaSep<Pattern> "}"
+}
+
+TuplePattern {
+  "(" Pattern "," commaSep1<Pattern> ")"
+}
+
+DestructuringPattern {
+  TuplePattern |
+  ArrayPattern |
+  ListPattern |
+  RecordPattern |
+  ConstructorPattern |
+  PolyVariantPattern |
+  UnitPattern |
+  VariantSpreadPattern |
+  PolyVariantSpreadPattern |
+  Wildcard
 }
 
 RecordPattern {
@@ -299,7 +321,7 @@ expression {
   Char |
   boolean |
   ArrowFunction |
-  VariableName |
+  VariableName !arrow |
   VariantLiteral |
   PolyVariantLiteral |
   RegExpLiteral |
@@ -324,15 +346,20 @@ expression {
     expression !or LogicOp<"||"> expression
   } |
   UnaryExpression { !prefix (ArithOp<"-"> | LogicOp<"!">) expression } |
-  ParenthesizedExpression { "(" expression ~parenthesized ")" } |
+  ParenthesizedExpression |
   JSXElement
 }
 
+ParenthesizedExpression[@dynamicPrecedence=-1] { "(" expression ~parenthesized ")" !arrow }
+
 ArrowFunction[@dynamicPrecedence=1] {
+  ParenthesizedExpression !arrow "=>" expression |
   ParamList !arrow "=>" expression |
   UnitToken !arrow "=>" expression |
-  VariableName !arrow "=>" expression
+  SingleParam !arrow "=>" expression
 }
+
+SingleParam { VariableName }
 
 MemberExpression {
   ModulePrefix MemberLeaf |
@@ -380,19 +407,15 @@ DotUncurried { "." }
 
 ParamItems {
   LabeledParameterList |
-  SingleAnnotatedParameter |
+  SingleParameter |
   UnlabeledParameter "," parameter ("," parameter?)*
-}
-
-SingleAnnotatedParameter {
-  VariableName (ParameterAnnotation ParameterDefault? | ParameterDefault)
 }
 
 LabeledParameterList {
   LabeledParameter ("," parameter?)*
 }
 
-UnlabeledParameter { SimpleParameter }
+SingleParameter { SimpleParameter }
 
 parameter {
   LabeledParameter |
@@ -402,6 +425,8 @@ parameter {
 LabeledParameter {
   "~" LabelName ParameterAnnotation? ParameterDefault?
 }
+
+UnlabeledParameter { SimpleParameter }
 
 SimpleParameter {
   VariableName ParameterAnnotation? ParameterDefault?
@@ -422,11 +447,12 @@ Hash { "#" }
 
 TypeParameter { Quote VariableName }
 
-FunctionType { (TypeName | TypeParameter | ParenthesizedType) FunctionArrow type }
+FunctionType { (TypeName | TypePath | TypeParameter | TypeApplication | ParenthesizedType) FunctionArrow type }
 
 FunctionArrow { "->" | "=>" }
 
 type[@isGroup=Type] {
+  TypePath |
   TypeName |
   TypeParameter |
   PolyVariantType |
@@ -439,7 +465,7 @@ type[@isGroup=Type] {
 TypeAngleLeftNode { CompareOp<"<"> }
 TypeAngleRightNode { CompareOp<">"> }
 
-TypeApplication { TypeName TypeAngleLeftNode commaSep<type> TypeAngleRightNode }
+TypeApplication { (TypeName | TypePath) TypeAngleLeftNode commaSep<type> TypeAngleRightNode }
 
 TypeParams { TypeAngleLeftNode commaSep<TypeParam> TypeAngleRightNode }
 
@@ -547,6 +573,9 @@ boolean { @specialize[@name=BooleanLiteral]<identifier, "true" | "false"> }
 
 VariableName { identifier | exoticIdentifier }
 VariableDefinition { identifier | exoticIdentifier }
+TypePath {
+  ModulePrefix TypeName
+}
 TypeName { identifier }
 VariantConstructor { uppercaseIdentifier }
 PropertyName { identifier }
