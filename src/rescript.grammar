@@ -6,6 +6,10 @@
   prefix,
   times @left,
   plus @left,
+  shift @left,
+  bitand @left,
+  bitxor @left,
+  bitor @left,
   concat @left,
   pipe @left,
   rel @left,
@@ -132,13 +136,21 @@ ExternalBody {
 LetBinding {
   kw<"let"> (
     kw<"module"> ModuleUnpackBinding |
+    LetRecBindings |
     LetValueBinding
   )
 }
 
 LetValueBinding {
-  kw<"rec"> VariableDefinition ParamList? (":" type)? "=" expression |
   DestructuringPattern "=" expression |
+  VariableDefinition ParamList? (":" type)? "=" expression
+}
+
+LetRecBindings {
+  kw<"rec"> LetRecBinding (kw<"and"> LetRecBinding)*
+}
+
+LetRecBinding {
   VariableDefinition ParamList? (":" type)? "=" expression
 }
 
@@ -309,6 +321,7 @@ ParenthesizedPattern {
 }
 
 expression {
+  AwaitExpression |
   IfExpression |
   WhileExpression |
   ForExpression |
@@ -320,6 +333,7 @@ expression {
   TemplateString |
   Char |
   boolean |
+  AsyncExpression |
   ArrowFunction |
   VariableName !arrow |
   VariantLiteral |
@@ -339,17 +353,23 @@ expression {
     expression !assign ":=" expression |
     expression !times (ArithOp<"*"> | ArithOp<"/"> | ArithOp<"*."> | ArithOp<"/."> | kw<"mod">) expression |
     expression !plus (ArithOp<"+"> | ArithOp<"-"> | ArithOp<"+."> | ArithOp<"-.">) expression |
+    expression !shift ShiftOp expression |
+    expression !bitand BitAndOp expression |
+    expression !bitxor BitXorOp expression |
+    expression !bitor BitOrOp expression |
     expression !concat StringOp<"++"> expression |
     expression !pipe PipeOp<"->" | "|>"> expression |
     expression !rel (LessThan | CompareOp<"<=" | ">" | ">=" | "==" | "!=">) expression |
     expression !and LogicOp<"&&"> expression |
     expression !or LogicOp<"||"> expression
   } |
-  UnaryExpression { !prefix (ArithOp<"-"> | LogicOp<"!">) expression } |
+  UnaryExpression { !prefix (ArithOp<"-"> | LogicOp<"!"> | BitNotOp) expression } |
   ParenthesizedExpression |
   JSXElement
 }
 
+AwaitExpression { kw<"await"> expression }
+AsyncExpression { kw<"async"> expression }
 ParenthesizedExpression[@dynamicPrecedence=-1] { "(" expression ~parenthesized ")" !arrow }
 
 ArrowFunction[@dynamicPrecedence=1] {
@@ -693,6 +713,11 @@ Interpolation {
   RegExpFlags { $[a-zA-Z]+ }
 
   ArithOp<expr> { expr }
+  ShiftOp { "<<<" | ">>>" | "<<" | ">>" }
+  BitAndOp { "&&&" }
+  BitOrOp { "|||" }
+  BitXorOp { "^^^" }
+  BitNotOp { "~~~" }
   LogicOp<expr> { expr }
   CompareOp<expr> { expr }
   StringOp<expr> { expr }
@@ -700,7 +725,7 @@ Interpolation {
   
   templateText { ![\`$]+ | "$" ![\{] }
 
-  @precedence { LineComment, RegExpLiteral, ArithOp }
+  @precedence { LineComment, RegExpLiteral, BitNotOp, ShiftOp, BitAndOp, BitXorOp, BitOrOp, ArithOp }
 
   "=>"
   "..."
