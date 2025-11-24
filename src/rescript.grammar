@@ -285,7 +285,8 @@ RecordPattern {
 }
 
 PatternField {
-  PropertyName (":" Pattern)?
+  VariableName |
+  PropertyName (":" Pattern)
 }
 
 PolyVariantPattern {
@@ -383,8 +384,13 @@ SingleParam { VariableName }
 
 MemberExpression {
   ModulePrefix MemberLeaf |
-  expression !member "." MemberLeaf |
+  RecordFieldAccess
   expression !member "[" String "]"
+}
+
+RecordFieldAccess {
+  expression !member "." PropertyName |
+  expression !member "." ModulePrefix PropertyName 
 }
 
 CallExpression {

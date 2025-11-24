@@ -44,8 +44,8 @@ export const rescriptHighlight = styleTags({
   FunctionArrow: t.operator,
   ParenthesizedType: t.paren,
 
-  RecordType: t.typeName,
-  RecordTypeField: t.propertyName,
+  RecordTypeField: t.definition(t.propertyName),
+  "RecordTypeField/String": t.definition(t.propertyName),
 
   VariantType: t.typeName,
   VariantConstructorCase: t.atom,
@@ -75,10 +75,14 @@ export const rescriptHighlight = styleTags({
   "AttributeIdentifier AttributeArguments/( AttributeArguments/)": t.annotation,
   "ExtensionExpression ExtensionExpression/% ExtensionExpression/%%":
     t.annotation,
-  Property: t.propertyName,
   PropertyDefinition: t.definition(t.propertyName),
   PropertyName: t.propertyName,
   "MemberExpression/String": t.propertyName,
+  "MemberExpression/RecordFieldAccess/PropertyName": t.propertyName,
+
+  "PatternAlias/VariableName": t.definition(t.variableName),
+  "PatternField/VariableName": t.definition(t.variableName),
+  "PatternPrimary/VariableName": t.definition(t.variableName),
 
   LabeledParameter: t.labelName,
   "SimpleParameter/VariableName": t.labelName,
@@ -99,6 +103,7 @@ export const rescriptHighlight = styleTags({
   VariableDefinition: t.definition(t.variableName),
   exoticIdentifier: t.variableName,
   TypeName: t.typeName,
+  "TypeBinding/TypeName": t.definition(t.typeName),
 
   Number: t.number,
   String: t.string,
