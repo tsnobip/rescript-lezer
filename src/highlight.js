@@ -75,10 +75,10 @@ export const rescriptHighlight = styleTags({
   "AttributeIdentifier AttributeArguments/( AttributeArguments/)": t.annotation,
   "ExtensionExpression ExtensionExpression/% ExtensionExpression/%%":
     t.annotation,
-  MemberLeaf: t.propertyName,
   Property: t.propertyName,
   PropertyDefinition: t.definition(t.propertyName),
   PropertyName: t.propertyName,
+  "MemberExpression/String": t.propertyName,
 
   LabeledParameter: t.labelName,
   "SimpleParameter/VariableName": t.labelName,

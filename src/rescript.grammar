@@ -383,7 +383,8 @@ SingleParam { VariableName }
 
 MemberExpression {
   ModulePrefix MemberLeaf |
-  expression !member "." MemberLeaf
+  expression !member "." MemberLeaf |
+  expression !member "[" String "]"
 }
 
 CallExpression {
@@ -402,7 +403,7 @@ DictEntry {
 }
 
 Property {
-  PropertyDefinition ":" expression
+  (PropertyDefinition | String) ":" expression
 }
 
 Argument {
@@ -496,7 +497,7 @@ RecordType {
 }
 
 RecordTypeField {
-  PropertyDefinition ":" type
+  (PropertyDefinition | String) ":" type
 }
 
 PolyVariantName { uppercaseIdentifier | identifier | String }

@@ -1,0 +1,23 @@
+# Object type with string keys
+
+type foo = {"bar": string, "baz": int}
+
+==>
+
+Script(TypeDeclaration(type,TypeBinding(TypeName,"=",TypeBody(RecordType("{",RecordTypeField(String,":",TypeName),",",RecordTypeField(String,":",TypeName),"}")))))
+
+# Object literal with string keys
+
+let foo = {"bar": "hello", "baz": 2, "bazz": false}
+
+==>
+
+Script(LetBinding(let,LetValueBinding(VariableDefinition,"=",RecordExpression("{",Property(String,":",String),",",Property(String,":",Number),",",Property(String,":",BooleanLiteral),"}"))))
+
+# Bracket access on object
+
+let bar = foo["bar"]
+
+==>
+
+Script(LetBinding(let,LetValueBinding(VariableDefinition,"=",MemberExpression(VariableName,"[",String,"]"))))
