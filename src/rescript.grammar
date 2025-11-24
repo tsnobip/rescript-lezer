@@ -384,13 +384,13 @@ SingleParam { VariableName }
 
 MemberExpression {
   ModulePrefix MemberLeaf |
-  RecordFieldAccess
+  RecordFieldAccess |
   expression !member "[" String "]"
 }
 
 RecordFieldAccess {
   expression !member "." PropertyName |
-  expression !member "." ModulePrefix PropertyName 
+  expression !member "." ModulePrefix PropertyName
 }
 
 CallExpression {

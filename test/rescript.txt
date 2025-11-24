@@ -85,7 +85,7 @@ let bar = foo.bar
 
 ==>
 
-Script(LetBinding(let,LetValueBinding(VariableDefinition,"=",MemberExpression(VariableName,".",MemberLeaf(VariableName)))))
+Script(LetBinding(let,LetValueBinding(VariableDefinition,"=",MemberExpression(RecordFieldAccess(VariableName,".",PropertyName)))))
 
 # Nested member expression - module chain
 
@@ -93,7 +93,7 @@ let bar = foo.Utils.Foo.bar
 
 ==>
 
-Script(LetBinding(let,LetValueBinding(VariableDefinition,"=",MemberExpression(VariableName,".",ModulePrefix,MemberLeaf(VariableName)))))
+Script(LetBinding(let,LetValueBinding(VariableDefinition,"=",MemberExpression(RecordFieldAccess(VariableName,".",ModulePrefix,PropertyName)))))
 
 # Bracket property access
 
