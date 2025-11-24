@@ -1,7 +1,7 @@
 import { styleTags, tags as t } from "@lezer/highlight";
 
 export const rescriptHighlight = styleTags({
-  "let type external exception := and": t.definitionKeyword,
+  "let type external exception := and as": t.definitionKeyword,
   "if else switch when while for in to downto try catch async await":
     t.controlKeyword,
   "module open include with": t.moduleKeyword,
