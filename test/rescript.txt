@@ -79,6 +79,30 @@ Stdlib.Option.map
 
 Script(MemberExpression(ModulePrefix,MemberLeaf(VariableName)))
 
+# Nested member expression - simple
+
+let bar = foo.bar
+
+==>
+
+Script(LetBinding(let,LetValueBinding(VariableDefinition,"=",MemberExpression(RecordFieldAccess(VariableName,".",PropertyName)))))
+
+# Nested member expression - module chain
+
+let bar = foo.Utils.Foo.bar
+
+==>
+
+Script(LetBinding(let,LetValueBinding(VariableDefinition,"=",MemberExpression(RecordFieldAccess(VariableName,".",ModulePrefix,PropertyName)))))
+
+# Bracket property access
+
+let bar = foo["bar"]
+
+==>
+
+Script(LetBinding(let,LetValueBinding(VariableDefinition,"=",MemberExpression(VariableName,"[",String,"]"))))
+
 # Parenthesized expression
 
 let result = (x + y) * z

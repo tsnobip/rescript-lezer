@@ -285,7 +285,8 @@ RecordPattern {
 }
 
 PatternField {
-  PropertyName (":" Pattern)?
+  VariableName |
+  PropertyName (":" Pattern)
 }
 
 PolyVariantPattern {
@@ -383,7 +384,13 @@ SingleParam { VariableName }
 
 MemberExpression {
   ModulePrefix MemberLeaf |
-  expression !member "." MemberLeaf
+  RecordFieldAccess |
+  expression !member "[" String "]"
+}
+
+RecordFieldAccess {
+  expression !member "." PropertyName |
+  expression !member "." ModulePrefix PropertyName
 }
 
 CallExpression {
@@ -402,7 +409,7 @@ DictEntry {
 }
 
 Property {
-  PropertyDefinition ":" expression
+  (PropertyDefinition | String) ":" expression
 }
 
 Argument {
@@ -496,7 +503,7 @@ RecordType {
 }
 
 RecordTypeField {
-  PropertyDefinition ":" type
+  (PropertyDefinition | String) ":" type
 }
 
 PolyVariantName { uppercaseIdentifier | identifier | String }

@@ -1,7 +1,7 @@
 import { styleTags, tags as t } from "@lezer/highlight";
 
 export const rescriptHighlight = styleTags({
-  "let type external exception := and": t.definitionKeyword,
+  "let type external exception := and as": t.definitionKeyword,
   "if else switch when while for in to downto try catch async await":
     t.controlKeyword,
   "module open include with": t.moduleKeyword,
@@ -44,8 +44,8 @@ export const rescriptHighlight = styleTags({
   FunctionArrow: t.operator,
   ParenthesizedType: t.paren,
 
-  RecordType: t.typeName,
-  RecordTypeField: t.propertyName,
+  RecordTypeField: t.definition(t.propertyName),
+  "RecordTypeField/String": t.definition(t.propertyName),
 
   VariantType: t.typeName,
   VariantConstructorCase: t.atom,
@@ -75,10 +75,14 @@ export const rescriptHighlight = styleTags({
   "AttributeIdentifier AttributeArguments/( AttributeArguments/)": t.annotation,
   "ExtensionExpression ExtensionExpression/% ExtensionExpression/%%":
     t.annotation,
-  MemberLeaf: t.propertyName,
-  Property: t.propertyName,
   PropertyDefinition: t.definition(t.propertyName),
   PropertyName: t.propertyName,
+  "MemberExpression/String": t.propertyName,
+  "MemberExpression/RecordFieldAccess/PropertyName": t.propertyName,
+
+  "PatternAlias/VariableName": t.definition(t.variableName),
+  "PatternField/VariableName": t.definition(t.variableName),
+  "PatternPrimary/VariableName": t.definition(t.variableName),
 
   LabeledParameter: t.labelName,
   "SimpleParameter/VariableName": t.labelName,
@@ -99,6 +103,7 @@ export const rescriptHighlight = styleTags({
   VariableDefinition: t.definition(t.variableName),
   exoticIdentifier: t.variableName,
   TypeName: t.typeName,
+  "TypeBinding/TypeName": t.definition(t.typeName),
 
   Number: t.number,
   String: t.string,
@@ -106,11 +111,11 @@ export const rescriptHighlight = styleTags({
   TemplateContent: t.special(t.string),
   Char: t.character,
   Escape: t.escape,
-  ShiftOp: t.operator,
-  BitAndOp: t.operator,
-  BitOrOp: t.operator,
-  BitXorOp: t.operator,
-  BitNotOp: t.operator,
+  ShiftOp: t.bitwiseOperator,
+  BitAndOp: t.bitwiseOperator,
+  BitOrOp: t.bitwiseOperator,
+  BitXorOp: t.bitwiseOperator,
+  BitNotOp: t.bitwiseOperator,
   ArithOp: t.arithmeticOperator,
   LogicOp: t.logicOperator,
   CompareOp: t.compareOperator,
