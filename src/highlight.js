@@ -1,11 +1,11 @@
 import { styleTags, tags as t } from "@lezer/highlight";
 
 export const rescriptHighlight = styleTags({
-  "let type external exception :=": t.definitionKeyword,
-  "if else switch when while for in to downto try catch": t.controlKeyword,
+  "let type external exception := and": t.definitionKeyword,
+  "if else switch when while for in to downto try catch async await":
+    t.controlKeyword,
   "module open include with": t.moduleKeyword,
   "private rec mutable": t.typeOperator,
-  await: t.operatorKeyword,
 
   BooleanLiteral: t.bool,
 
@@ -106,6 +106,11 @@ export const rescriptHighlight = styleTags({
   TemplateContent: t.special(t.string),
   Char: t.character,
   Escape: t.escape,
+  ShiftOp: t.operator,
+  BitAndOp: t.operator,
+  BitOrOp: t.operator,
+  BitXorOp: t.operator,
+  BitNotOp: t.operator,
   ArithOp: t.arithmeticOperator,
   LogicOp: t.logicOperator,
   CompareOp: t.compareOperator,

@@ -1,0 +1,31 @@
+# Async/await expression
+
+let asyncAdd = async (a, b) => await(add(a, b))
+
+==>
+
+Script(LetBinding(let,LetValueBinding(VariableDefinition,"=",AsyncExpression(async,ArrowFunction(ParamList("(",ParamItems(UnlabeledParameter(SimpleParameter(VariableName)),",",SimpleParameter(VariableName)),")"),"=>",AwaitExpression(await,ParenthesizedExpression("(",CallExpression(VariableName,"(",Argument(VariableName),",",Argument(VariableName),")"),")")))))))
+
+# Recursive let with and
+
+let rec foo = 1 and bar = 2
+
+==>
+
+Script(LetBinding(let,LetRecBindings(rec,LetRecBinding(VariableDefinition,"=",Number),and,LetRecBinding(VariableDefinition,"=",Number))))
+
+# Bitwise unary not
+
+let inverted = ~~~mask
+
+==>
+
+Script(LetBinding(let,LetValueBinding(VariableDefinition,"=",UnaryExpression(BitNotOp,VariableName))))
+
+# Bitwise binary operators
+
+let bitwiseOps = [a &&& b, a ^^^ b, a ||| b, a <<< 1, a >>> 2, a << 3, a >> 4]
+
+==>
+
+Script(LetBinding(let,LetValueBinding(VariableDefinition,"=",ArrayExpression("[",BinaryExpression(VariableName,BitAndOp,VariableName),",",BinaryExpression(VariableName,BitXorOp,VariableName),",",BinaryExpression(VariableName,BitOrOp,VariableName),",",BinaryExpression(VariableName,ShiftOp,Number),",",BinaryExpression(VariableName,ShiftOp,Number),",",BinaryExpression(VariableName,ShiftOp,Number),",",BinaryExpression(VariableName,ShiftOp,Number),"]"))))
