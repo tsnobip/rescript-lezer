@@ -1,0 +1,7 @@
+# Optional record field punning
+
+let make = (~bar=?, ~baz=?) => {?bar, ?baz}
+
+==>
+
+Script(LetBinding(let,LetValueBinding(VariableDefinition,"=",ArrowFunction(ParamList("(",ParamItems(LabeledParameterList(LabeledParameter("~",LabelName,ParameterDefault("=","?")),",",LabeledParameter("~",LabelName,ParameterDefault("=","?")))),")"),"=>",RecordExpression("{",Property(OptionalPropertyPun("?",PropertyDefinition)),",",Property(OptionalPropertyPun("?",PropertyDefinition)),"}")))))

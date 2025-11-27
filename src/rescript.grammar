@@ -409,7 +409,12 @@ DictEntry {
 }
 
 Property {
+  OptionalPropertyPun |
   (PropertyDefinition | String) ":" expression
+}
+
+OptionalPropertyPun {
+  "?" PropertyDefinition
 }
 
 Argument {
@@ -467,6 +472,41 @@ ParameterDefault {
   "=" ("?" expression? | expression)
 }
 
+FunctionTypeParamList {
+  "(" DotUncurried? FunctionTypeParamItems ")"
+}
+
+FunctionTypeParamItems {
+  FunctionTypeLabeledParamList |
+  FunctionTypeSingleParam |
+  FunctionTypeUnlabeledParam "," FunctionTypeParameter ("," FunctionTypeParameter?)*
+}
+
+FunctionTypeLabeledParamList {
+  FunctionTypeLabeledParam ("," FunctionTypeParameter?)*
+}
+
+FunctionTypeSingleParam { FunctionTypeSimpleParam }
+
+FunctionTypeParameter {
+  FunctionTypeLabeledParam |
+  FunctionTypeSimpleParam
+}
+
+FunctionTypeLabeledParam {
+  "~" LabelName FunctionTypeAnnotation ParameterDefault?
+}
+
+FunctionTypeUnlabeledParam { FunctionTypeSimpleParam }
+
+FunctionTypeSimpleParam {
+  VariableName FunctionTypeAnnotation ParameterDefault?
+}
+
+FunctionTypeAnnotation {
+  ":" type
+}
+
 ParenthesizedType { "(" type ")" }
 
 Quote { "'" }
@@ -474,7 +514,9 @@ Hash { "#" }
 
 TypeParameter { Quote VariableName }
 
-FunctionType { (TypeName | TypePath | TypeParameter | TypeApplication | ParenthesizedType) FunctionArrow type }
+FunctionType {
+  (FunctionTypeParamList | TypeName | TypePath | TypeParameter | TypeApplication | ParenthesizedType) FunctionArrow type
+}
 
 FunctionArrow { "->" | "=>" }
 
@@ -503,7 +545,7 @@ RecordType {
 }
 
 RecordTypeField {
-  (PropertyDefinition | String) ":" type
+  (PropertyDefinition "?"? | String) ":" type
 }
 
 PolyVariantName { uppercaseIdentifier | identifier | String }
