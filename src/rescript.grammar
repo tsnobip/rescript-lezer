@@ -570,7 +570,8 @@ RecordType {
 }
 
 RecordTypeField {
-  (PropertyDefinition "?"? | String) ":" type
+  (PropertyDefinition "?"? | String) ":" type |
+  SpreadOperator (TypeName | TypePath)
 }
 
 PolyVariantName { uppercaseIdentifier | identifier | String }

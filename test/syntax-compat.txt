@@ -117,6 +117,51 @@ let decodeUser = (json: json) => {
 
 Script(TypeDeclaration(type,rec,TypeBinding(TypeName,"=",TypeBody(VariantType("|",VariantConstructorCase(VariantConstructorArgsToken,VariantConstructorArgs("(",DictType(dict,TypeAngleLeftNode(CompareOp),TypeName,TypeAngleRightNode(CompareOp)),")")),"|",VariantConstructorCase(VariantConstructorArgsToken,VariantConstructorArgs("(",TypeName,")")))))),LetBinding(let,LetValueBinding(VariableDefinition,"=",ArrowFunction(ParamList("(",ParamItems(SingleParameter(SimpleParameter(VariableName,ParameterAnnotation(":",TypeName)))),")"),"=>",BlockExpression("{",SwitchExpression(switch,VariableName,"{",SwitchCase("|",Pattern(PatternPrimary(ConstructorPattern(VariantConstructor,PatternArguments("(",Pattern(PatternPrimary(DictPattern(dict,"{",DictPatternField(String,":",DictPatternValue(Pattern(PatternPrimary(ConstructorPattern(VariantConstructor,PatternArguments("(",Pattern(PatternPrimary(VariableName)),")")))))),"}"))),")")))),"=>",VariantLiteral(VariantConstructor,VariantArguments("(",VariableName,")"))),SwitchCase("|",Pattern(PatternPrimary(VariableName)),"=>",VariantLiteral(VariantConstructor)),"}"),"}")))))
 
+# Record type spread with mixed fields
+
+type t = {
+  ...foo,
+  bar: string,
+}
+
+==>
+
+Script(TypeDeclaration(type,TypeBinding(TypeName,"=",TypeBody(RecordType("{",RecordTypeField(SpreadOperator,TypeName),",",RecordTypeField(PropertyDefinition,":",TypeName),",","}")))))
+
+# Record type spread with module-qualified source
+
+type t = {
+  ...Foo.base,
+  bar: string,
+}
+
+==>
+
+Script(TypeDeclaration(type,TypeBinding(TypeName,"=",TypeBody(RecordType("{",RecordTypeField(SpreadOperator,TypePath(ModulePrefix,TypeName)),",",RecordTypeField(PropertyDefinition,":",TypeName),",","}")))))
+
+# Nominal variant type spread
+
+type a =
+  | One
+  | Two
+
+type b =
+  | ...a
+  | Three
+
+==>
+
+Script(TypeDeclaration(type,TypeBinding(TypeName,"=",TypeBody(VariantType("|",VariantConstructorCase(VariantConstructor),"|",VariantConstructorCase(VariantConstructor))))),TypeDeclaration(type,TypeBinding(TypeName,"=",TypeBody(VariantType("|",VariantConstructorCase(VariantSpreadCase(SpreadOperator,TypeName)),"|",VariantConstructorCase(VariantConstructor))))))
+
+# Polymorphic variant type spread
+
+type c = [#One | #Two]
+type d = [#...c | #Three]
+
+==>
+
+Script(TypeDeclaration(type,TypeBinding(TypeName,"=",TypeBody(TypeAlias(PolyVariantType("[",PolyVariantCaseList(PolyVariantCase(PolyVariantTagCase(PolyVariantTag(Hash,PolyVariantName))),"|",PolyVariantCase(PolyVariantTagCase(PolyVariantTag(Hash,PolyVariantName)))),"]"))))),TypeDeclaration(type,TypeBinding(TypeName,"=",TypeBody(TypeAlias(PolyVariantType("[",PolyVariantCaseList(PolyVariantCase(PolyVariantSpreadCase(Hash,SpreadOperator,TypeName)),"|",PolyVariantCase(PolyVariantTagCase(PolyVariantTag(Hash,PolyVariantName)))),"]"))))))
+
 # First-class module numeric index piping
 
 module(Teenager)[0]->Js.log
