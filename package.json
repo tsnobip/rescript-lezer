@@ -1,6 +1,6 @@
 {
   "name": "@tsnobip/rescript-lezer",
-  "version": "0.7.0",
+  "version": "0.8.0",
   "description": "lezer-based ReScript grammar",
   "main": "dist/index.cjs",
   "type": "module",
@@ -31,6 +31,8 @@
     "build": "lezer-generator src/rescript.grammar -o src/parser && rollup -c",
     "build-debug": "lezer-generator src/rescript.grammar --names -o src/parser && rollup -c",
     "prepare": "npm run build",
-    "test": "mocha test/test-*.js"
+    "test": "mocha test/test-*.js",
+    "audit:grammar": "npm run build && node scripts/audit-grammar.mjs --mode all",
+    "audit:grammar:strict": "npm run build && node scripts/audit-grammar.mjs --mode all --fail-on-mismatch --fail-on-crash"
   }
 }

@@ -1,0 +1,249 @@
+# Interop external + chained bracket + pipe (user repro)
+
+@val external process: 'a = "process"
+let input1 = process["argv"][2]->Option.getOrThrow
+let input2 = process["argv"][3]->Option.getOrThrow
+
+==>
+
+Script(Decorator("@",AttributeIdentifier),ExternalDeclaration(external,VariableDefinition,":",TypeParameter(Quote("'"),VariableName),"=",ExternalBody(String)),LetBinding(let,LetValueBinding(VariableDefinition,"=",BinaryExpression(MemberExpression(MemberExpression(VariableName,"[",String,"]"),"[",Number,"]"),PipeOp,MemberExpression(ModulePrefix,MemberLeaf(VariableName))))),LetBinding(let,LetValueBinding(VariableDefinition,"=",BinaryExpression(MemberExpression(MemberExpression(VariableName,"[",String,"]"),"[",Number,"]"),PipeOp,MemberExpression(ModulePrefix,MemberLeaf(VariableName))))))
+
+# Bracket access with computed index expression
+
+let index = 2
+let item = process["argv"][index + 1]
+
+==>
+
+Script(LetBinding(let,LetValueBinding(VariableDefinition,"=",Number)),LetBinding(let,LetValueBinding(VariableDefinition,"=",MemberExpression(MemberExpression(VariableName,"[",String,"]"),"[",BinaryExpression(VariableName,ArithOp,Number),"]"))))
+
+# Bracket index constraint and coercion
+
+let typed = arr[idx: int]
+let coerced = arr[idx :> int]
+
+==>
+
+Script(LetBinding(let,LetValueBinding(VariableDefinition,"=",MemberExpression(VariableName,"[",VariableName,IndexConstraint(":",TypeName),"]"))),LetBinding(let,LetValueBinding(VariableDefinition,"=",MemberExpression(VariableName,"[",VariableName,IndexConstraint(":>",TypeName),"]"))))
+
+# Chained bracket assignment expressions
+
+john["age"] = 99
+john["son"]["age"] = steve["age"] - 5
+
+==>
+
+Script(BinaryExpression(MemberExpression(VariableName,"[",String,"]"),"=",Number),BinaryExpression(MemberExpression(MemberExpression(VariableName,"[",String,"]"),"[",String,"]"),"=",BinaryExpression(MemberExpression(VariableName,"[",String,"]"),ArithOp,Number)))
+
+# Escaped bracket key assignment
+
+table["\n"] = abc
+json["\""] = json2["\""]
+
+==>
+
+Script(BinaryExpression(MemberExpression(VariableName,"[",String(Escape),"]"),"=",VariableName),BinaryExpression(MemberExpression(VariableName,"[",String(Escape),"]"),"=",MemberExpression(VariableName,"[",String(Escape),"]")))
+
+# External declarations with empty function type params and semicolons
+
+external svg: () => React.element = "svg";
+external svg2: () => React.element = "svg"
+
+==>
+
+Script(ExternalDeclaration(external,VariableDefinition,":",FunctionType(FunctionTypeParamList("(",FunctionTypeParamItems,")"),FunctionArrow("=>"),TypePath(ModulePrefix,TypeName)),"=",ExternalBody(String)),";",ExternalDeclaration(external,VariableDefinition,":",FunctionType(FunctionTypeParamList("(",FunctionTypeParamItems,")"),FunctionArrow("=>"),TypePath(ModulePrefix,TypeName)),"=",ExternalBody(String)))
+
+# Let annotation with empty function type params
+
+let makeSvg: () => React.element = svg
+
+==>
+
+Script(LetBinding(let,LetValueBinding(VariableDefinition,":",FunctionType(FunctionTypeParamList("(",FunctionTypeParamItems,")"),FunctionArrow("=>"),TypePath(ModulePrefix,TypeName)),"=",VariableName)))
+
+# Top-level semicolon separators
+
+let x = 1;
+let y = 2;;
+let z = x + y;
+
+==>
+
+Script(LetBinding(let,LetValueBinding(VariableDefinition,"=",Number)),";",LetBinding(let,LetValueBinding(VariableDefinition,"=",Number)),";",";",LetBinding(let,LetValueBinding(VariableDefinition,"=",BinaryExpression(VariableName,ArithOp,VariableName))),";")
+
+# Dict expressions from syntax corpus
+
+let x = dict{}
+let y = dict{"foo": "bar"}
+let baz = "foo"
+let z = dict{"foo": "bar", "bar": "baz", "baz": baz}
+
+==>
+
+Script(LetBinding(let,LetValueBinding(VariableDefinition,"=",DictExpression(dict,"{","}"))),LetBinding(let,LetValueBinding(VariableDefinition,"=",DictExpression(dict,"{",DictEntry(String,":",String),"}"))),LetBinding(let,LetValueBinding(VariableDefinition,"=",String)),LetBinding(let,LetValueBinding(VariableDefinition,"=",DictExpression(dict,"{",DictEntry(String,":",String),",",DictEntry(String,":",String),",",DictEntry(String,":",VariableName),"}"))))
+
+# Dict destructuring with optional binding
+
+let dict{"one": ?one} = someDict
+
+==>
+
+Script(LetBinding(let,LetValueBinding(DestructuringPattern(DictPattern(dict,"{",DictPatternField(String,":",DictPatternValue("?",VariableName)),"}")),"=",VariableName)))
+
+# Dict pattern in switch
+
+let foo = () => switch someDict {
+| dict{"one": "one"} => Js.log("one")
+| _ => Js.log("not one")
+}
+
+==>
+
+Script(LetBinding(let,LetValueBinding(VariableDefinition,"=",ArrowFunction(UnitToken,"=>",SwitchExpression(switch,VariableName,"{",SwitchCase("|",Pattern(PatternPrimary(DictPattern(dict,"{",DictPatternField(String,":",DictPatternValue(Pattern(PatternPrimary(String)))),"}"))),"=>",CallExpression(MemberExpression(ModulePrefix,MemberLeaf(VariableName)),"(",Argument(String),")")),SwitchCase("|",Pattern(PatternPrimary(VariableName)),"=>",CallExpression(MemberExpression(ModulePrefix,MemberLeaf(VariableName)),"(",Argument(String),")")),"}")))))
+
+# Dict type alias
+
+type payload = dict<string>
+
+==>
+
+Script(TypeDeclaration(type,TypeBinding(TypeName,"=",TypeBody(TypeAlias(DictType(dict,TypeAngleLeftNode(CompareOp),TypeName,TypeAngleRightNode(CompareOp)))))))
+
+# Dict type in variant payload and nested dict pattern
+
+type rec json =
+  | Object(dict<json>)
+  | String(string)
+
+let decodeUser = (json: json) => {
+  switch json {
+  | Object(dict{"name": String(name)}) => Some(name)
+  | _ => None
+  }
+}
+
+==>
+
+Script(TypeDeclaration(type,rec,TypeBinding(TypeName,"=",TypeBody(VariantType("|",VariantConstructorCase(VariantConstructorArgsToken,VariantConstructorArgs("(",DictType(dict,TypeAngleLeftNode(CompareOp),TypeName,TypeAngleRightNode(CompareOp)),")")),"|",VariantConstructorCase(VariantConstructorArgsToken,VariantConstructorArgs("(",TypeName,")")))))),LetBinding(let,LetValueBinding(VariableDefinition,"=",ArrowFunction(ParamList("(",ParamItems(SingleParameter(SimpleParameter(VariableName,ParameterAnnotation(":",TypeName)))),")"),"=>",BlockExpression("{",SwitchExpression(switch,VariableName,"{",SwitchCase("|",Pattern(PatternPrimary(ConstructorPattern(VariantConstructor,PatternArguments("(",Pattern(PatternPrimary(DictPattern(dict,"{",DictPatternField(String,":",DictPatternValue(Pattern(PatternPrimary(ConstructorPattern(VariantConstructor,PatternArguments("(",Pattern(PatternPrimary(VariableName)),")")))))),"}"))),")")))),"=>",VariantLiteral(VariantConstructor,VariantArguments("(",VariableName,")"))),SwitchCase("|",Pattern(PatternPrimary(VariableName)),"=>",VariantLiteral(VariantConstructor)),"}"),"}")))))
+
+# Record type spread with mixed fields
+
+type t = {
+  ...foo,
+  bar: string,
+}
+
+==>
+
+Script(TypeDeclaration(type,TypeBinding(TypeName,"=",TypeBody(RecordType("{",RecordTypeField(SpreadOperator,TypeName),",",RecordTypeField(PropertyDefinition,":",TypeName),",","}")))))
+
+# Record type spread with module-qualified source
+
+type t = {
+  ...Foo.base,
+  bar: string,
+}
+
+==>
+
+Script(TypeDeclaration(type,TypeBinding(TypeName,"=",TypeBody(RecordType("{",RecordTypeField(SpreadOperator,TypePath(ModulePrefix,TypeName)),",",RecordTypeField(PropertyDefinition,":",TypeName),",","}")))))
+
+# Nominal variant type spread
+
+type a =
+  | One
+  | Two
+
+type b =
+  | ...a
+  | Three
+
+==>
+
+Script(TypeDeclaration(type,TypeBinding(TypeName,"=",TypeBody(VariantType("|",VariantConstructorCase(VariantConstructor),"|",VariantConstructorCase(VariantConstructor))))),TypeDeclaration(type,TypeBinding(TypeName,"=",TypeBody(VariantType("|",VariantConstructorCase(VariantSpreadCase(SpreadOperator,TypeName)),"|",VariantConstructorCase(VariantConstructor))))))
+
+# Polymorphic variant type spread
+
+type c = [#One | #Two]
+type d = [#...c | #Three]
+
+==>
+
+Script(TypeDeclaration(type,TypeBinding(TypeName,"=",TypeBody(TypeAlias(PolyVariantType("[",PolyVariantCaseList(PolyVariantCase(PolyVariantTagCase(PolyVariantTag(Hash,PolyVariantName))),"|",PolyVariantCase(PolyVariantTagCase(PolyVariantTag(Hash,PolyVariantName)))),"]"))))),TypeDeclaration(type,TypeBinding(TypeName,"=",TypeBody(TypeAlias(PolyVariantType("[",PolyVariantCaseList(PolyVariantCase(PolyVariantSpreadCase(Hash,SpreadOperator,TypeName)),"|",PolyVariantCase(PolyVariantTagCase(PolyVariantTag(Hash,PolyVariantName)))),"]"))))))
+
+# First-class module numeric index piping
+
+module(Teenager)[0]->Js.log
+
+==>
+
+Script(BinaryExpression(MemberExpression(ModulePackExpression(module,"(",ModulePackContent(ModulePath(ModuleName)),")"),"[",Number,"]"),PipeOp,MemberExpression(ModulePrefix,MemberLeaf(VariableName))))
+
+# First-class module numeric index then member piping
+
+module(Teenager)[0]->age->Js.log
+
+==>
+
+Script(BinaryExpression(BinaryExpression(MemberExpression(ModulePackExpression(module,"(",ModulePackContent(ModulePath(ModuleName)),")"),"[",Number,"]"),PipeOp,VariableName),PipeOp,MemberExpression(ModulePrefix,MemberLeaf(VariableName))))
+
+# Strict comparison operators
+
+let cmp = a === b || a !== c
+
+==>
+
+Script(LetBinding(let,LetValueBinding(VariableDefinition,"=",BinaryExpression(BinaryExpression(VariableName,CompareOp,VariableName),LogicOp,BinaryExpression(VariableName,CompareOp,VariableName)))))
+
+# Exponent operator on bigint
+
+let pow = 2n ** 2n
+
+==>
+
+Script(LetBinding(let,LetValueBinding(VariableDefinition,"=",BinaryExpression(Number,ArithOp,Number))))
+
+# Unary plus and float signs
+
+let a = +5
+let b = +.5.4
+let c = -.2.5
+
+==>
+
+Script(LetBinding(let,LetValueBinding(VariableDefinition,"=",UnaryExpression(ArithOp,Number))),LetBinding(let,LetValueBinding(VariableDefinition,"=",UnaryExpression(ArithOp,Number))),LetBinding(let,LetValueBinding(VariableDefinition,"=",UnaryExpression(ArithOp,Number))))
+
+# Extension expressions without arguments
+
+%client.call
+%%server.op
+
+==>
+
+Script(ExtensionExpression("%",AttributeIdentifier),ExtensionExpression("%%",AttributeIdentifier))
+
+# Typed labeled call arguments
+
+call(~a: int, ~b: string=foo)
+
+==>
+
+Script(CallExpression(VariableName,"(",Argument(LabeledArgument("~",LabelName,LabeledArgumentAnnotation(":",TypeName))),",",Argument(LabeledArgument("~",LabelName,LabeledArgumentAnnotation(":",TypeName),"=",ArgumentValue(VariableName))),")"))
+
+# Qualified record field definition
+
+let recd = {Parsetree.pexp_attributes: [], loc: value}
+
+==>
+
+Script(LetBinding(let,LetValueBinding(VariableDefinition,"=",RecordExpression("{",Property(PropertyDefinition(ModulePrefix),":",ArrayExpression("[","]")),",",Property(PropertyDefinition,":",VariableName),"}"))))
+
+# Numeric polymorphic variant tags
+
+let one = #1
+let fortyTwo = #42
+
+==>
+
+Script(LetBinding(let,LetValueBinding(VariableDefinition,"=",PolyVariantLiteral(PolyVariantTag(Hash,PolyVariantName(Number))))),LetBinding(let,LetValueBinding(VariableDefinition,"=",PolyVariantLiteral(PolyVariantTag(Hash,PolyVariantName(Number))))))
+

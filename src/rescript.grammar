@@ -22,7 +22,12 @@
   statement @cut
 }
 
-@top Script { statement* }
+@top Script { scriptItem* }
+
+scriptItem {
+  statement |
+  ";"
+}
 
 @top SingleExpression { expression }
 
@@ -240,6 +245,7 @@ PatternPrimary {
   ConstructorPattern |
   ArrayPattern |
   ListPattern |
+  DictPattern |
   RecordPattern |
   PolyVariantPattern |
   ParenthesizedPattern
@@ -271,6 +277,7 @@ DestructuringPattern {
   TuplePattern |
   ArrayPattern |
   ListPattern |
+  DictPattern |
   RecordPattern |
   ConstructorPattern |
   PolyVariantPattern |
@@ -287,6 +294,19 @@ RecordPattern {
 PatternField {
   VariableName |
   PropertyName (":" Pattern)
+}
+
+DictPattern {
+  kw<"dict"> "{" commaSep<DictPatternField> "}"
+}
+
+DictPatternField {
+  String ":" DictPatternValue
+}
+
+DictPatternValue {
+  "?" VariableName |
+  Pattern
 }
 
 PolyVariantPattern {
@@ -346,13 +366,17 @@ expression {
   DictExpression { kw<"dict"> "{" commaSep<DictEntry> "}" } |
   RecordExpression { "{" commaSep1<Property> "}" } |
   Decorator |
-  ExtensionExpression { ("%" | "%%") AttributeIdentifier AttributeArguments } |
+  ExtensionExpression {
+    ("%" | "%%") AttributeIdentifier |
+    ("%" | "%%") AttributeIdentifier !decorator AttributeArguments
+  } |
   ModulePackExpression |
   CallExpression |
   MemberExpression |
   BinaryExpression {
+    expression !assign "=" expression |
     expression !assign ":=" expression |
-    expression !times (ArithOp<"*"> | ArithOp<"/"> | ArithOp<"*."> | ArithOp<"/."> | kw<"mod">) expression |
+    expression !times (ArithOp<"**"> | ArithOp<"*"> | ArithOp<"/"> | ArithOp<"*."> | ArithOp<"/."> | kw<"mod">) expression |
     expression !plus (ArithOp<"+"> | ArithOp<"-"> | ArithOp<"+."> | ArithOp<"-.">) expression |
     expression !shift ShiftOp expression |
     expression !bitand BitAndOp expression |
@@ -360,18 +384,20 @@ expression {
     expression !bitor BitOrOp expression |
     expression !concat StringOp<"++"> expression |
     expression !pipe PipeOp<"->" | "|>"> expression |
-    expression !rel (LessThan | CompareOp<"<=" | ">" | ">=" | "==" | "!=">) expression |
+    expression !rel (LessThan | CompareOp<"<=" | ">" | ">=" | "==" | "!=" | "===" | "!==">) expression |
     expression !and LogicOp<"&&"> expression |
     expression !or LogicOp<"||"> expression
   } |
-  UnaryExpression { !prefix (ArithOp<"-"> | LogicOp<"!"> | BitNotOp) expression } |
+  UnaryExpression { !prefix (ArithOp<"-"> | ArithOp<"-."> | ArithOp<"+"> | ArithOp<"+."> | LogicOp<"!"> | BitNotOp) expression } |
   ParenthesizedExpression |
   JSXElement
 }
 
 AwaitExpression { kw<"await"> expression }
 AsyncExpression { kw<"async"> expression }
-ParenthesizedExpression[@dynamicPrecedence=-1] { "(" expression ~parenthesized ")" !arrow }
+ParenthesizedExpression[@dynamicPrecedence=-1] {
+  "(" expression ~parenthesized ")" !arrow
+}
 
 ArrowFunction[@dynamicPrecedence=1] {
   ParenthesizedExpression !arrow "=>" expression |
@@ -385,7 +411,12 @@ SingleParam { VariableName }
 MemberExpression {
   ModulePrefix MemberLeaf |
   RecordFieldAccess |
-  expression !member "[" String "]"
+  expression !member "[" expression IndexConstraint? "]"
+}
+
+IndexConstraint {
+  ":" type |
+  ":>" type
 }
 
 RecordFieldAccess {
@@ -423,7 +454,11 @@ Argument {
 }
 
 LabeledArgument {
-  "~" LabelName ("=" ArgumentValue)?
+  "~" LabelName LabeledArgumentAnnotation? ("=" ArgumentValue)?
+}
+
+LabeledArgumentAnnotation {
+  ":" type
 }
 
 ArgumentValue {
@@ -477,6 +512,7 @@ FunctionTypeParamList {
 }
 
 FunctionTypeParamItems {
+  "" |
   FunctionTypeLabeledParamList |
   FunctionTypeSingleParam |
   FunctionTypeUnlabeledParam "," FunctionTypeParameter ("," FunctionTypeParameter?)*
@@ -515,7 +551,7 @@ Hash { "#" }
 TypeParameter { Quote VariableName }
 
 FunctionType {
-  (FunctionTypeParamList | TypeName | TypePath | TypeParameter | TypeApplication | ParenthesizedType) FunctionArrow type
+  (FunctionTypeParamList | TypeName | TypePath | TypeParameter | TypeApplication | DictType | ParenthesizedType) FunctionArrow type
 }
 
 FunctionArrow { "->" | "=>" }
@@ -525,6 +561,7 @@ type[@isGroup=Type] {
   TypeName |
   TypeParameter |
   PolyVariantType |
+  DictType |
   TypeApplication |
   ParenthesizedType |
   FunctionType
@@ -533,6 +570,8 @@ type[@isGroup=Type] {
 
 TypeAngleLeftNode { CompareOp<"<"> }
 TypeAngleRightNode { CompareOp<">"> }
+
+DictType { kw<"dict"> TypeAngleLeftNode type TypeAngleRightNode }
 
 TypeApplication { (TypeName | TypePath) TypeAngleLeftNode commaSep<type> TypeAngleRightNode }
 
@@ -545,10 +584,11 @@ RecordType {
 }
 
 RecordTypeField {
-  (PropertyDefinition "?"? | String) ":" type
+  (PropertyDefinition "?"? | String) ":" type |
+  SpreadOperator (TypeName | TypePath)
 }
 
-PolyVariantName { uppercaseIdentifier | identifier | String }
+PolyVariantName { uppercaseIdentifier | identifier | Number | String }
 PolyVariantTag { Hash PolyVariantName }
 
 // Variance marker for polymorphic variants: lower-bound '>' or upper-bound '<'
@@ -648,7 +688,7 @@ TypePath {
 TypeName { identifier }
 VariantConstructor { uppercaseIdentifier }
 PropertyName { identifier }
-PropertyDefinition { identifier }
+PropertyDefinition { identifier | ModulePrefix identifier }
 LabelName { identifier }
 
 @skip { spaces | newline | LineComment | BlockComment }
@@ -780,7 +820,7 @@ Interpolation {
   "..."
   "("  ")" "[" "]" "{" "}"
   "." "," ":" ";"
-  "=" "?" "|" "~" "'" "@" "%" "_" "`" "${" ":="
+  "=" "?" "|" "~" "'" "@" "%" "_" "`" "${" ":=" ":>"
   "@@" "%%"
 
   "+." "-." "*." "/."
