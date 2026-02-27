@@ -17,6 +17,15 @@ let item = process["argv"][index + 1]
 
 Script(LetBinding(let,LetValueBinding(VariableDefinition,"=",Number)),LetBinding(let,LetValueBinding(VariableDefinition,"=",MemberExpression(MemberExpression(VariableName,"[",String,"]"),"[",BinaryExpression(VariableName,ArithOp,Number),"]"))))
 
+# Bracket index constraint and coercion
+
+let typed = arr[idx: int]
+let coerced = arr[idx :> int]
+
+==>
+
+Script(LetBinding(let,LetValueBinding(VariableDefinition,"=",MemberExpression(VariableName,"[",VariableName,IndexConstraint(":",TypeName),"]"))),LetBinding(let,LetValueBinding(VariableDefinition,"=",MemberExpression(VariableName,"[",VariableName,IndexConstraint(":>",TypeName),"]"))))
+
 # Chained bracket assignment expressions
 
 john["age"] = 99
@@ -177,4 +186,64 @@ module(Teenager)[0]->age->Js.log
 ==>
 
 Script(BinaryExpression(BinaryExpression(MemberExpression(ModulePackExpression(module,"(",ModulePackContent(ModulePath(ModuleName)),")"),"[",Number,"]"),PipeOp,VariableName),PipeOp,MemberExpression(ModulePrefix,MemberLeaf(VariableName))))
+
+# Strict comparison operators
+
+let cmp = a === b || a !== c
+
+==>
+
+Script(LetBinding(let,LetValueBinding(VariableDefinition,"=",BinaryExpression(BinaryExpression(VariableName,CompareOp,VariableName),LogicOp,BinaryExpression(VariableName,CompareOp,VariableName)))))
+
+# Exponent operator on bigint
+
+let pow = 2n ** 2n
+
+==>
+
+Script(LetBinding(let,LetValueBinding(VariableDefinition,"=",BinaryExpression(Number,ArithOp,Number))))
+
+# Unary plus and float signs
+
+let a = +5
+let b = +.5.4
+let c = -.2.5
+
+==>
+
+Script(LetBinding(let,LetValueBinding(VariableDefinition,"=",UnaryExpression(ArithOp,Number))),LetBinding(let,LetValueBinding(VariableDefinition,"=",UnaryExpression(ArithOp,Number))),LetBinding(let,LetValueBinding(VariableDefinition,"=",UnaryExpression(ArithOp,Number))))
+
+# Extension expressions without arguments
+
+%client.call
+%%server.op
+
+==>
+
+Script(ExtensionExpression("%",AttributeIdentifier),ExtensionExpression("%%",AttributeIdentifier))
+
+# Typed labeled call arguments
+
+call(~a: int, ~b: string=foo)
+
+==>
+
+Script(CallExpression(VariableName,"(",Argument(LabeledArgument("~",LabelName,LabeledArgumentAnnotation(":",TypeName))),",",Argument(LabeledArgument("~",LabelName,LabeledArgumentAnnotation(":",TypeName),"=",ArgumentValue(VariableName))),")"))
+
+# Qualified record field definition
+
+let recd = {Parsetree.pexp_attributes: [], loc: value}
+
+==>
+
+Script(LetBinding(let,LetValueBinding(VariableDefinition,"=",RecordExpression("{",Property(PropertyDefinition(ModulePrefix),":",ArrayExpression("[","]")),",",Property(PropertyDefinition,":",VariableName),"}"))))
+
+# Numeric polymorphic variant tags
+
+let one = #1
+let fortyTwo = #42
+
+==>
+
+Script(LetBinding(let,LetValueBinding(VariableDefinition,"=",PolyVariantLiteral(PolyVariantTag(Hash,PolyVariantName(Number))))),LetBinding(let,LetValueBinding(VariableDefinition,"=",PolyVariantLiteral(PolyVariantTag(Hash,PolyVariantName(Number))))))
 
