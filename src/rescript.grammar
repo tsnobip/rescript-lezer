@@ -238,7 +238,17 @@ LetValueBinding {
   PatternBinding
 }
 
-PatternBinding[@dynamicPrecedence=-1] { Pattern "=" expression }
+PatternBinding { BindingPattern "=" expression }
+BindingPattern[@name=Pattern] {
+  BindingLiteral ~parameter (PatternAnnotation | PatternAlias)* ~parameter ("|" PatternPrimary ~parameter (PatternAnnotation | PatternAlias)* ~parameter)* |
+  PatternPrimary ~parameter PatternAnnotation* (
+    PatternAlias (PatternAnnotation | PatternAlias)* ~parameter ("|" PatternPrimary ~parameter (PatternAnnotation | PatternAlias)* ~parameter)* |
+    ("|" PatternPrimary ~parameter (PatternAnnotation | PatternAlias)* ~parameter)+
+  )
+}
+BindingLiteral[@name=PatternPrimary] {
+  (Number | SignedPattern | RangePattern | String | Char | boolean | TemplateString | ExtensionExpression | DecoratedPattern) ~parameter
+}
 
 LetRecBindings {
   kw<"rec"> LetRecBinding (~binding Decorator* kw<"and"> LetRecBinding)* ~binding
