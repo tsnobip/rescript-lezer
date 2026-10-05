@@ -39,6 +39,9 @@ checkout. It also compares fresh and incremental trees across 1,000 reproducible
 It fails on compiler-valid parse errors, incremental mismatches, or crashes.
 Compiler-rejected fixtures remain visible in the full differential audit.
 
+GitHub Actions runs `npm test` and this corpus check on pushes and pull requests,
+and saves the JSON audit report as the `grammar-audit` artifact.
+
 ### Strict agreement
 
 ```bash
