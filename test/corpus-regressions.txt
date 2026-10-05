@@ -1,3 +1,14 @@
+# for-of, asynchronous loops and parenthesized loop headers
+
+for (index in 0 to 3) {ignore(index)}
+for value of values {ignore(value)}
+for await value of iterable {ignore(value)}
+for (id of values) {ignore(id)}
+
+==>
+
+Script(ForExpression(for,"(",Pattern(PatternPrimary(VariableName)),in,Number,ForDirection(to),Number,")",BlockExpression("{",CallExpression(VariableName,"(",Argument(VariableName),")"),"}")),ForExpression(for,VariableName,of,VariableName,BlockExpression("{",CallExpression(VariableName,"(",Argument(VariableName),")"),"}")),ForExpression(for,await,VariableName,of,VariableName,BlockExpression("{",CallExpression(VariableName,"(",Argument(VariableName),")"),"}")),ForExpression(for,"(",VariableName,of,VariableName,")",BlockExpression("{",CallExpression(VariableName,"(",Argument(VariableName),")"),"}")))
+
 # decorated parameters, mixed local types and module patterns
 
 let decorated = (@attr ~a, @attr b, @attr ~c) => (a, b, c)

@@ -220,7 +220,12 @@ WhileExpression {
 }
 
 ForExpression {
-  kw<"for"> Pattern kw<"in"> expression ForDirection expression BlockExpression
+  kw<"for"> (forHeader | "(" forHeader ")") BlockExpression
+}
+
+forHeader {
+  Pattern kw<"in"> expression ForDirection expression |
+  kw<"await">? VariableName kw<"of"> expression
 }
 
 ForDirection {
