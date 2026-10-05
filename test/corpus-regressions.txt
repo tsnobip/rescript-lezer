@@ -1,3 +1,17 @@
+# exception and optional record patterns, literal parameters and partial calls
+
+let get = value => switch value {
+| exception _ => None
+| {id, ?deprecated} => Some(id)
+}
+let literal = (1, "hello") => ()
+let partial = call(3, ...)
+type t = ((), ()) => unit
+
+==>
+
+Script(LetBinding(let,LetValueBinding(VariableDefinition,"=",ArrowFunction(SingleParam(VariableName),"=>",SwitchExpression(switch,VariableName,"{",SwitchCase("|",Pattern(PatternPrimary(ExceptionPattern(exception,PatternPrimary(VariableName)))),"=>",VariantLiteral(VariantConstructor)),SwitchCase("|",Pattern(PatternPrimary(RecordPattern("{",PatternField(VariableName),",",PatternField("?",VariableName),"}"))),"=>",VariantLiteral(VariantConstructor,VariantArguments("(",VariableName,")"))),"}")))),LetBinding(let,LetValueBinding(VariableDefinition,"=",ArrowFunction(ParamList("(",ParamItems(UnlabeledParameter(SimpleParameter(LiteralParameter(Number))),",",SimpleParameter(LiteralParameter(String))),")"),"=>",UnitToken))),LetBinding(let,LetValueBinding(VariableDefinition,"=",CallExpression(VariableName,"(",Argument(Number),",",Argument(SpreadOperator),")"))),TypeDeclaration(type,TypeBinding(TypeName,"=",TypeBody(TypeAlias(FunctionType(FunctionTypeParamList("(",FunctionTypeParamItems(FunctionTypeUnlabeledParam(FunctionTypeSimpleParam(UnitType("(",")"))),",",FunctionTypeParameter(FunctionTypeSimpleParam(UnitType("(",")")))),")"),FunctionArrow("=>"),TypeName))))))
+
 # signed patterns, tagged templates and object function types
 
 let find = index => switch index { | -1 => None | _ => Some(index) }

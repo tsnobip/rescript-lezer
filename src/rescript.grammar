@@ -277,6 +277,7 @@ PatternPrimary {
   Number |
   SignedPattern |
   RangePattern |
+  ExceptionPattern |
   String |
   Char |
   boolean |
@@ -297,6 +298,7 @@ VariantSpreadPattern {
 
 SignedPattern { (ArithOp<"-"> | ArithOp<"-."> | ArithOp<"+"> | ArithOp<"+.">) Number }
 RangePattern { Char ".." Char }
+ExceptionPattern { kw<"exception"> PatternPrimary }
 
 UnitPattern { UnitToken ~annotation | "(" ")" }
 
@@ -337,6 +339,7 @@ RecordPattern {
 }
 
 PatternField {
+  "?" VariableName |
   VariableName ~parameter |
   ModulePrefix? PropertyName (":" Pattern)
 }
@@ -517,7 +520,8 @@ OptionalPropertyPun {
 
 Argument {
   LabeledArgument |
-  expression
+  expression |
+  SpreadOperator
 }
 
 LabeledArgument {
@@ -567,8 +571,11 @@ UnlabeledParameter { SimpleParameter }
 
 SimpleParameter {
   VariableName ~parameter ParameterAnnotation? ParameterDefault? |
-  DestructuringPattern PatternAlias? ParameterAnnotation? ParameterDefault?
+  DestructuringPattern PatternAlias? ParameterAnnotation? ParameterDefault? |
+  LiteralParameter
 }
+
+LiteralParameter { (Number | String | Char | boolean) ~parameter }
 
 ParameterAnnotation {
   ":" type
@@ -579,11 +586,11 @@ ParameterDefault {
 }
 
 FunctionTypeParamList {
-  "(" DotUncurried? FunctionTypeParamItems ")"
+  "(" DotUncurried? FunctionTypeParamItems ")" ~functionType
 }
 
 FunctionTypeParamItems {
-  "" |
+  "" ~functionType |
   FunctionTypeLabeledParamList |
   FunctionTypeSingleParam |
   FunctionTypeUnlabeledParam "," FunctionTypeParameter ("," FunctionTypeParameter?)*
@@ -649,10 +656,12 @@ type[@isGroup=Type] {
   DecoratedType |
   QuantifiedType |
   AliasedType
+  | UnitType
   ) ~typeBody ~typeAlias
 }
 
 ObjectType { "{" (".." | ".") commaSep<RecordTypeField> "}" }
+UnitType { "(" ~functionType ")" ~functionType }
 DecoratedType { Decorator ~decorated type }
 QuantifiedType { TypeParameter+ "." type }
 AliasedType { type ~typeAlias kw<"as"> TypeParameter }
