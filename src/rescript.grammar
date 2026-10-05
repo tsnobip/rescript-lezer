@@ -17,6 +17,7 @@
   or @left,
   typearg @left,
   assign @right,
+  ternary @right,
   arrow @right,
   decorator,
   statement @cut
@@ -113,7 +114,7 @@ ModulePackContent {
 }
 
 ModuleBody {
-  "{" statement* "}"
+  "{" blockItem* "}"
 }
 
 ModuleTypeBody {
@@ -180,7 +181,7 @@ LetBinding {
 }
 
 LetValueBinding {
-  DestructuringPattern "=" expression |
+  DestructuringPattern (":" type)? "=" expression |
   VariableDefinition ParamList? (":" type)? "=" expression
 }
 
@@ -226,7 +227,7 @@ ForDirection {
 }
 
 TryExpression {
-  kw<"try"> BlockExpression kw<"catch"> "{" SwitchCase* "}"
+  kw<"try"> expression kw<"catch"> "{" SwitchCase* "}"
 }
 
 BlockExpression {
@@ -413,6 +414,7 @@ expression {
   ModulePackExpression |
   CallExpression |
   MemberExpression |
+  TernaryExpression { expression !ternary "?" expression ":" expression } |
   BinaryExpression {
     expression !assign "=" expression |
     expression !assign ":=" expression |

@@ -1,3 +1,14 @@
+# ternaries, bare try expressions and typed destructuring
+
+let compare = (a, b) => a < b ? Less : a > b ? Greater : Equal
+let parse = value => try Some(parseOrThrow(value)) catch { | _ => None }
+let {depth}: nested = value
+let pair: (int, int) = flag ? (1, 2) : (3, 4)
+
+==>
+
+Script(LetBinding(let,LetValueBinding(VariableDefinition,"=",ArrowFunction(ParamList("(",ParamItems(UnlabeledParameter(SimpleParameter(VariableName)),",",SimpleParameter(VariableName)),")"),"=>",TernaryExpression(BinaryExpression(VariableName,CompareOp,VariableName),"?",VariantLiteral(VariantConstructor),":",TernaryExpression(BinaryExpression(VariableName,CompareOp,VariableName),"?",VariantLiteral(VariantConstructor),":",VariantLiteral(VariantConstructor)))))),LetBinding(let,LetValueBinding(VariableDefinition,"=",ArrowFunction(SingleParam(VariableName),"=>",TryExpression(try,VariantLiteral(VariantConstructor,VariantArguments("(",CallExpression(VariableName,"(",Argument(VariableName),")"),")")),catch,"{",SwitchCase("|",Pattern(PatternPrimary(VariableName)),"=>",VariantLiteral(VariantConstructor)),"}")))),LetBinding(let,LetValueBinding(DestructuringPattern(RecordPattern("{",PatternField(VariableName),"}")),":",TypeName,"=",VariableName)),LetBinding(let,LetValueBinding(VariableDefinition,":",TupleType("(",TypeName,",",TypeName,")"),"=",TernaryExpression(VariableName,"?",TupleExpression("(",Number,",",Number,")"),":",TupleExpression("(",Number,",",Number,")")))))
+
 # contextual keyword identifiers
 
 let map = (list, dict) => switch list { | list{} => dict | list{head, ...tail} => head }
