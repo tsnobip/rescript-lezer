@@ -651,7 +651,7 @@ TypeBinding {
 TypeBody {
   VariantType |
   RecordType |
-  TypeAlias
+  TypeAlias ("=" (RecordType | VariantType))?
 }
 
 TypeAlias { type }

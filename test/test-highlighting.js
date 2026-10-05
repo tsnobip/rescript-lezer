@@ -107,4 +107,34 @@ ${"let after = false\n".repeat(20)}`
     }
     assert.deepEqual(nodes(tree), nodes(fresh))
   })
+
+  it("parses and highlights record type re-exports", () => {
+    const source = `module Foo = {
+  type t = {foo: array<int>, bar: string}
+}
+
+type t = Foo.t = {foo: array<int>, bar: string}`
+    const start = source.indexOf("type t = Foo.t")
+    const tree = checkHighlighting(source, [
+      ["type", t.definitionKeyword, start], ["t", t.definition(t.typeName), start + 5],
+      ["Foo.", t.namespace, start], ["t", t.typeName, source.indexOf("Foo.t") + 4],
+      ["foo", t.definition(t.propertyName), start], ["array", t.typeName, start],
+      ["int", t.typeName, start], ["bar", t.definition(t.propertyName), start],
+      ["string", t.typeName, start],
+    ])
+    const body = tree.topNode.getChild("TypeDeclaration").getChild("TypeBinding").getChild("TypeBody")
+    assert.ok(body.getChild("TypeAlias").getChild("TypePath"))
+    assert.ok(body.getChild("RecordType"))
+  })
+
+  it("supports generic record and variant re-exports in module signatures", () => {
+    const source = `module type S = {
+  type t<'a> = Foo.t<'a> = {data: 'a}
+  type result = Foo.result = | Ok(int) | Error(string)
+}`
+    checkHighlighting(source, [
+      ["Foo.", t.namespace], ["data", t.definition(t.propertyName)],
+      ["Ok", t.atom], ["Error", t.atom], ["string", t.typeName],
+    ])
+  })
 })
