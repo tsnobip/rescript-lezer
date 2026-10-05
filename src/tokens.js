@@ -59,6 +59,24 @@ function identifierChar(ch, start) {
 }
 
 // JSX tokenizer that also handles < comparison
+export const comments = new ExternalTokenizer(input => {
+  if (input.next != slash || input.peek(1) != star) return;
+  input.advance(2);
+  let depth = 1;
+  while (input.next >= 0) {
+    if (input.next == slash && input.peek(1) == star) {
+      depth++;
+      input.advance(2);
+    } else if (input.next == star && input.peek(1) == slash) {
+      input.advance(2);
+      if (--depth == 0) {
+        input.acceptToken(BlockComment);
+        return;
+      }
+    } else input.advance();
+  }
+});
+
 export const unit = new ExternalTokenizer((input, stack) => {
   if (input.next == 40 && input.peek(1) == 41 && stack.canShift(UnitToken)) {
     input.advance(2);

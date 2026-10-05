@@ -1,3 +1,13 @@
+# nested comments and escaped template delimiters
+
+/* outer /* middle /* inner */ middle */ outer */
+let x = `escaped \${value and \`backtick and $`
+let y = `value ${name}`
+
+==>
+
+Script(BlockComment,LetBinding(let,LetValueBinding(VariableDefinition,"=",TemplateString("`",TemplateContent,TemplateEscape,TemplateContent,TemplateEscape,TemplateContent,TemplateContent,"`"))),LetBinding(let,LetValueBinding(VariableDefinition,"=",TemplateString("`",TemplateContent,Interpolation("${",VariableName,"}"),"`"))))
+
 # consecutive declaration attributes
 
 @a @a @a @a @a @a @a @a @a @a @a @a type t = int

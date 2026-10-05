@@ -906,6 +906,7 @@ LabelName { identifier | exoticIdentifier }
 @context trackNewline from "./tokens.js"
 
 @external tokens variant from "./tokens" { VariantConstructorArgsToken, VariantConstructorResultToken }
+@external tokens comments from "./tokens" { BlockComment[isolate] }
 @external tokens regexp from "./tokens" { RegExpLiteral }
 @external tokens ternaryColon from "./tokens" { TernaryColon[@name=":"] }
 @external tokens attributeArgs from "./tokens" { AttributeArgsOpen[@name="("] }
@@ -920,10 +921,10 @@ LabelName { identifier | exoticIdentifier }
   }
   
   TemplateString[isolate] {
-    "`" (TemplateContent | Interpolation)* "`"
+    "`" (TemplateContent | TemplateEscape | Interpolation)* "`"
   }
   
-  BlockComment[isolate] { "/*" (blockCommentContent | blockCommentNewline)* blockCommentEnd }
+
 }
 
 TemplateContent {
@@ -932,12 +933,6 @@ TemplateContent {
 
 Interpolation {
   "${" expression "}"
-}
-
-@local tokens {
-  blockCommentEnd { "*/" }
-  blockCommentNewline { "\n" }
-  @else blockCommentContent
 }
 
 @tokens {
@@ -995,7 +990,9 @@ Interpolation {
   StringOp<expr> { expr }
   PipeOp<expr> { expr }
   
-  templateText { ![\`$]+ | "$" ![\{] }
+  templateText { ![\\`$]+ | "$" }
+  TemplateEscape { "\\" _ }
+  @precedence { "${", templateText }
 
   @precedence { LineComment, BitNotOp, ShiftOp, BitAndOp, BitXorOp, BitOrOp, ArithOp, DivisionOp }
 
