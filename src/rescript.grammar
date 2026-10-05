@@ -41,7 +41,7 @@ statement[@isGroup=Statement] {
   IncludeStatement |
   ExternalDeclaration |
   ExceptionDeclaration |
-  expression
+  expression ~jsxAttribute
 }
 
 ModuleDeclaration {
@@ -808,6 +808,7 @@ LabelName { identifier | exoticIdentifier }
 @external tokens variant from "./tokens" { VariantConstructorArgsToken, VariantConstructorResultToken }
 @external tokens unit from "./tokens" { UnitToken }
 @external tokens typeAngle from "./tokens" { TypeAngleLeftToken[@name=CompareOp], TypeAngleRightToken[@name=CompareOp] }
+@external tokens jsxTag from "./tokens" { JSXIdentifier, JSXEndTag }
 @external tokens jsx from "./tokens" { JSXStartTag, LessThan[@name=CompareOp] }
 
 @skip {} {
@@ -937,12 +938,10 @@ Interpolation {
 
   "+." "-." "*." "/."
 
-  JSXEndTag { ">" }
   
   JSXSelfCloseEndTag { "/>" }
   JSXStartCloseTag { "</" }
   JSXText { ![<{]+ }
-  JSXIdentifier { identifier }
 
   AttributeIdentifier {
     identifier ("." identifier)* 
@@ -952,8 +951,11 @@ Interpolation {
 @skip {} {
   JSXElement {
     JSXSelfClosingTag |
-    JSXOpenTag jsxChildren* JSXCloseTag
+    JSXOpenTag jsxChildren* JSXCloseTag |
+    JSXFragment
   }
+
+  JSXFragment { JSXFragmentOpenTag jsxChildren* JSXFragmentCloseTag }
 }
 
 jsxChildren {
@@ -963,10 +965,12 @@ jsxChildren {
 }
 
 JSXExpressionContainer {
-  "{" expression "}"
+  "{" expression ~jsxAttribute "}"
 }
 
 JSXSelfClosingTag { JSXStartTag jsxElementName jsxAttribute* JSXSelfCloseEndTag }
+JSXFragmentOpenTag { JSXStartTag JSXEndTag }
+JSXFragmentCloseTag { JSXStartCloseTag JSXEndTag }
 JSXOpenTag { JSXStartTag jsxElementName jsxAttribute* JSXEndTag }
 JSXCloseTag { JSXStartCloseTag jsxElementName? JSXEndTag }
 
@@ -984,7 +988,12 @@ jsxAttribute {
 
 jsxAttributeValue {
   String |
-  "{" expression "}"
+  Number |
+  boolean |
+  VariableName |
+  MemberExpression |
+  CallExpression |
+  "{" expression ~jsxAttribute "}"
 }
 
 @external propSource rescriptHighlight from "./highlight"

@@ -1,3 +1,15 @@
+# JSX fragments, hyphenated names and bare attribute values
+
+let view = <div data-value={a >> 1} title=name>
+  <option value=version.id>{View.text(version.label)}</option>
+  <>{`value ${a >>> 1}`}</>
+</div>
+let short = <input value=1 checked=true onChange=handler />
+
+==>
+
+Script(LetBinding(let,LetValueBinding(VariableDefinition,"=",JSXElement(JSXOpenTag(JSXStartTag,JSXIntrinsicElementName(JSXIdentifier),JSXAttribute(JSXIdentifier,"=","{",BinaryExpression(VariableName,ShiftOp,Number),"}"),JSXAttribute(JSXIdentifier,"=",VariableName),JSXEndTag),JSXText,JSXElement(JSXOpenTag(JSXStartTag,JSXIntrinsicElementName(JSXIdentifier),JSXAttribute(JSXIdentifier,"=",MemberExpression(RecordFieldAccess(VariableName,".",PropertyName))),JSXEndTag),JSXExpressionContainer("{",CallExpression(MemberExpression(ModulePrefix,MemberLeaf(VariableName)),"(",Argument(MemberExpression(RecordFieldAccess(VariableName,".",PropertyName))),")"),"}"),JSXCloseTag(JSXStartCloseTag,JSXIntrinsicElementName(JSXIdentifier),JSXEndTag)),JSXText,JSXElement(JSXFragment(JSXFragmentOpenTag(JSXStartTag,JSXEndTag),JSXExpressionContainer("{",TemplateString("`",TemplateContent,Interpolation("${",BinaryExpression(VariableName,ShiftOp,Number),"}"),"`"),"}"),JSXFragmentCloseTag(JSXStartCloseTag,JSXEndTag))),JSXText,JSXCloseTag(JSXStartCloseTag,JSXIntrinsicElementName(JSXIdentifier),JSXEndTag)))),LetBinding(let,LetValueBinding(VariableDefinition,"=",JSXElement(JSXSelfClosingTag(JSXStartTag,JSXIntrinsicElementName(JSXIdentifier),JSXAttribute(JSXIdentifier,"=",Number),JSXAttribute(JSXIdentifier,"=",BooleanLiteral),JSXAttribute(JSXIdentifier,"=",VariableName),JSXSelfCloseEndTag)))))
+
 # exception and optional record patterns, literal parameters and partial calls
 
 let get = value => switch value {

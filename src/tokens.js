@@ -10,6 +10,7 @@ import {
   JSXStartTag,
   JSXStartCloseTag,
   JSXEndTag,
+  JSXIdentifier,
   LessThan,
   VariantConstructorArgsToken,
   VariantConstructorResultToken,
@@ -71,10 +72,22 @@ export const typeAngle = new ExternalTokenizer((input, stack) => {
   }
 }, { contextual: true });
 
+export const jsxTag = new ExternalTokenizer((input, stack) => {
+  if (input.next == 62 && stack.canShift(JSXEndTag)) {
+    input.advance();
+    input.acceptToken(JSXEndTag);
+  } else if (stack.canShift(JSXIdentifier) &&
+      (input.next >= 97 && input.next <= 122 || input.next == 95)) {
+    input.advance();
+    while (identifierChar(input.next, false) || input.next == 36 || input.next == 45) input.advance();
+    input.acceptToken(JSXIdentifier);
+  }
+}, { contextual: true });
+
 export const jsx = new ExternalTokenizer((input, stack) => {
   if (input.next != lt || input.peek(1) == 61 || input.peek(1) == lt) return;
   if (stack.canShift(LessThan) && !stack.canShift(JSXStartCloseTag) &&
-      !(stack.context && stack.canShift(JSXStartTag) && identifierChar(input.peek(1), true))) {
+      !(stack.canShift(JSXStartTag) && (input.peek(1) == 62 || stack.context && identifierChar(input.peek(1), true)))) {
     input.advance();
     input.acceptToken(LessThan);
     return;
@@ -91,7 +104,7 @@ export const jsx = new ExternalTokenizer((input, stack) => {
   }
 
   // If followed by an identifier character, it's JSX
-  if (identifierChar(input.next, true)) {
+  if (identifierChar(input.next, true) || input.next == 62) {
     input.acceptToken(JSXStartTag);
   } else {
     // Not an identifier, treat as less-than
