@@ -1,3 +1,34 @@
+# switch branch statement sequences
+
+let read = value => switch value {
+| Some(cell) =>
+  let key = cell.key
+  log(key)
+  Some(key)
+| None => None
+}
+
+==>
+
+Script(LetBinding(let,LetValueBinding(VariableDefinition,"=",ArrowFunction(SingleParam(VariableName),"=>",SwitchExpression(switch,VariableName,"{",SwitchCase("|",Pattern(PatternPrimary(ConstructorPattern(VariantConstructor,PatternArguments("(",Pattern(PatternPrimary(VariableName)),")")))),"=>",LetBinding(let,LetValueBinding(VariableDefinition,"=",MemberExpression(RecordFieldAccess(VariableName,".",PropertyName)))),CallExpression(VariableName,"(",Argument(VariableName),")"),VariantLiteral(VariantConstructor,VariantArguments("(",VariableName,")"))),SwitchCase("|",Pattern(PatternPrimary(ConstructorPattern(VariantConstructor))),"=>",VariantLiteral(VariantConstructor)),"}")))))
+
+# qualified record patterns
+
+let {N.left: l, right: r} = node
+switch value { | Lib.Some({N.left: l}) => l | _ => 0 }
+
+==>
+
+Script(LetBinding(let,LetValueBinding(DestructuringPattern(RecordPattern("{",PatternField(ModulePrefix,PropertyName,":",Pattern(PatternPrimary(VariableName))),",",PatternField(PropertyName,":",Pattern(PatternPrimary(VariableName))),"}")),"=",VariableName)),SwitchExpression(switch,VariableName,"{",SwitchCase("|",Pattern(PatternPrimary(ConstructorPattern(ModulePrefix,VariantConstructor,PatternArguments("(",Pattern(PatternPrimary(RecordPattern("{",PatternField(ModulePrefix,PropertyName,":",Pattern(PatternPrimary(VariableName))),"}"))),")")))),"=>",VariableName),SwitchCase("|",Pattern(PatternPrimary(VariableName)),"=>",Number),"}"))
+
+# expression constraints and coercions
+
+let run = () => {(action(): unit); (value :> int)}
+
+==>
+
+Script(LetBinding(let,LetValueBinding(VariableDefinition,"=",ArrowFunction(UnitToken,"=>",BlockExpression("{",ParenthesizedExpression("(",CallExpression(VariableName,UnitToken),IndexConstraint(":",TypeName),")"),";",ParenthesizedExpression("(",VariableName,IndexConstraint(":>",TypeName),")"),"}")))))
+
 # unnamed and nested function type parameters
 
 external get: (array<'a>, int) => 'a = "%array_unsafe_get"

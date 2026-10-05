@@ -180,7 +180,7 @@ SwitchExpression[@dynamicPrecedence=1] {
 }
 
 SwitchCase[@dynamicPrecedence=-1] {
-  "|" Pattern (PatternGuard)? "=>" expression
+  "|" Pattern (PatternGuard)? "=>" blockItem+
 }
 
 IfExpression {
@@ -270,7 +270,7 @@ VariantSpreadPattern {
 UnitPattern { "(" ")" }
 
 ConstructorPattern {
-  VariantConstructor PatternArguments?
+  ModulePrefix? VariantConstructor PatternArguments?
 }
 
 ArrayPattern {
@@ -305,7 +305,7 @@ RecordPattern {
 
 PatternField {
   VariableName |
-  PropertyName (":" Pattern)
+  ModulePrefix? PropertyName (":" Pattern)
 }
 
 DictPattern {
@@ -409,7 +409,7 @@ expression {
 AwaitExpression { kw<"await"> expression }
 AsyncExpression { kw<"async"> expression }
 ParenthesizedExpression[@dynamicPrecedence=-1] {
-  "(" expression ~parenthesized ")" !arrow
+  "(" expression IndexConstraint? ~parenthesized ")" !arrow
 }
 
 ArrowFunction[@dynamicPrecedence=1] {
@@ -668,7 +668,7 @@ TypeBody {
 TypeAlias { type }
 
 VariantType {
-  "|" VariantConstructorCase ("|" VariantConstructorCase)*
+  "|" VariantConstructorCase (~case "|" VariantConstructorCase)* ~case
 }
 
 VariantConstructorCase {
