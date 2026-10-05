@@ -1,3 +1,23 @@
+# labeled aliases and locally abstract function types
+
+let make = (type key identity, ~id: id<key, identity>, ~cmp as compare) => compare(id)
+let copy = (~src as source, ~len as length=1) => source
+let () = sideEffect()
+let first = 1 and second = 2
+
+==>
+
+Script(LetBinding(let,LetValueBinding(VariableDefinition,"=",ArrowFunction(ParamList("(",ParamItems(LocalTypeParameter(type,TypeName,TypeName),",",LabeledParameter("~",LabelName,ParameterAnnotation(":",TypeApplication(TypeName,TypeAngleLeftNode(CompareOp),TypeName,",",TypeName,TypeAngleRightNode(CompareOp)))),",",LabeledParameter("~",LabelName,PatternAlias(as,VariableName))),")"),"=>",CallExpression(VariableName,"(",Argument(VariableName),")")))),LetBinding(let,LetValueBinding(VariableDefinition,"=",ArrowFunction(ParamList("(",ParamItems(LabeledParameterList(LabeledParameter("~",LabelName,PatternAlias(as,VariableName)),",",LabeledParameter("~",LabelName,PatternAlias(as,VariableName),ParameterDefault("=",Number)))),")"),"=>",VariableName))),LetBinding(let,LetValueBinding(DestructuringPattern(UnitPattern(UnitToken)),"=",CallExpression(VariableName,UnitToken))),LetBinding(let,LetValueBinding(VariableDefinition,"=",Number),and,LetValueBinding(VariableDefinition,"=",Number)))
+
+# typed patterns
+
+let (first: int, second) = pair
+switch value { | Some(cell: N.bucket<_>) => cell | _ => other }
+
+==>
+
+Script(LetBinding(let,LetValueBinding(DestructuringPattern(TuplePattern("(",Pattern(PatternPrimary(VariableName),PatternAnnotation(":",TypeName)),",",Pattern(PatternPrimary(VariableName)),")")),"=",VariableName)),SwitchExpression(switch,VariableName,"{",SwitchCase("|",Pattern(PatternPrimary(ConstructorPattern(VariantConstructor,PatternArguments("(",Pattern(PatternPrimary(VariableName),PatternAnnotation(":",TypeApplication(TypePath(ModulePrefix,TypeName),TypeAngleLeftNode(CompareOp),TypeName,TypeAngleRightNode(CompareOp)))),")")))),"=>",VariableName),SwitchCase("|",Pattern(PatternPrimary(VariableName)),"=>",VariableName),"}"))
+
 # JSX statement after an effect
 
 let make = () => {

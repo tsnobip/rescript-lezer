@@ -154,7 +154,7 @@ LetBinding {
   kw<"let"> (
     kw<"module"> ModuleUnpackBinding |
     LetRecBindings |
-    LetValueBinding
+    LetValueBinding (kw<"and"> LetValueBinding)*
   )
 }
 
@@ -225,11 +225,13 @@ PatternGuard {
 }
 
 Pattern {
-  PatternPrimary PatternAlias? ("|" PatternPrimary PatternAlias?)*
+  PatternPrimary PatternAnnotation? PatternAlias? ("|" PatternPrimary PatternAnnotation? PatternAlias?)*
 }
 
+PatternAnnotation { ":" annotationType }
+
 PatternAlias {
-  kw<"as"> VariableName
+  ~typeAlias kw<"as"> VariableName
 }
 
 Decorator {
@@ -267,7 +269,7 @@ VariantSpreadPattern {
   SpreadOperator TypeName
 }
 
-UnitPattern { "(" ")" }
+UnitPattern { UnitToken | "(" ")" }
 
 ConstructorPattern {
   ModulePrefix? VariantConstructor PatternArguments?
@@ -420,7 +422,11 @@ ArrowFunction[@dynamicPrecedence=1] {
 }
 
 ReturnTypeAnnotation {
-  ":" (TypeName | TypePath | TypeParameter | TypeApplication | DictType | ListType | ParenthesizedType | TupleType | PolyVariantType)
+  ":" annotationType
+}
+
+annotationType {
+  TypeName | TypePath | TypeParameter | TypeApplication | DictType | ListType | ParenthesizedType | TupleType | PolyVariantType
 }
 TupleExpression { "(" expression "," commaSep1<expression> ")" }
 
@@ -500,9 +506,12 @@ DotUncurried { "." }
 
 ParamItems {
   LabeledParameterList |
+  LocalTypeParameter ("," parameter?)* |
   SingleParameter |
   UnlabeledParameter "," parameter ("," parameter?)*
 }
+
+LocalTypeParameter { kw<"type"> TypeName+ }
 
 LabeledParameterList {
   LabeledParameter ("," parameter?)*
@@ -516,7 +525,7 @@ parameter {
 }
 
 LabeledParameter {
-  "~" LabelName ParameterAnnotation? ParameterDefault?
+  "~" LabelName PatternAlias? ParameterAnnotation? ParameterDefault?
 }
 
 UnlabeledParameter { SimpleParameter }
@@ -631,7 +640,7 @@ PolyVariantVarianceMarker { PolyVariantVarianceUpper | PolyVariantVarianceLower 
 
 // PolyVariantType: one-or-more variant tags separated by pipe `|` (e.g. [#A | #B])
 PolyVariantType {
-  "[" PolyVariantVarianceMarker? PolyVariantCaseList "]" (kw<"as"> TypeParameter)?
+  "[" PolyVariantVarianceMarker? PolyVariantCaseList "]" (~typeAlias kw<"as"> TypeParameter)? ~typeAlias
 }
 
 PolyVariantCaseList {
