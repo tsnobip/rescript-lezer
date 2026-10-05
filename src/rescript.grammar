@@ -368,11 +368,11 @@ expression {
   boolean |
   AsyncExpression |
   ArrowFunction |
-  VariableName !arrow |
+  VariableName ~parameter |
   VariantLiteral |
   PolyVariantLiteral |
   RegExpLiteral |
-  UnitToken |
+  UnitToken ~annotation |
   ArrayExpression { "[" commaSep<expression> "]" } |
   ListExpression { kw<"list"> "{" commaSep<expression> "}" } |
   DictExpression { kw<"dict"> "{" commaSep<DictEntry> "}" } |
@@ -401,7 +401,8 @@ expression {
     expression !or LogicOp<"||"> expression
   } |
   UnaryExpression { !prefix (ArithOp<"-"> | ArithOp<"-."> | ArithOp<"+"> | ArithOp<"+."> | LogicOp<"!"> | BitNotOp) expression } |
-  ParenthesizedExpression |
+  ParenthesizedExpression ~annotation |
+  TupleExpression |
   JSXElement
 }
 
@@ -412,13 +413,18 @@ ParenthesizedExpression[@dynamicPrecedence=-1] {
 }
 
 ArrowFunction[@dynamicPrecedence=1] {
-  ParenthesizedExpression !arrow "=>" expression |
-  ParamList !arrow "=>" expression |
-  UnitToken !arrow "=>" expression |
+  ParenthesizedExpression ~annotation ReturnTypeAnnotation? !arrow "=>" expression |
+  ParamList ReturnTypeAnnotation? !arrow "=>" expression |
+  UnitToken ~annotation ReturnTypeAnnotation? !arrow "=>" expression |
   SingleParam !arrow "=>" expression
 }
 
-SingleParam { VariableName }
+ReturnTypeAnnotation {
+  ":" (TypeName | TypePath | TypeParameter | TypeApplication | DictType | ParenthesizedType | TupleType | PolyVariantType)
+}
+TupleExpression { "(" expression "," commaSep1<expression> ")" }
+
+SingleParam { VariableName ~parameter }
 
 MemberExpression {
   ModulePrefix MemberLeaf |
@@ -494,7 +500,7 @@ LabeledParameterList {
   LabeledParameter ("," parameter?)*
 }
 
-SingleParameter { SimpleParameter }
+SingleParameter[@dynamicPrecedence=-1] { SimpleParameter }
 
 parameter {
   LabeledParameter |
@@ -508,7 +514,7 @@ LabeledParameter {
 UnlabeledParameter { SimpleParameter }
 
 SimpleParameter {
-  VariableName ParameterAnnotation? ParameterDefault?
+  VariableName ~parameter ParameterAnnotation? ParameterDefault?
 }
 
 ParameterAnnotation {
@@ -548,6 +554,7 @@ FunctionTypeLabeledParam {
 FunctionTypeUnlabeledParam { FunctionTypeSimpleParam }
 
 FunctionTypeSimpleParam {
+  Decorator FunctionTypeSimpleParam |
   type ~functionType |
   VariableName FunctionTypeAnnotation ParameterDefault?
 }
@@ -557,6 +564,8 @@ FunctionTypeAnnotation {
 }
 
 ParenthesizedType { "(" type ~functionType ")" }
+TupleType { "(" tupleTypeItem "," commaSep1<tupleTypeItem> ")" }
+tupleTypeItem { type ~functionType }
 
 Quote { "'" }
 Hash { "#" }
@@ -577,6 +586,7 @@ type[@isGroup=Type] {
   DictType |
   TypeApplication |
   ParenthesizedType |
+  TupleType |
   FunctionType
 }
 
@@ -597,7 +607,7 @@ RecordType {
 }
 
 RecordTypeField {
-  (PropertyDefinition "?"? | String) ":" type |
+  Decorator* kw<"mutable">? (PropertyDefinition "?"? | String) ":" type |
   SpreadOperator (TypeName | TypePath)
 }
 

@@ -1,0 +1,56 @@
+# unnamed and nested function type parameters
+
+external get: (array<'a>, int) => 'a = "%array_unsafe_get"
+external map: (array<'a>, 'a => 'b, ~start: int=?) => array<'b> = "map"
+type cmp<'a> = ('a, 'a) => int
+
+==>
+
+Script(ExternalDeclaration(external,VariableDefinition,":",FunctionType(FunctionTypeParamList("(",FunctionTypeParamItems(FunctionTypeUnlabeledParam(FunctionTypeSimpleParam(TypeApplication(TypeName,TypeAngleLeftNode(CompareOp),TypeParameter(Quote("'"),VariableName),TypeAngleRightNode(CompareOp)))),",",FunctionTypeParameter(FunctionTypeSimpleParam(TypeName))),")"),FunctionArrow("=>"),TypeParameter(Quote("'"),VariableName)),"=",ExternalBody(String)),ExternalDeclaration(external,VariableDefinition,":",FunctionType(FunctionTypeParamList("(",FunctionTypeParamItems(FunctionTypeUnlabeledParam(FunctionTypeSimpleParam(TypeApplication(TypeName,TypeAngleLeftNode(CompareOp),TypeParameter(Quote("'"),VariableName),TypeAngleRightNode(CompareOp)))),",",FunctionTypeParameter(FunctionTypeSimpleParam(FunctionType(TypeParameter(Quote("'"),VariableName),FunctionArrow("=>"),TypeParameter(Quote("'"),VariableName)))),",",FunctionTypeParameter(FunctionTypeLabeledParam("~",LabelName,FunctionTypeAnnotation(":",TypeName),ParameterDefault("=","?")))),")"),FunctionArrow("=>"),TypeApplication(TypeName,TypeAngleLeftNode(CompareOp),TypeParameter(Quote("'"),VariableName),TypeAngleRightNode(CompareOp))),"=",ExternalBody(String)),TypeDeclaration(type,TypeBinding(TypeName,TypeParams(TypeAngleLeftNode(CompareOp),TypeParam(TypeParameter(Quote("'"),VariableName)),TypeAngleRightNode(CompareOp)),"=",TypeBody(TypeAlias(FunctionType(FunctionTypeParamList("(",FunctionTypeParamItems(FunctionTypeUnlabeledParam(FunctionTypeSimpleParam(TypeParameter(Quote("'"),VariableName))),",",FunctionTypeParameter(FunctionTypeSimpleParam(TypeParameter(Quote("'"),VariableName)))),")"),FunctionArrow("=>"),TypeName))))))
+
+# abstract implementation types
+
+type arrayLike<'a>
+type t
+let x = 1
+
+==>
+
+Script(TypeDeclaration(type,TypeBinding(TypeName,TypeParams(TypeAngleLeftNode(CompareOp),TypeParam(TypeParameter(Quote("'"),VariableName)),TypeAngleRightNode(CompareOp)))),TypeDeclaration(type,TypeBinding(TypeName)),LetBinding(let,LetValueBinding(VariableDefinition,"=",Number)))
+
+# tuple expressions and tuple types
+
+type pair = (int, string)
+let pair = (1, "one")
+let swap = (a, b) => (b, a)
+switch (pair, pair) { | ((x, y), _) => (x, y) }
+
+==>
+
+Script(TypeDeclaration(type,TypeBinding(TypeName,"=",TypeBody(TypeAlias(TupleType("(",TypeName,",",TypeName,")"))))),LetBinding(let,LetValueBinding(VariableDefinition,"=",TupleExpression("(",Number,",",String,")"))),LetBinding(let,LetValueBinding(VariableDefinition,"=",ArrowFunction(ParamList("(",ParamItems(UnlabeledParameter(SimpleParameter(VariableName)),",",SimpleParameter(VariableName)),")"),"=>",TupleExpression("(",VariableName,",",VariableName,")")))),SwitchExpression(switch,TupleExpression("(",VariableName,",",VariableName,")"),"{",SwitchCase("|",Pattern(PatternPrimary(TuplePattern("(",Pattern(PatternPrimary(TuplePattern("(",Pattern(PatternPrimary(VariableName)),",",Pattern(PatternPrimary(VariableName)),")"))),",",Pattern(PatternPrimary(VariableName)),")"))),"=>",TupleExpression("(",VariableName,",",VariableName,")")),"}"))
+
+# return type annotations
+
+let make = (): option<int> => Some(1)
+let add = (a: int, b: int): int => a + b
+let identity = (value): int => value
+
+==>
+
+Script(LetBinding(let,LetValueBinding(VariableDefinition,"=",ArrowFunction(UnitToken,ReturnTypeAnnotation(":",TypeApplication(TypeName,TypeAngleLeftNode(CompareOp),TypeName,TypeAngleRightNode(CompareOp))),"=>",VariantLiteral(VariantConstructor,VariantArguments("(",Number,")"))))),LetBinding(let,LetValueBinding(VariableDefinition,"=",ArrowFunction(ParamList("(",ParamItems(UnlabeledParameter(SimpleParameter(VariableName,ParameterAnnotation(":",TypeName))),",",SimpleParameter(VariableName,ParameterAnnotation(":",TypeName))),")"),ReturnTypeAnnotation(":",TypeName),"=>",BinaryExpression(VariableName,ArithOp,VariableName)))),LetBinding(let,LetValueBinding(VariableDefinition,"=",ArrowFunction(ParenthesizedExpression("(",VariableName,")"),ReturnTypeAnnotation(":",TypeName),"=>",VariableName))))
+
+# mutable and decorated record fields
+
+type t = {@as("v") mutable value: int, @as("next") next: option<t>}
+
+==>
+
+Script(TypeDeclaration(type,TypeBinding(TypeName,"=",TypeBody(RecordType("{",RecordTypeField(Decorator("@",AttributeIdentifier,AttributeArguments("(",String,")")),mutable,PropertyDefinition,":",TypeName),",",RecordTypeField(Decorator("@",AttributeIdentifier,AttributeArguments("(",String,")")),PropertyDefinition,":",TypeApplication(TypeName,TypeAngleLeftNode(CompareOp),TypeName,TypeAngleRightNode(CompareOp))),"}")))))
+
+# decorated unnamed external arguments
+
+@send external copy: (array<'a>, @as(0) _) => array<'a> = "slice"
+
+==>
+
+Script(Decorator("@",AttributeIdentifier),ExternalDeclaration(external,VariableDefinition,":",FunctionType(FunctionTypeParamList("(",FunctionTypeParamItems(FunctionTypeUnlabeledParam(FunctionTypeSimpleParam(TypeApplication(TypeName,TypeAngleLeftNode(CompareOp),TypeParameter(Quote("'"),VariableName),TypeAngleRightNode(CompareOp)))),",",FunctionTypeParameter(FunctionTypeSimpleParam(Decorator("@",AttributeIdentifier,AttributeArguments("(",Number,")")),FunctionTypeSimpleParam(TypeName)))),")"),FunctionArrow("=>"),TypeApplication(TypeName,TypeAngleLeftNode(CompareOp),TypeParameter(Quote("'"),VariableName),TypeAngleRightNode(CompareOp))),"=",ExternalBody(String)))

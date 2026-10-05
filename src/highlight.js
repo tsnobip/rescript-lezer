@@ -96,7 +96,7 @@ export const rescriptHighlight = styleTags({
     t.labelName,
   "ArrowFunction/ParamList/ParamItems/LabelParameter/VariableName": t.labelName,
 
-  ParameterAnnotation: t.typeName,
+  "ParameterAnnotation ReturnTypeAnnotation": t.typeName,
 
   Quote: t.string,
   Hash: t.operator,
