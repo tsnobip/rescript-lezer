@@ -6,6 +6,16 @@ import {
   spaces,
   newline,
   BlockComment,
+  TypeBinding,
+  TypeDeclaration,
+  TypeSpec,
+  LetValueBinding,
+  LetRecBinding,
+  LetBinding,
+  ModuleDeclarationBody,
+  ModuleDeclaration,
+  Decorator,
+  and as AndKeyword,
   LineComment,
   JSXStartTag,
   JSXStartCloseTag,
@@ -38,18 +48,34 @@ const braceR = 125,
   colon = 58,
   dot = 46;
 
-export const trackNewline = new ContextTracker({
-  start: false,
-  shift(context, term, stack, input) {
-    if (term == BlockComment && /[\r\n\u2028\u2029]/.test(input.read(input.pos, stack.pos))) return true;
-    return term == LineComment || term == BlockComment || term == spaces
-      ? context
-      : term == newline;
-  },
-  strict: false,
-});
+const newlineContext = 1, bindingContext = 2;
+const lineBreak = /[\r\n\u2028\u2029]/;
+const bindings = [TypeBinding, LetValueBinding, LetRecBinding, ModuleDeclarationBody];
+const declarations = [TypeDeclaration, TypeSpec, LetBinding, ModuleDeclaration];
 
-// insertSemicolon removed — grammar no longer declares this external tokenizer.
+// Reused decorators must distinguish binding continuations from new declarations.
+export const trackContext = new ContextTracker({
+  start: 0,
+  shift(context, term, stack, input) {
+    if (term == BlockComment) return lineBreak.test(input.read(input.pos, stack.pos)) ? context | newlineContext : context;
+    if (term == LineComment || term == spaces) return context;
+    return (term == AndKeyword ? 0 : context & bindingContext) | (term == newline ? newlineContext : 0);
+  },
+  reduce(context, term) {
+    if (bindings.includes(term)) return context | bindingContext;
+    if (declarations.includes(term)) return context & newlineContext;
+    return context;
+  },
+  reuse(context, node, stack, input) {
+    const term = node.type.id;
+    if (term == BlockComment) return lineBreak.test(input.read(input.pos, stack.pos)) ? context | newlineContext : context;
+    if (term == LineComment) return context;
+    if (bindings.includes(term)) return bindingContext;
+    if (term == Decorator) return context & bindingContext;
+    return 0;
+  },
+  hash(context) { return context; },
+});
 
 function identifierChar(ch, start) {
   return (
@@ -81,7 +107,7 @@ export const comments = new ExternalTokenizer(input => {
 });
 
 export const postfix = new ExternalTokenizer((input, stack) => {
-  if (input.next == 91 && !stack.context && stack.canShift(IndexOpen)) {
+  if (input.next == 91 && !(stack.context & newlineContext) && stack.canShift(IndexOpen)) {
     input.advance();
     input.acceptToken(IndexOpen);
   }
@@ -96,7 +122,7 @@ export const unit = new ExternalTokenizer((input, stack) => {
 
 export const regexp = new ExternalTokenizer((input, stack) => {
   if (input.next != slash || !stack.canShift(RegExpLiteral) ||
-      stack.canShift(DivisionOp) && !stack.context ||
+      stack.canShift(DivisionOp) && !(stack.context & newlineContext) ||
       input.peek(1) == slash || input.peek(1) == star) return;
   let length = 1, inClass = false;
   for (;;) {
@@ -164,7 +190,7 @@ export const jsx = new ExternalTokenizer((input, stack) => {
     input.advance(offset + 1);
     input.acceptToken(JSXStartCloseTag);
   } else if (stack.canShift(LessThan) &&
-      !(stack.canShift(JSXStartTag) && (next == 62 || stack.context && identifierChar(next, true)))) {
+      !(stack.canShift(JSXStartTag) && (next == 62 || (stack.context & newlineContext) && identifierChar(next, true)))) {
     input.advance();
     input.acceptToken(LessThan);
   } else if (stack.canShift(JSXStartTag) && (identifierChar(next, true) || next == 62)) {

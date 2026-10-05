@@ -926,7 +926,7 @@ LabelName { identifier | exoticIdentifier }
 
 @skip { spaces | newline | LineComment | BlockComment }
 
-@context trackNewline from "./tokens.js"
+@context trackContext from "./tokens.js"
 
 @external tokens variant from "./tokens" { VariantConstructorArgsToken, VariantConstructorResultToken }
 @external tokens comments from "./tokens" { BlockComment[isolate] }

@@ -28,7 +28,18 @@ npm run build
 npm run audit:grammar
 ```
 
-### Strict mode (CI-friendly)
+### Corpus regression check
+
+```bash
+npm run test:corpus
+```
+
+This checks the syntax fixtures, runtime packages, and scripts in the pinned
+checkout. It also compares fresh and incremental trees across 1,000 reproducible edits.
+It fails on compiler-valid parse errors, incremental mismatches, or crashes.
+Compiler-rejected fixtures remain visible in the full differential audit.
+
+### Strict agreement
 
 ```bash
 npm run audit:grammar:strict
@@ -39,8 +50,6 @@ npm run audit:grammar:strict
 ```bash
 node scripts/audit-grammar.mjs \
   --mode all \
-  --corpus vendored/rescript/packages \
-  --corpus vendored/rescript/scripts/res \
   --max-files 10000 \
   --fuzz-cases 500 \
   --incremental-cases 300 \
@@ -54,7 +63,8 @@ node scripts/audit-grammar.mjs \
 - Mutation fuzzing with mismatch detection
 - Incremental parse consistency (incremental tree vs fresh parse)
 
-`--corpus` adds real source directories to the syntax fixtures. Use a fixed
+`--corpus` adds directories to the default corpus. Reports include error positions
+and the full source and edit for reproducing fuzz and incremental failures. Use a fixed
 `--seed` to reproduce edits, and `--rescript-root` or `RESCRIPT_ROOT` to compare
 against another compiler checkout.
 
