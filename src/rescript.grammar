@@ -958,7 +958,7 @@ Interpolation {
   identifier { $[a-z_] (identifierChar | @digit | "'" )* }
   
   ModulePrefix { $[A-Z] (identifierChar | @digit | "'" )* ("." $[A-Z] (identifierChar | @digit | "'" )*)* "." }
-  exoticIdentifier { "\\\"" (!["\\\n] | ExoticEscape)* "\"" }
+  exoticIdentifier { "\\\"" !["\n\r]* "\"" }
   SpreadOperator { "..." }
   
   uppercaseIdentifier { $[A-Z] (identifierChar | @digit | "'" )* }
@@ -984,9 +984,6 @@ Interpolation {
     "\\" ("x" $[0-9a-fA-F] $[0-9a-fA-F] | "u" ("{" $[0-9a-fA-F]+ "}" | $[0-9a-fA-F] $[0-9a-fA-F] $[0-9a-fA-F] $[0-9a-fA-F]) | ![xu])
   }
 
-  ExoticEscape {
-    "\\" ("x" $[0-9a-fA-F] $[0-9a-fA-F] | "u" ("{" $[0-9a-fA-F]+ "}" | $[0-9a-fA-F] $[0-9a-fA-F] $[0-9a-fA-F] $[0-9a-fA-F]) | ![xu\n])
-  }
 
   stringContentDouble { ![\\"]+ }
   

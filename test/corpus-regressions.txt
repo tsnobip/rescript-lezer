@@ -1,3 +1,11 @@
+# exotic identifiers containing literal backslashes
+
+if \"module\" { () }
+
+==>
+
+Script(IfExpression(if,VariableName,BlockExpression("{",UnitToken,"}")))
+
 # JSX expression children and whitespace around tag delimiters
 
 let x = <   div > list{a, b} dict{"x": a} `value ${name}` {name: value} {let child = value; child} <   / div >
