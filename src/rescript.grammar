@@ -47,7 +47,11 @@ statement[@isGroup=Statement] {
 }
 
 ModuleDeclaration {
-  kw<"module"> ModuleName ModuleDeclarationBody
+  kw<"module"> (ModuleName ModuleDeclarationBody | RecursiveModuleBindings)
+}
+
+RecursiveModuleBindings {
+  kw<"rec"> ModuleName ModuleDeclarationBody (~binding Decorator* kw<"and"> ModuleName ModuleDeclarationBody)* ~binding
 }
 
 ModuleTypeDeclaration {
@@ -65,7 +69,7 @@ ModuleSpec {
 }
 
 ModuleWithConstraint {
-  softkw<"with"> moduleTypeConstraint (kw<"and"> moduleTypeConstraint)*
+  softkw<"with"> moduleTypeConstraint (~moduleAnd kw<"and"> moduleTypeConstraint)* ~moduleAnd
 }
 
 moduleTypeConstraint {
@@ -164,7 +168,10 @@ ModuleTypeStatement {
   OpenStatement |
   ModuleTypeInclude |
   ModuleTypeAlias
+  | RecursiveModuleSpec
 }
+
+RecursiveModuleSpec { kw<"module"> kw<"rec"> ModuleName ModuleSpec (~binding Decorator* kw<"and"> ModuleName ModuleSpec)* ~binding }
 
 ModuleTypeInclude { kw<"include"> ModuleTypeExpr ModuleWithConstraint* }
 ModuleTypeAlias { kw<"module"> ModuleName "=" ModulePath }
@@ -174,7 +181,7 @@ ModuleTypeModuleSpec {
 }
 
 TypeSpec {
-  kw<"type"> kw<"rec">? TypeName TypeParams? ("=" TypeBody)? TypeConstraint* (kw<"and"> TypeBinding)*
+  kw<"type"> kw<"rec">? TypeName TypeParams? ("=" TypeBody)? TypeConstraint* (~binding Decorator* kw<"and"> TypeBinding)* ~binding
 }
 
 ValueSpec {
@@ -216,7 +223,7 @@ LetBinding {
   kw<"let"> (
     kw<"module"> ModuleUnpackBinding |
     LetRecBindings |
-    LetValueBinding (kw<"and"> LetValueBinding)*
+    LetValueBinding (~binding Decorator* kw<"and"> LetValueBinding)* ~binding
   )
 }
 
@@ -229,7 +236,7 @@ LetValueBinding {
 PatternBinding[@dynamicPrecedence=-1] { Pattern "=" expression }
 
 LetRecBindings {
-  kw<"rec"> LetRecBinding (kw<"and"> LetRecBinding)*
+  kw<"rec"> LetRecBinding (~binding Decorator* kw<"and"> LetRecBinding)* ~binding
 }
 
 LetRecBinding {
@@ -721,11 +728,13 @@ type[@isGroup=Type] {
   QuantifiedType |
   AliasedType
   | UnitType
+  | LocallyAbstractType
   ) ~typeBody ~typeAlias
 }
 
 ObjectType { "{" (".." | ".") commaSep<RecordTypeField> "}" }
 UnitType { "(" ~functionType ")" ~functionType }
+LocallyAbstractType { kw<"type"> TypeName+ "." type }
 DecoratedType { Decorator ~decorated type }
 QuantifiedType { (TypeParameter ~typeAlias)+ "." type }
 AliasedType { type ~typeAlias kw<"as"> TypeParameter }
@@ -795,7 +804,7 @@ PolyVariantTypeReference {
 
 // Type declaration supports optional `rec` and optional type parameters
 TypeDeclaration {
-  kw<"type"> (kw<"rec">)? TypeBinding (kw<"and"> TypeBinding)*
+  kw<"type"> (kw<"rec">)? TypeBinding (~binding Decorator* kw<"and"> TypeBinding)* ~binding
 }
 
 TypeBinding {

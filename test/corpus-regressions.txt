@@ -1,3 +1,23 @@
+# recursive modules and decorated simultaneous bindings
+
+module rec A: S = {let x = 1}
+@attr and B: S = {let x = A.x}
+module type S = {
+  module rec A: {type t}
+  and B: {type t}
+  type t = int
+  @attr and u = string
+}
+let first = 1
+@attr and second = 2
+let rec f = () => g()
+@attr and g = () => ()
+let identity: type t. t => t = value => value
+
+==>
+
+Script(ModuleDeclaration(module,RecursiveModuleBindings(rec,ModuleName,ModuleDeclarationBody(ModuleSpec(":",ModuleTypeExpr(ModulePath(ModuleName))),"=",ModuleExpression(ModuleBody("{",LetBinding(let,LetValueBinding(VariableDefinition,"=",Number)),"}"))),Decorator("@",AttributeIdentifier),and,ModuleName,ModuleDeclarationBody(ModuleSpec(":",ModuleTypeExpr(ModulePath(ModuleName))),"=",ModuleExpression(ModuleBody("{",LetBinding(let,LetValueBinding(VariableDefinition,"=",MemberExpression(ModulePrefix,MemberLeaf(VariableName)))),"}"))))),ModuleTypeDeclaration(module,type,ModuleName,"=",ModuleTypeExpr(ModuleTypeBody("{",ModuleTypeStatement(RecursiveModuleSpec(module,rec,ModuleName,ModuleSpec(":",ModuleTypeExpr(ModuleTypeBody("{",ModuleTypeStatement(TypeSpec(type,TypeName)),"}"))),and,ModuleName,ModuleSpec(":",ModuleTypeExpr(ModuleTypeBody("{",ModuleTypeStatement(TypeSpec(type,TypeName)),"}"))))),ModuleTypeStatement(TypeSpec(type,TypeName,"=",TypeBody(TypeAlias(TypeName)),Decorator("@",AttributeIdentifier),and,TypeBinding(TypeName,"=",TypeBody(TypeAlias(TypeName))))),"}"))),LetBinding(let,LetValueBinding(VariableDefinition,"=",Number),Decorator("@",AttributeIdentifier),and,LetValueBinding(VariableDefinition,"=",Number)),LetBinding(let,LetRecBindings(rec,LetRecBinding(VariableDefinition,"=",ArrowFunction(UnitToken,"=>",CallExpression(VariableName,UnitToken))),Decorator("@",AttributeIdentifier),and,LetRecBinding(VariableDefinition,"=",ArrowFunction(UnitToken,"=>",UnitToken)))),LetBinding(let,LetValueBinding(VariableDefinition,":",LocallyAbstractType(type,TypeName,".",FunctionType(TypeName,FunctionArrow("=>"),TypeName)),"=",ArrowFunction(SingleParam(VariableName),"=>",VariableName))))
+
 # complete module signatures and aliased function parameters
 
 module type S = {
