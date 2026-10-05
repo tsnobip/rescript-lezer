@@ -1,3 +1,24 @@
+# module unpacking and first-class module types
+
+module type S = {
+  type t
+  type identity
+  let value: t
+}
+type packed<'a, 'id> = module(S with type t = 'a and type identity = 'id)
+let use = (id: packed<int, int>) => {
+  module M = unpack(id)
+  M.value
+}
+let pack = (): module(S with type t = int) => module({
+  type t = int
+  let value = 1
+}: S)
+
+==>
+
+Script(ModuleTypeDeclaration(module,type,ModuleName,"=",ModuleTypeExpr(ModuleTypeBody("{",ModuleTypeStatement(TypeSpec(type,TypeName)),ModuleTypeStatement(TypeSpec(type,TypeName)),ModuleTypeStatement(ValueSpec(let,VariableDefinition,":",TypeName)),"}"))),TypeDeclaration(type,TypeBinding(TypeName,TypeParams(TypeAngleLeftNode(CompareOp),TypeParam(TypeParameter(Quote("'"),VariableName)),",",TypeParam(TypeParameter(Quote("'"),VariableName)),TypeAngleRightNode(CompareOp)),"=",TypeBody(TypeAlias(ModulePackageType(module,"(",ModuleTypeExpr(ModulePath(ModuleName)),ModuleWithConstraint(with,type,TypeName,ConstraintOperator("="),TypeParameter(Quote("'"),VariableName),and,type,TypeName,ConstraintOperator("="),TypeParameter(Quote("'"),VariableName)),")"))))),LetBinding(let,LetValueBinding(VariableDefinition,"=",ArrowFunction(ParenthesizedExpression("(",VariableName,IndexConstraint(":",TypeApplication(TypeName,TypeAngleLeftNode(CompareOp),TypeName,",",TypeName,TypeAngleRightNode(CompareOp))),")"),"=>",BlockExpression("{",ModuleDeclaration(module,ModuleName,ModuleDeclarationBody("=",ModuleExpression(ModuleUnpackExpression(unpack,"(",VariableName,")")))),MemberExpression(ModulePrefix,MemberLeaf(VariableName)),"}")))),LetBinding(let,LetValueBinding(VariableDefinition,"=",ArrowFunction(UnitToken,ReturnTypeAnnotation(":",ModulePackageType(module,"(",ModuleTypeExpr(ModulePath(ModuleName)),ModuleWithConstraint(with,type,TypeName,ConstraintOperator("="),TypeName),")")),"=>",ModulePackExpression(module,"(",ModulePackContent(ModuleBody("{",TypeDeclaration(type,TypeBinding(TypeName,"=",TypeBody(TypeAlias(TypeName)))),LetBinding(let,LetValueBinding(VariableDefinition,"=",Number)),"}"),ModuleSpec(":",ModuleTypeExpr(ModulePath(ModuleName)))),")")))))
+
 # labeled aliases and locally abstract function types
 
 let make = (type key identity, ~id: id<key, identity>, ~cmp as compare) => compare(id)

@@ -62,8 +62,10 @@ ModuleSpec {
 }
 
 ModuleWithConstraint {
-  kw<"with"> kw<"type"> ModulePrefix? TypeName ConstraintOperator type
+  kw<"with"> moduleTypeConstraint (kw<"and"> moduleTypeConstraint)*
 }
+
+moduleTypeConstraint { kw<"type"> ModulePrefix? TypeName ConstraintOperator type }
 
 ConstraintOperator {
   "=" |
@@ -78,8 +80,11 @@ ModuleTypeExpr {
 ModuleExpression {
   ModuleBody |
   ModulePath |
-  ModulePackExpression
+  ModulePackExpression |
+  ModuleUnpackExpression
 }
+
+ModuleUnpackExpression { kw<"unpack"> "(" expression ")" }
 
 ModuleName { uppercaseIdentifier }
 
@@ -88,7 +93,7 @@ ModulePackExpression {
 }
 
 ModulePackContent {
-  ModulePath ModuleSpec?
+  (ModulePath | ModuleBody) ModuleSpec?
 }
 
 ModuleBody {
@@ -426,7 +431,7 @@ ReturnTypeAnnotation {
 }
 
 annotationType {
-  TypeName | TypePath | TypeParameter | TypeApplication | DictType | ListType | ParenthesizedType | TupleType | PolyVariantType
+  TypeName | TypePath | TypeParameter | TypeApplication | DictType | ListType | ParenthesizedType | TupleType | PolyVariantType | ModulePackageType
 }
 TupleExpression { "(" expression "," commaSep1<expression> ")" }
 
@@ -605,8 +610,11 @@ type[@isGroup=Type] {
   TypeApplication |
   ParenthesizedType |
   TupleType |
-  FunctionType
+  FunctionType |
+  ModulePackageType
 }
+
+ModulePackageType { kw<"module"> "(" ModuleTypeExpr ModuleWithConstraint* ")" }
 
 
 TypeAngleLeftNode { TypeAngleLeftToken }
