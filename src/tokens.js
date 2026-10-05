@@ -17,6 +17,8 @@ import {
   TypeAngleLeftToken,
   TypeAngleRightToken,
   UnitToken,
+  RegExpLiteral,
+  DivisionOp,
 } from "./parser.terms.js";
 
 const space = [
@@ -60,6 +62,29 @@ export const unit = new ExternalTokenizer((input, stack) => {
     input.advance(2);
     input.acceptToken(UnitToken);
   }
+}, { contextual: true });
+
+export const regexp = new ExternalTokenizer((input, stack) => {
+  if (input.next != slash || !stack.canShift(RegExpLiteral) ||
+      stack.canShift(DivisionOp) && !stack.context ||
+      input.peek(1) == slash || input.peek(1) == star) return;
+  let length = 1, inClass = false;
+  for (;;) {
+    const ch = input.peek(length);
+    if (ch < 0 || ch == 10 || ch == 13 || ch == 8232 || ch == 8233) return;
+    if (ch == 92) {
+      const escaped = input.peek(++length);
+      if (escaped < 0 || escaped == 10 || escaped == 13 || escaped == 8232 || escaped == 8233) return;
+    } else if (ch == 91) inClass = true;
+    else if (ch == 93) inClass = false;
+    else if (ch == slash && !inClass) break;
+    length++;
+  }
+  length++;
+  while (input.peek(length) >= 65 && input.peek(length) <= 90 ||
+      input.peek(length) >= 97 && input.peek(length) <= 122) length++;
+  input.advance(length);
+  input.acceptToken(RegExpLiteral);
 }, { contextual: true });
 
 export const typeAngle = new ExternalTokenizer((input, stack) => {

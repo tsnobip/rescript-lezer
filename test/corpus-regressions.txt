@@ -1,3 +1,13 @@
+# floating-point divisions beside regular expressions
+
+let ratio = (position -. separatorSize /. 2.0) /. available
+let pattern = /[<>]+>>=/g
+let fraction = numerator / denominator
+
+==>
+
+Script(LetBinding(let,LetValueBinding(VariableDefinition,"=",BinaryExpression(ParenthesizedExpression("(",BinaryExpression(VariableName,ArithOp,BinaryExpression(VariableName,ArithOp,Number)),")"),ArithOp,VariableName))),LetBinding(let,LetValueBinding(VariableDefinition,"=",RegExpLiteral)),LetBinding(let,LetValueBinding(VariableDefinition,"=",BinaryExpression(VariableName,ArithOp,VariableName))))
+
 # JSX fragments, hyphenated names and bare attribute values
 
 let view = <div data-value={a >> 1} title=name>

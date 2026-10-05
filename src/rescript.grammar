@@ -427,7 +427,7 @@ expression {
   BinaryExpression {
     expression !assign "=" expression |
     expression !assign ":=" expression |
-    expression !times (ArithOp<"**"> | ArithOp<"*"> | ArithOp<"/"> | ArithOp<"*."> | ArithOp<"/."> | softkw<"mod">) expression |
+    expression !times (ArithOp<"**"> | ArithOp<"*"> | DivisionOp | ArithOp<"*."> | softkw<"mod">) expression |
     expression !plus (ArithOp<"+"> | ArithOp<"-"> | ArithOp<"+."> | ArithOp<"-.">) expression |
     expression !shift ShiftOp expression |
     expression !bitand BitAndOp expression |
@@ -806,6 +806,7 @@ LabelName { identifier | exoticIdentifier }
 @context trackNewline from "./tokens.js"
 
 @external tokens variant from "./tokens" { VariantConstructorArgsToken, VariantConstructorResultToken }
+@external tokens regexp from "./tokens" { RegExpLiteral }
 @external tokens unit from "./tokens" { UnitToken }
 @external tokens typeAngle from "./tokens" { TypeAngleLeftToken[@name=CompareOp], TypeAngleRightToken[@name=CompareOp] }
 @external tokens jsxTag from "./tokens" { JSXIdentifier, JSXEndTag }
@@ -880,40 +881,7 @@ Interpolation {
 
   stringContentDouble { ![\\"]+ }
   
-  RegExpLiteral {
-    "/" RegExpFirstChunk RegExpBody "/" RegExpFlags?
-  }
-
-  RegExpFirstChunk {
-    RegExpClass |
-    RegExpBackslash |
-    RegExpStartChar
-  }
-
-  RegExpStartChar { ![*/\n[] }
-
-  RegExpBody { RegExpChunk* }
-
-  RegExpChunk {
-    RegExpBackslash |
-    RegExpClass |
-    RegExpChar
-  }
-
-  RegExpBackslash { "\\" _ }
-
-  RegExpClass { "[" RegExpClassChunk* "]" }
-
-  RegExpClassChunk { RegExpClassBackslash | RegExpClassChar }
-
-  RegExpClassBackslash { "\\" _ }
-
-  RegExpClassChar { ![\]\n] }
-
-  RegExpChar { ![\\/\n[] }
-
-  RegExpFlags { $[a-zA-Z]+ }
-
+  DivisionOp[@name=ArithOp,@export] { "/" | "/." }
   ArithOp<expr> { expr }
   ShiftOp { "<<<" | ">>>" | "<<" | ">>" }
   BitAndOp { "&&&" }
@@ -927,7 +895,7 @@ Interpolation {
   
   templateText { ![\`$]+ | "$" ![\{] }
 
-  @precedence { LineComment, RegExpLiteral, BitNotOp, ShiftOp, BitAndOp, BitXorOp, BitOrOp, ArithOp }
+  @precedence { LineComment, BitNotOp, ShiftOp, BitAndOp, BitXorOp, BitOrOp, ArithOp, DivisionOp }
 
   "=>"
   "..."
