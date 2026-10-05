@@ -529,7 +529,7 @@ expression {
 }
 
 ArrayExpression { "[" commaSep<collectionItem> "]" }
-ListExpression[@dynamicPrecedence=1] { softkw<"list"> "{" commaSep<collectionItem> "}" }
+ListExpression[@dynamicPrecedence=2] { softkw<"list"> "{" commaSep<collectionItem> "}" }
 DictExpression[@dynamicPrecedence=2] { softkw<"dict"> "{" commaSep<DictEntry> "}" }
 RecordExpression[@dynamicPrecedence=1] { "{" commaSep1<Property> "}" }
 
