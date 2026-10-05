@@ -15,6 +15,7 @@ import {
   VariantConstructorResultToken,
   TypeAngleLeftToken,
   TypeAngleRightToken,
+  UnitToken,
 } from "./parser.terms.js";
 
 const space = [
@@ -53,6 +54,13 @@ function identifierChar(ch, start) {
 }
 
 // JSX tokenizer that also handles < comparison
+export const unit = new ExternalTokenizer((input, stack) => {
+  if (input.next == 40 && input.peek(1) == 41 && stack.canShift(UnitToken)) {
+    input.advance(2);
+    input.acceptToken(UnitToken);
+  }
+}, { contextual: true });
+
 export const typeAngle = new ExternalTokenizer((input, stack) => {
   if (input.next == 60 && stack.canShift(TypeAngleLeftToken)) {
     input.advance();

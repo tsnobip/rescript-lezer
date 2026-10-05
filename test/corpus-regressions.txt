@@ -1,3 +1,19 @@
+# open objects, nested types and exotic field names
+
+type object = {..}
+type empty = {.}
+type props = {to?: string, \"type"?: string, nested: {value: int}}
+external get: unit => {.. "value": int} = "get"
+external with: (object, int) => object = "with"
+type mode = [M.t | #default]
+type quantified = {send: 'a. ('a, 'a) => 'a}
+type decorated = @attr array<@attr int>
+type alias = (int as 'a)
+
+==>
+
+Script(TypeDeclaration(type,TypeBinding(TypeName,"=",TypeBody(TypeAlias(ObjectType("{","..","}"))))),TypeDeclaration(type,TypeBinding(TypeName,"=",TypeBody(TypeAlias(ObjectType("{",".","}"))))),TypeDeclaration(type,TypeBinding(TypeName,"=",TypeBody(RecordType("{",RecordTypeField(PropertyDefinition,"?",":",TypeName),",",RecordTypeField(PropertyDefinition,"?",":",TypeName),",",RecordTypeField(PropertyDefinition,":",RecordType("{",RecordTypeField(PropertyDefinition,":",TypeName),"}")),"}")))),ExternalDeclaration(external,VariableDefinition,":",FunctionType(TypeName,FunctionArrow("=>"),ObjectType("{","..",RecordTypeField(String,":",TypeName),"}")),"=",ExternalBody(String)),ExternalDeclaration(external,VariableDefinition,":",FunctionType(FunctionTypeParamList("(",FunctionTypeParamItems(FunctionTypeUnlabeledParam(FunctionTypeSimpleParam(TypeName)),",",FunctionTypeParameter(FunctionTypeSimpleParam(TypeName))),")"),FunctionArrow("=>"),TypeName),"=",ExternalBody(String)),TypeDeclaration(type,TypeBinding(TypeName,"=",TypeBody(TypeAlias(PolyVariantType("[",PolyVariantCaseList(PolyVariantCase(PolyVariantTypeReference(TypePath(ModulePrefix,TypeName))),"|",PolyVariantCase(PolyVariantTagCase(PolyVariantTag(Hash,PolyVariantName)))),"]"))))),TypeDeclaration(type,TypeBinding(TypeName,"=",TypeBody(RecordType("{",RecordTypeField(PropertyDefinition,":",QuantifiedType(TypeParameter(Quote("'"),VariableName),".",FunctionType(FunctionTypeParamList("(",FunctionTypeParamItems(FunctionTypeUnlabeledParam(FunctionTypeSimpleParam(TypeParameter(Quote("'"),VariableName))),",",FunctionTypeParameter(FunctionTypeSimpleParam(TypeParameter(Quote("'"),VariableName)))),")"),FunctionArrow("=>"),TypeParameter(Quote("'"),VariableName)))),"}")))),TypeDeclaration(type,TypeBinding(TypeName,"=",TypeBody(TypeAlias(DecoratedType(Decorator("@",AttributeIdentifier),TypeApplication(TypeName,TypeAngleLeftNode(CompareOp),DecoratedType(Decorator("@",AttributeIdentifier),TypeName),TypeAngleRightNode(CompareOp))))))),TypeDeclaration(type,TypeBinding(TypeName,"=",TypeBody(TypeAlias(ParenthesizedType("(",AliasedType(TypeName,as,TypeParameter(Quote("'"),VariableName)),")"))))))
+
 # ternaries, bare try expressions and typed destructuring
 
 let compare = (a, b) => a < b ? Less : a > b ? Greater : Equal

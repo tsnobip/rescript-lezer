@@ -63,7 +63,7 @@ ModuleSpec {
 }
 
 ModuleWithConstraint {
-  kw<"with"> moduleTypeConstraint (kw<"and"> moduleTypeConstraint)*
+  softkw<"with"> moduleTypeConstraint (kw<"and"> moduleTypeConstraint)*
 }
 
 moduleTypeConstraint { kw<"type"> ModulePrefix? TypeName ConstraintOperator type }
@@ -101,7 +101,7 @@ ModuleParameter { ModuleName ModuleSpec? | UnitToken }
 ModuleApplication[@dynamicPrecedence=1] { ModuleExpression ~moduleCall ("(" commaSep<ModuleArgument> ")" | UnitToken) }
 ModuleArgument { ModuleExpression ModuleSpec? | UnitToken }
 
-ModuleUnpackExpression { kw<"unpack"> "(" expression ")" }
+ModuleUnpackExpression { softkw<"unpack"> "(" expression ")" }
 
 ModuleName { uppercaseIdentifier }
 
@@ -222,12 +222,12 @@ ForExpression {
 }
 
 ForDirection {
-  kw<"to"> |
-  kw<"downto">
+  softkw<"to"> |
+  softkw<"downto">
 }
 
 TryExpression {
-  kw<"try"> expression kw<"catch"> "{" SwitchCase* "}"
+  kw<"try"> expression softkw<"catch"> "{" SwitchCase* "}"
 }
 
 BlockExpression {
@@ -600,7 +600,7 @@ FunctionTypeLabeledParam {
 
 FunctionTypeUnlabeledParam { FunctionTypeSimpleParam }
 
-FunctionTypeSimpleParam {
+FunctionTypeSimpleParam[@dynamicPrecedence=1] {
   Decorator FunctionTypeSimpleParam |
   type ~functionType |
   VariableName FunctionTypeAnnotation ParameterDefault?
@@ -626,6 +626,7 @@ FunctionType {
 FunctionArrow { "->" | "=>" }
 
 type[@isGroup=Type] {
+  (
   TypePath |
   TypeName |
   TypeParameter |
@@ -636,8 +637,19 @@ type[@isGroup=Type] {
   ParenthesizedType |
   TupleType |
   FunctionType |
-  ModulePackageType
+  ModulePackageType |
+  RecordType |
+  ObjectType |
+  DecoratedType |
+  QuantifiedType |
+  AliasedType
+  ) ~typeBody ~typeAlias
 }
+
+ObjectType { "{" (".." | ".") commaSep<RecordTypeField> "}" }
+DecoratedType { Decorator ~decorated type }
+QuantifiedType { TypeParameter+ "." type }
+AliasedType { type ~typeAlias kw<"as"> TypeParameter }
 
 ModulePackageType { kw<"module"> "(" ModuleTypeExpr ModuleWithConstraint* ")" }
 
@@ -663,7 +675,7 @@ RecordTypeField {
   SpreadOperator (TypeName | TypePath)
 }
 
-PolyVariantName { uppercaseIdentifier | identifier | Number | String }
+PolyVariantName { uppercaseIdentifier | identifier | exoticIdentifier | Number | String }
 PolyVariantTag { Hash PolyVariantName }
 
 // Variance marker for polymorphic variants: lower-bound '>' or upper-bound '<'
@@ -699,7 +711,7 @@ PolyVariantSpreadCase {
 }
 
 PolyVariantTypeReference {
-  TypeName
+  TypeName | TypePath | TypeApplication
 }
 
 // Type declaration supports optional `rec` and optional type parameters
@@ -713,7 +725,7 @@ TypeBinding {
 
 TypeBody {
   VariantType |
-  RecordType |
+  RecordType ~typeBody |
   TypeAlias ("=" (RecordType | VariantType))?
 }
 
@@ -724,7 +736,7 @@ VariantType {
 }
 
 VariantConstructorCase {
-  Decorator* (
+  (Decorator ~decorated)* (
   VariantSpreadCase |
   VariantConstructorArgsToken VariantConstructorArgs VariantConstructorResult? |
   VariantConstructorResultToken VariantConstructorResult |
@@ -737,7 +749,7 @@ VariantSpreadCase {
 }
 
 VariantConstructorArgs {
-  !variant "(" commaSep1<type | RecordType> ")"
+  !variant "(" commaSep1<type> ")"
 }
 
 VariantConstructorResult {
@@ -764,17 +776,18 @@ VariableDefinition { identifier | exoticIdentifier }
 TypePath {
   ModulePrefix TypeName
 }
-TypeName { identifier ~record }
+TypeName { (identifier | exoticIdentifier) ~record }
 VariantConstructor { uppercaseIdentifier }
-PropertyName { identifier ~record }
-PropertyDefinition { (identifier | ModulePrefix identifier) ~record }
-LabelName { identifier }
+PropertyName { (identifier | exoticIdentifier) ~record }
+PropertyDefinition { (identifier | exoticIdentifier | ModulePrefix (identifier | exoticIdentifier)) ~record }
+LabelName { identifier | exoticIdentifier }
 
 @skip { spaces | newline | LineComment | BlockComment }
 
 @context trackNewline from "./tokens.js"
 
 @external tokens variant from "./tokens" { VariantConstructorArgsToken, VariantConstructorResultToken }
+@external tokens unit from "./tokens" { UnitToken }
 @external tokens typeAngle from "./tokens" { TypeAngleLeftToken[@name=CompareOp], TypeAngleRightToken[@name=CompareOp] }
 @external tokens jsx from "./tokens" { JSXStartTag, LessThan[@name=CompareOp] }
 
@@ -816,12 +829,11 @@ Interpolation {
   
   ModulePrefix { $[A-Z] (identifierChar | @digit)* ("." $[A-Z] (identifierChar | @digit)*)* "." }
   exoticIdentifier { "\\\"" (!["\\\n] | ExoticEscape)* "\"" }
-  UnitToken { "()" }
   SpreadOperator { "..." }
   
   uppercaseIdentifier { $[A-Z] (identifierChar | @digit)* }
 
-  @precedence { ModulePrefix, UnitToken, SpreadOperator, uppercaseIdentifier }
+  @precedence { ModulePrefix, SpreadOperator, uppercaseIdentifier }
 
   @precedence { spaces, newline, identifier, "_" }
 
@@ -900,7 +912,7 @@ Interpolation {
   "=>"
   "..."
   "("  ")" "[" "]" "{" "}"
-  "." "," ":" ";"
+  "." ".." "," ":" ";"
   "=" "?" "|" "~" "'" "@" "%" "_" "`" "${" ":=" ":>"
   "@@" "%%"
 
