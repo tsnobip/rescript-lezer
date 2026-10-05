@@ -1,3 +1,25 @@
+# consecutive declaration attributes
+
+@a @a @a @a @a @a @a @a @a @a @a @a type t = int
+
+==>
+
+Script(Decorator("@",AttributeIdentifier),Decorator("@",AttributeIdentifier),Decorator("@",AttributeIdentifier),Decorator("@",AttributeIdentifier),Decorator("@",AttributeIdentifier),Decorator("@",AttributeIdentifier),Decorator("@",AttributeIdentifier),Decorator("@",AttributeIdentifier),Decorator("@",AttributeIdentifier),Decorator("@",AttributeIdentifier),Decorator("@",AttributeIdentifier),Decorator("@",AttributeIdentifier),TypeDeclaration(type,TypeBinding(TypeName,"=",TypeBody(TypeAlias(TypeName)))))
+
+# attribute payloads and assert expressions
+
+@attr(: int)
+@attr(?value if flag)
+@@private(@module("lib") external run: int => int = "run")
+%%ext("A"; "B")
+%signature(: let value: int)
+let check = assert Some(value)
+let decorate = @JSX child
+
+==>
+
+Script(Decorator("@",AttributeIdentifier,AttributeArguments("(",":",TypeName,")")),Decorator("@",AttributeIdentifier,AttributeArguments("(","?",Pattern(PatternPrimary(VariableName)),PatternGuard(if,VariableName),")")),Decorator("@@",AttributeIdentifier,AttributeArguments("(",AttributeStructurePayload(Decorator("@",AttributeIdentifier,AttributeArguments("(",String,")")),ExternalDeclaration(external,VariableDefinition,":",FunctionType(TypeName,FunctionArrow("=>"),TypeName),"=",ExternalBody(String))),")")),ExtensionExpression("%%",AttributeIdentifier,AttributeArguments("(",AttributeStructurePayload(String,";",String),")")),ExtensionExpression("%",AttributeIdentifier,AttributeArguments("(",":",ModuleTypeStatement(ValueSpec(let,VariableDefinition,":",TypeName)),")")),LetBinding(let,LetValueBinding(VariableDefinition,"=",AssertExpression(assert,VariantLiteral(VariantConstructor,VariantArguments("(",VariableName,")"))))),LetBinding(let,LetValueBinding(VariableDefinition,"=",DecoratedExpression(Decorator("@",AttributeIdentifier),VariableName))))
+
 # extensible variants, type extensions and punned record fields
 
 type t = ..
@@ -254,7 +276,7 @@ let unwrap = (Some(value)) => value
 
 ==>
 
-Script(LetBinding(let,LetValueBinding(VariableDefinition,"=",ArrowFunction(ParamList("(",ParamItems(UnlabeledParameter(SimpleParameter(DestructuringPattern(TuplePattern("(",Pattern(PatternPrimary(VariableName)),",",Pattern(PatternPrimary(VariableName)),")")))),",",SimpleParameter(DestructuringPattern(TuplePattern("(",Pattern(PatternPrimary(VariableName)),",",Pattern(PatternPrimary(VariableName)),")")))),")"),"=>",BinaryExpression(VariableName,CompareOp,VariableName)))),LetBinding(let,LetValueBinding(VariableDefinition,"=",ArrowFunction(ParamList("(",ParamItems(UnlabeledParameter(SimpleParameter(DestructuringPattern(RecordPattern("{",PatternField(VariableName),"}")),PatternAlias(as,VariableName))),",",SimpleParameter(VariableName)),")"),"=>",CallExpression(VariableName,"(",Argument(VariableName),",",Argument(VariableName),")")))),LetBinding(let,LetValueBinding(VariableDefinition,"=",ArrowFunction(ParamList("(",ParamItems(SingleParameter(SimpleParameter(DestructuringPattern(TuplePattern("(",Pattern(PatternPrimary(VariableName)),",",Pattern(PatternPrimary(VariableName)),")")),ParameterAnnotation(":",TupleType("(",TypeName,",",TypeName,")"))))),")"),"=>",BinaryExpression(VariableName,ArithOp,VariableName)))),LetBinding(let,LetValueBinding(VariableDefinition,"=",ArrowFunction(ParenthesizedExpression("(",VariantLiteral(VariantConstructor,VariantArguments("(",VariableName,")")),")"),"=>",VariableName))))
+Script(LetBinding(let,LetValueBinding(VariableDefinition,"=",ArrowFunction(ParamList("(",ParamItems(UnlabeledParameter(SimpleParameter(DestructuringPattern(TuplePattern("(",Pattern(PatternPrimary(VariableName)),",",Pattern(PatternPrimary(VariableName)),")")))),",",SimpleParameter(DestructuringPattern(TuplePattern("(",Pattern(PatternPrimary(VariableName)),",",Pattern(PatternPrimary(VariableName)),")")))),")"),"=>",BinaryExpression(VariableName,CompareOp,VariableName)))),LetBinding(let,LetValueBinding(VariableDefinition,"=",ArrowFunction(ParamList("(",ParamItems(UnlabeledParameter(SimpleParameter(DestructuringPattern(RecordPattern("{",PatternField(VariableName),"}")),PatternAlias(as,VariableName))),",",SimpleParameter(VariableName)),")"),"=>",CallExpression(VariableName,"(",Argument(VariableName),",",Argument(VariableName),")")))),LetBinding(let,LetValueBinding(VariableDefinition,"=",ArrowFunction(ParamList("(",ParamItems(SingleParameter(SimpleParameter(DestructuringPattern(TuplePattern("(",Pattern(PatternPrimary(VariableName)),",",Pattern(PatternPrimary(VariableName)),")")),ParameterAnnotation(":",TupleType("(",TypeName,",",TypeName,")"))))),")"),"=>",BinaryExpression(VariableName,ArithOp,VariableName)))),LetBinding(let,LetValueBinding(VariableDefinition,"=",ArrowFunction(ParamList("(",ParamItems(SingleParameter(SimpleParameter(DestructuringPattern(ConstructorPattern(VariantConstructor,PatternArguments("(",Pattern(PatternPrimary(VariableName)),")")))))),")"),"=>",VariableName))))
 
 # expression after a local module body
 

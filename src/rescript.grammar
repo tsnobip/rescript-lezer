@@ -21,6 +21,7 @@
   ternary @right,
   annotation @left,
   arrow @right,
+  decoratorStatement,
   decorator,
   statement @cut
 }
@@ -35,6 +36,7 @@ scriptItem {
 @top SingleExpression { expression }
 
 statement[@isGroup=Statement] {
+  Decorator !decoratorStatement |
   LetBinding |
   ModuleDeclaration |
   ModuleTypeDeclaration |
@@ -163,8 +165,8 @@ ModuleTypeStatement {
   TypeSpec |
   ValueSpec |
   ExceptionDeclaration |
-  Decorator |
-  ExtensionExpression |
+  Decorator ~decorated |
+  ExtensionExpression ~payload |
   ExternalDeclaration |
   OpenStatement |
   ModuleTypeInclude |
@@ -314,13 +316,25 @@ PatternAlias {
 }
 
 Decorator {
-  ("@" | "@@") AttributeIdentifier |
-  ("@" | "@@") AttributeIdentifier !decorator AttributeArguments
+  decorator<"@" | "@@">
+}
+
+decorator<prefix> {
+  prefix AttributeIdentifier ~decorated |
+  prefix AttributeIdentifier !decorator AttributeArguments ~decorated
 }
 
 AttributeArguments {
-  AttributeArgsOpen commaSep<expression> ")"
+  AttributeArgsOpen attributePayload ")"
 }
+
+attributePayload {
+  commaSep<expression> |
+  AttributeStructurePayload |
+  ":" (type | ModuleTypeStatement+) |
+  "?" Pattern PatternGuard?
+}
+AttributeStructurePayload[@dynamicPrecedence=-1] { blockItem+ }
 
 Wildcard { "_" }
 
@@ -458,6 +472,7 @@ ParenthesizedPattern {
 expression {
   (
   AwaitExpression |
+  AssertExpression |
   IfExpression |
   WhileExpression |
   ForExpression |
@@ -481,8 +496,7 @@ expression {
   ListExpression[@dynamicPrecedence=1] { softkw<"list"> "{" commaSep<collectionItem> "}" } |
   DictExpression[@dynamicPrecedence=2] { softkw<"dict"> "{" commaSep<DictEntry> "}" } |
   RecordExpression[@dynamicPrecedence=1] { "{" commaSep1<Property> "}" } |
-  Decorator ~decorated |
-  DecoratedExpression { Decorator ~decorated expression } |
+  DecoratedExpression { Decorator !decorator expression } |
   ExtensionExpression |
   ModulePackExpression |
   CallExpression |
@@ -512,6 +526,7 @@ expression {
 }
 
 AwaitExpression { kw<"await"> expression }
+AssertExpression { !prefix kw<"assert"> expression }
 ExtensionExpression {
   ("%" | "%%") AttributeIdentifier |
   ("%" | "%%") AttributeIdentifier !decorator AttributeArguments
@@ -738,7 +753,7 @@ type[@isGroup=Type] {
 ObjectType { "{" (".." | ".") commaSep<RecordTypeField> "}" }
 UnitType { "(" ~functionType ")" ~functionType }
 LocallyAbstractType { kw<"type"> TypeName+ "." type }
-ExtensionType { ExtensionExpression }
+ExtensionType { ExtensionExpression ~payload }
 DecoratedType { Decorator ~decorated type }
 QuantifiedType { (TypeParameter ~typeAlias)+ "." type }
 AliasedType { type ~typeAlias kw<"as"> TypeParameter }
@@ -861,7 +876,7 @@ VariantConstructorResult {
 }
 
 commaSep<content> {
-  "" ~pattern | content ("," content?)*
+  "" ~pattern | content ("," content?)* ~jsxAttribute
 }
 
 commaSep1<content> {
@@ -1000,7 +1015,7 @@ Interpolation {
   JSXText { ![<{]+ }
 
   AttributeIdentifier {
-    identifier ("." identifier)* 
+    (identifier | uppercaseIdentifier) ("." (identifier | uppercaseIdentifier))*
   }
 }
 
