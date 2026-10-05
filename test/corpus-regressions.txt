@@ -1,3 +1,49 @@
+# JSX statement after an effect
+
+let make = () => {
+  effect(_ => {play(); None})
+  <div><span /> <Input value={<span>{React.string("hi")}</span>} /></div>
+}
+
+==>
+
+Script(LetBinding(let,LetValueBinding(VariableDefinition,"=",ArrowFunction(UnitToken,"=>",BlockExpression("{",CallExpression(VariableName,"(",Argument(ArrowFunction(SingleParam(VariableName),"=>",BlockExpression("{",CallExpression(VariableName,UnitToken),";",VariantLiteral(VariantConstructor),"}"))),")"),JSXElement(JSXOpenTag(JSXStartTag,JSXIntrinsicElementName(JSXIdentifier),JSXEndTag),JSXElement(JSXSelfClosingTag(JSXStartTag,JSXIntrinsicElementName(JSXIdentifier),JSXSelfCloseEndTag)),JSXText,JSXElement(JSXSelfClosingTag(JSXStartTag,JSXCustomComponentName(ModulePath(ModuleName)),JSXAttribute(JSXIdentifier,"=","{",JSXElement(JSXOpenTag(JSXStartTag,JSXIntrinsicElementName(JSXIdentifier),JSXEndTag),JSXExpressionContainer("{",CallExpression(MemberExpression(ModulePrefix,MemberLeaf(VariableName)),"(",Argument(String),")"),"}"),JSXCloseTag(JSXStartCloseTag,JSXIntrinsicElementName(JSXIdentifier),JSXEndTag)),"}"),JSXSelfCloseEndTag)),JSXCloseTag(JSXStartCloseTag,JSXIntrinsicElementName(JSXIdentifier),JSXEndTag)),"}")))))
+
+# JSX siblings with nested attribute expressions
+
+let ui = <div>
+  <SignaturePicker />
+  <div className="h-8" />
+  <FatSlider meterSuffix={<span>{React.string("BPM")}</span>} />
+  <div />
+</div>
+
+==>
+
+Script(LetBinding(let,LetValueBinding(VariableDefinition,"=",JSXElement(JSXOpenTag(JSXStartTag,JSXIntrinsicElementName(JSXIdentifier),JSXEndTag),JSXText,JSXElement(JSXSelfClosingTag(JSXStartTag,JSXCustomComponentName(ModulePath(ModuleName)),JSXSelfCloseEndTag)),JSXText,JSXElement(JSXSelfClosingTag(JSXStartTag,JSXIntrinsicElementName(JSXIdentifier),JSXAttribute(JSXIdentifier,"=",String),JSXSelfCloseEndTag)),JSXText,JSXElement(JSXSelfClosingTag(JSXStartTag,JSXCustomComponentName(ModulePath(ModuleName)),JSXAttribute(JSXIdentifier,"=","{",JSXElement(JSXOpenTag(JSXStartTag,JSXIntrinsicElementName(JSXIdentifier),JSXEndTag),JSXExpressionContainer("{",CallExpression(MemberExpression(ModulePrefix,MemberLeaf(VariableName)),"(",Argument(String),")"),"}"),JSXCloseTag(JSXStartCloseTag,JSXIntrinsicElementName(JSXIdentifier),JSXEndTag)),"}"),JSXSelfCloseEndTag)),JSXText,JSXElement(JSXSelfClosingTag(JSXStartTag,JSXIntrinsicElementName(JSXIdentifier),JSXSelfCloseEndTag)),JSXText,JSXCloseTag(JSXStartCloseTag,JSXIntrinsicElementName(JSXIdentifier),JSXEndTag)))))
+
+# comparisons beside JSX and generics
+
+let compare = (a, b) => (a<b, a<=b, a<<b)
+let el = <div>{compare(1, 2)}</div>
+type nested = array<array<int>>
+
+==>
+
+Script(LetBinding(let,LetValueBinding(VariableDefinition,"=",ArrowFunction(ParamList("(",ParamItems(UnlabeledParameter(SimpleParameter(VariableName)),",",SimpleParameter(VariableName)),")"),"=>",TupleExpression("(",BinaryExpression(VariableName,CompareOp,VariableName),",",BinaryExpression(VariableName,CompareOp,VariableName),",",BinaryExpression(VariableName,ShiftOp,VariableName),")")))),LetBinding(let,LetValueBinding(VariableDefinition,"=",JSXElement(JSXOpenTag(JSXStartTag,JSXIntrinsicElementName(JSXIdentifier),JSXEndTag),JSXExpressionContainer("{",CallExpression(VariableName,"(",Argument(Number),",",Argument(Number),")"),"}"),JSXCloseTag(JSXStartCloseTag,JSXIntrinsicElementName(JSXIdentifier),JSXEndTag)))),TypeDeclaration(type,TypeBinding(TypeName,"=",TypeBody(TypeAlias(TypeApplication(TypeName,TypeAngleLeftNode(CompareOp),TypeApplication(TypeName,TypeAngleLeftNode(CompareOp),TypeName,TypeAngleRightNode(CompareOp)),TypeAngleRightNode(CompareOp)))))))
+
+# record punning and collection spreads
+
+let record = {...old, N.key, value, next: None}
+let array = [1, ...rest, 2]
+let values = list{1, ...tail}
+let data = dict{...old, "key": value}
+type values<'a> = list<'a>
+
+==>
+
+Script(LetBinding(let,LetValueBinding(VariableDefinition,"=",RecordExpression("{",Property(SpreadExpression(SpreadOperator,VariableName)),",",Property(PropertyPun(PropertyDefinition(ModulePrefix))),",",Property(PropertyPun(PropertyDefinition)),",",Property(PropertyDefinition,":",VariantLiteral(VariantConstructor)),"}"))),LetBinding(let,LetValueBinding(VariableDefinition,"=",ArrayExpression("[",Number,",",SpreadExpression(SpreadOperator,VariableName),",",Number,"]"))),LetBinding(let,LetValueBinding(VariableDefinition,"=",ListExpression(list,"{",Number,",",SpreadExpression(SpreadOperator,VariableName),"}"))),LetBinding(let,LetValueBinding(VariableDefinition,"=",DictExpression(dict,"{",DictEntry(SpreadExpression(SpreadOperator,VariableName)),",",DictEntry(String,":",VariableName),"}"))),TypeDeclaration(type,TypeBinding(TypeName,TypeParams(TypeAngleLeftNode(CompareOp),TypeParam(TypeParameter(Quote("'"),VariableName)),TypeAngleRightNode(CompareOp)),"=",TypeBody(TypeAlias(ListType(list,TypeAngleLeftNode(CompareOp),TypeParameter(Quote("'"),VariableName),TypeAngleRightNode(CompareOp)))))))
+
 # switch branch statement sequences
 
 let read = value => switch value {

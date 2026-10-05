@@ -373,10 +373,10 @@ expression {
   PolyVariantLiteral |
   RegExpLiteral |
   UnitToken ~annotation |
-  ArrayExpression { "[" commaSep<expression> "]" } |
-  ListExpression { kw<"list"> "{" commaSep<expression> "}" } |
+  ArrayExpression { "[" commaSep<collectionItem> "]" } |
+  ListExpression { kw<"list"> "{" commaSep<collectionItem> "}" } |
   DictExpression { kw<"dict"> "{" commaSep<DictEntry> "}" } |
-  RecordExpression { "{" commaSep1<Property> "}" } |
+  RecordExpression[@dynamicPrecedence=1] { "{" commaSep1<Property> "}" } |
   Decorator |
   ExtensionExpression {
     ("%" | "%%") AttributeIdentifier |
@@ -420,7 +420,7 @@ ArrowFunction[@dynamicPrecedence=1] {
 }
 
 ReturnTypeAnnotation {
-  ":" (TypeName | TypePath | TypeParameter | TypeApplication | DictType | ParenthesizedType | TupleType | PolyVariantType)
+  ":" (TypeName | TypePath | TypeParameter | TypeApplication | DictType | ListType | ParenthesizedType | TupleType | PolyVariantType)
 }
 TupleExpression { "(" expression "," commaSep1<expression> ")" }
 
@@ -454,13 +454,21 @@ MemberLeaf {
 
 
 DictEntry {
-  String ":" expression
+  String ":" expression |
+  SpreadExpression
 }
+
+collectionItem { expression | SpreadExpression }
+SpreadExpression { SpreadOperator expression }
 
 Property {
   OptionalPropertyPun |
-  (PropertyDefinition | String) ":" expression
+  (PropertyDefinition | String) ":" expression |
+  PropertyPun |
+  SpreadExpression
 }
+
+PropertyPun { PropertyDefinition }
 
 OptionalPropertyPun {
   "?" PropertyDefinition
@@ -573,7 +581,7 @@ Hash { "#" }
 TypeParameter { Quote VariableName }
 
 FunctionType {
-  (FunctionTypeParamList | TypeName | TypePath | TypeParameter | TypeApplication | DictType | ParenthesizedType) FunctionArrow type
+  (FunctionTypeParamList | TypeName | TypePath | TypeParameter | TypeApplication | DictType | ListType | ParenthesizedType) FunctionArrow type
 }
 
 FunctionArrow { "->" | "=>" }
@@ -584,6 +592,7 @@ type[@isGroup=Type] {
   TypeParameter |
   PolyVariantType |
   DictType |
+  ListType |
   TypeApplication |
   ParenthesizedType |
   TupleType |
@@ -591,10 +600,11 @@ type[@isGroup=Type] {
 }
 
 
-TypeAngleLeftNode { CompareOp<"<"> }
-TypeAngleRightNode { CompareOp<">"> }
+TypeAngleLeftNode { TypeAngleLeftToken }
+TypeAngleRightNode { TypeAngleRightToken }
 
 DictType { kw<"dict"> TypeAngleLeftNode type TypeAngleRightNode }
+ListType { kw<"list"> TypeAngleLeftNode type TypeAngleRightNode }
 
 TypeApplication { (TypeName | TypePath) TypeAngleLeftNode commaSep<type> TypeAngleRightNode }
 
@@ -703,7 +713,7 @@ kw<term> { @specialize[@name={term}]<identifier, term> }
 
 boolean { @specialize[@name=BooleanLiteral]<identifier, "true" | "false"> }
 
-VariableName { identifier | exoticIdentifier }
+VariableName { (identifier | exoticIdentifier) ~record }
 VariableDefinition { identifier | exoticIdentifier }
 TypePath {
   ModulePrefix TypeName
@@ -711,7 +721,7 @@ TypePath {
 TypeName { identifier }
 VariantConstructor { uppercaseIdentifier }
 PropertyName { identifier }
-PropertyDefinition { identifier | ModulePrefix identifier }
+PropertyDefinition { (identifier | ModulePrefix identifier) ~record }
 LabelName { identifier }
 
 @skip { spaces | newline | LineComment | BlockComment }
@@ -719,6 +729,8 @@ LabelName { identifier }
 @context trackNewline from "./tokens.js"
 
 @external tokens variant from "./tokens" { VariantConstructorArgsToken, VariantConstructorResultToken }
+@external tokens typeAngle from "./tokens" { TypeAngleLeftToken[@name=CompareOp], TypeAngleRightToken[@name=CompareOp] }
+@external tokens jsx from "./tokens" { JSXStartTag, LessThan[@name=CompareOp] }
 
 @skip {} {
   String[isolate] {
@@ -899,7 +911,5 @@ jsxAttributeValue {
 }
 
 @external propSource rescriptHighlight from "./highlight"
-
-@external tokens jsx from "./tokens" { JSXStartTag, LessThan[@name=CompareOp] }
 
 @detectDelim

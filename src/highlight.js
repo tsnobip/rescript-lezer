@@ -78,6 +78,7 @@ export const rescriptHighlight = styleTags({
   "ExtensionExpression ExtensionExpression/% ExtensionExpression/%%":
     t.annotation,
   PropertyDefinition: t.definition(t.propertyName),
+  "SpreadOperator SpreadExpression": t.operator,
   PropertyName: t.propertyName,
   "MemberExpression/String": t.propertyName,
   "MemberExpression/RecordFieldAccess/PropertyName": t.propertyName,

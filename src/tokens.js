@@ -8,9 +8,13 @@ import {
   BlockComment,
   LineComment,
   JSXStartTag,
+  JSXStartCloseTag,
+  JSXEndTag,
   LessThan,
   VariantConstructorArgsToken,
   VariantConstructorResultToken,
+  TypeAngleLeftToken,
+  TypeAngleRightToken,
 } from "./parser.terms.js";
 
 const space = [
@@ -49,8 +53,25 @@ function identifierChar(ch, start) {
 }
 
 // JSX tokenizer that also handles < comparison
+export const typeAngle = new ExternalTokenizer((input, stack) => {
+  if (input.next == 60 && stack.canShift(TypeAngleLeftToken)) {
+    input.advance();
+    input.acceptToken(TypeAngleLeftToken);
+  } else if (input.next == 62 && stack.canShift(TypeAngleRightToken) && !stack.canShift(JSXEndTag)) {
+    input.advance();
+    input.acceptToken(TypeAngleRightToken);
+  }
+}, { contextual: true });
+
 export const jsx = new ExternalTokenizer((input, stack) => {
-  if (input.next != lt) return;
+  if (input.next != lt || input.peek(1) == 61 || input.peek(1) == lt) return;
+  if (stack.canShift(LessThan) && !stack.canShift(JSXStartCloseTag) &&
+      !(stack.context && stack.canShift(JSXStartTag) && identifierChar(input.peek(1), true))) {
+    input.advance();
+    input.acceptToken(LessThan);
+    return;
+  }
+  if (!stack.canShift(JSXStartTag)) return;
   input.advance();
   if (input.next == slash) return; // Could be </
 
@@ -68,7 +89,7 @@ export const jsx = new ExternalTokenizer((input, stack) => {
     // Not an identifier, treat as less-than
     input.acceptToken(LessThan);
   }
-});
+}, { contextual: true });
 
 export const variant = new ExternalTokenizer((input) => {
   let ch = input.next;
