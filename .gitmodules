@@ -1,0 +1,3 @@
+[submodule "vendored/rescript"]
+	path = vendored/rescript
+	url = https://github.com/rescript-lang/rescript.git

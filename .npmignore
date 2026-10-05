@@ -1,1 +1,9 @@
 /node_modules
+/src/
+/test/
+/scripts/
+/docs/
+/vendored/
+/.gitmodules
+/.github/
+/rollup.config.js

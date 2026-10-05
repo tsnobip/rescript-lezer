@@ -14,12 +14,11 @@ const __dirname = path.dirname(__filename);
 const repoRoot = path.resolve(__dirname, "..");
 
 const DEFAULT_MODE = "all";
-const DEFAULT_MAX_FILES = 500;
+const DEFAULT_MAX_FILES = 10000;
 const DEFAULT_FUZZ_CASES = 250;
-const DEFAULT_INCREMENTAL_CASES = 150;
-const DEFAULT_SEED = (Date.now() ^ (process.pid << 8)) >>> 0;
+const DEFAULT_INCREMENTAL_CASES = 1000;
+const DEFAULT_SEED = 12345;
 const MAX_EXAMPLES = 30;
-const MAX_SEED_POOL = 300;
 
 const INSERT_TOKENS = [
   "(",
@@ -57,7 +56,7 @@ Runs grammar audit checks for rescript-lezer:
 
 Options:
   --mode <all|differential|fuzz|incremental>   Audit mode (default: ${DEFAULT_MODE})
-  --rescript-root <path>                        Path to rescript monorepo (default: ../rescript)
+  --rescript-root <path>                        Path to rescript monorepo (default: vendored/rescript)
   --corpus <path>                               Extra corpus directory (repeatable)
   --include-idempotency                         Include syntax_tests/data/idempotency corpus
   --include-resi                                Include .resi files (default: .res only)
@@ -67,6 +66,7 @@ Options:
   --seed <n>                                    RNG seed (default: ${DEFAULT_SEED})
   --report <file>                               Write JSON report
   --fail-on-mismatch                            Exit non-zero on parser mismatches
+  --fail-on-regression                          Exit non-zero on compiler-valid errors or incremental mismatches
   --fail-on-crash                               Exit non-zero on parser crashes
   --verbose                                     Print per-file progress
   --help                                        Show this help
@@ -83,7 +83,7 @@ function parseArgs(argv) {
     mode: DEFAULT_MODE,
     rescriptRoot: process.env.RESCRIPT_ROOT
       ? path.resolve(process.env.RESCRIPT_ROOT)
-      : path.resolve(repoRoot, "../rescript"),
+      : path.resolve(repoRoot, "vendored/rescript"),
     corpus: [],
     includeIdempotency: false,
     includeResi: false,
@@ -94,6 +94,7 @@ function parseArgs(argv) {
     report: null,
     failOnMismatch: false,
     failOnCrash: false,
+    failOnRegression: false,
     verbose: false,
     help: false,
   };
@@ -152,6 +153,10 @@ function parseArgs(argv) {
     }
     if (arg === "--fail-on-mismatch") {
       options.failOnMismatch = true;
+      continue;
+    }
+    if (arg === "--fail-on-regression") {
+      options.failOnRegression = true;
       continue;
     }
     if (arg === "--fail-on-crash") {
@@ -245,6 +250,8 @@ function getCorpusDirectories(options) {
   const defaults = [
     path.join(options.rescriptRoot, "tests/syntax_tests/data/parsing/grammar"),
     path.join(options.rescriptRoot, "tests/syntax_tests/data/printer"),
+    path.join(options.rescriptRoot, "packages"),
+    path.join(options.rescriptRoot, "scripts/res"),
   ];
   if (options.includeIdempotency) {
     defaults.push(path.join(options.rescriptRoot, "tests/syntax_tests/data/idempotency"));
@@ -265,8 +272,7 @@ function collectCorpusFiles(corpusDirs, options) {
       }),
     );
   }
-  files.sort((a, b) => a.localeCompare(b));
-  return files.slice(0, options.maxFiles);
+  return [...new Set(files)].sort((a, b) => a.localeCompare(b)).slice(0, options.maxFiles);
 }
 
 function sanitizeDiagnostic(msg) {
@@ -317,13 +323,12 @@ function parseWithReScriptText(text, extension, toolchain, tempDir, index) {
   return parseWithReScriptFile(filePath, toolchain);
 }
 
-function collectLezerErrors(tree, maxCount = 10) {
+function collectLezerErrors(tree) {
   const errors = [];
   const cursor = tree.cursor();
   do {
     if (cursor.type.isError || cursor.name === "⚠") {
       errors.push({from: cursor.from, to: cursor.to, name: cursor.name});
-      if (errors.length >= maxCount) break;
     }
   } while (cursor.next());
   return errors;
@@ -401,13 +406,11 @@ function runDifferentialAudit(files, toolchain, options) {
     switch (cls) {
       case "both_accept":
         summary.bothAccept++;
-        if (summary.seedPool.length < MAX_SEED_POOL) {
-          summary.seedPool.push({
-            filePath,
-            extension: path.extname(filePath) || ".res",
-            text,
-          });
-        }
+        summary.seedPool.push({
+          filePath,
+          extension: path.extname(filePath) || ".res",
+          text,
+        });
         break;
       case "both_reject":
         summary.bothReject++;
@@ -418,6 +421,7 @@ function runDifferentialAudit(files, toolchain, options) {
           summary.mismatches.push({
             kind: cls,
             filePath,
+            lezerErrors: lezerResult.errors,
             lezerError: shortLezerErrorSummary(lezerResult.errors),
             rescriptError: summarizeDiagnostic(rescriptResult.stderr),
             preview: summarizeTextPreview(text),
@@ -430,6 +434,7 @@ function runDifferentialAudit(files, toolchain, options) {
           summary.mismatches.push({
             kind: cls,
             filePath,
+            lezerErrors: lezerResult.errors,
             lezerError: shortLezerErrorSummary(lezerResult.errors),
             rescriptError: summarizeDiagnostic(rescriptResult.stderr),
             preview: summarizeTextPreview(text),
@@ -454,6 +459,7 @@ function runDifferentialAudit(files, toolchain, options) {
           summary.mismatches.push({
             kind: cls,
             filePath,
+            lezerErrors: lezerResult.errors,
             lezerError: shortLezerErrorSummary(lezerResult.errors),
             rescriptError: rescriptResult.error,
             preview: summarizeTextPreview(text),
@@ -587,6 +593,7 @@ function runFuzzAudit(seedPool, toolchain, options, rng) {
         rescriptError: rescriptResult.crashed
           ? rescriptResult.error
           : summarizeDiagnostic(rescriptResult.stderr),
+        source: mutated,
         preview: summarizeTextPreview(mutated),
       });
     }
@@ -645,6 +652,15 @@ function randomEdit(text, rng) {
   };
 }
 
+function treeSnapshot(tree) {
+  const nodes = [];
+  tree.iterate({
+    enter(node) { nodes.push([node.name, node.from, node.to]); },
+    leave() { nodes.push(null); },
+  });
+  return JSON.stringify(nodes);
+}
+
 function runIncrementalAudit(seedPool, options, rng) {
   const summary = {
     cases: options.incrementalCases,
@@ -667,7 +683,7 @@ function runIncrementalAudit(seedPool, options, rng) {
       const fragments = TreeFragment.applyChanges(TreeFragment.addTree(originalTree), [change]);
       const incrementalTree = parser.parse(nextText, fragments);
       const freshTree = parser.parse(nextText);
-      const equal = incrementalTree.toString() === freshTree.toString();
+      const equal = treeSnapshot(incrementalTree) === treeSnapshot(freshTree);
       if (equal) {
         summary.matched++;
       } else {
@@ -675,6 +691,7 @@ function runIncrementalAudit(seedPool, options, rng) {
         if (summary.mismatches.length < MAX_EXAMPLES) {
           summary.mismatches.push({
             seedFile: seed.filePath,
+            source, nextText, change,
             preview: summarizeTextPreview(nextText),
           });
         }
@@ -765,7 +782,7 @@ function ensureToolchain(options) {
   };
 
   if (!fs.existsSync(toolchain.bscExe)) {
-    throw new Error(`ReScript compiler not found at ${toolchain.bscExe}. Run build in rescript repo.`);
+    throw new Error(`ReScript compiler not found at ${toolchain.bscExe}. Initialize with git submodule update --init vendored/rescript, then run dune build compiler/bsc/rescript_compiler_main.exe in ${toolchain.rescriptRoot}.`);
   }
   if (!fs.existsSync(toolchain.runtimePath)) {
     throw new Error(`ReScript runtime not found at ${toolchain.runtimePath}`);
@@ -852,7 +869,6 @@ function main() {
           extension: path.extname(filePath) || ".res",
           text,
         });
-        if (seedPool.length >= MAX_SEED_POOL) break;
       }
     }
   }
@@ -866,25 +882,12 @@ function main() {
     let incrementalSeeds = seedPool;
     if (incrementalSeeds.length === 0) {
       const testFiles = walkFiles(path.join(repoRoot, "test"), (filePath) => filePath.endsWith(".txt"));
-      for (const filePath of testFiles.slice(0, 8)) {
+      for (const filePath of testFiles) {
         const raw = fs.readFileSync(filePath, "utf8");
-        const snippets = raw.split(/\n==>\n/);
-        for (const snippet of snippets) {
-          const code = snippet
-            .split("\n")
-            .slice(1)
-            .join("\n")
-            .trim();
-          if (code.length > 0) {
-            incrementalSeeds.push({
-              filePath,
-              extension: ".res",
-              text: code,
-            });
-            if (incrementalSeeds.length >= MAX_SEED_POOL) break;
-          }
+        for (const snippet of raw.split(/^# .*\n/m).slice(1)) {
+          const code = snippet.split("\n==>\n")[0].trim();
+          if (code.length > 0) incrementalSeeds.push({filePath, extension: ".res", text: code});
         }
-        if (incrementalSeeds.length >= MAX_SEED_POOL) break;
       }
     }
     report.incremental = runIncrementalAudit(incrementalSeeds, options, rng);
@@ -902,7 +905,11 @@ function main() {
   console.log(`  mismatches: ${findings.mismatches}`);
   console.log(`  crashes:    ${findings.crashes}`);
 
-  if ((options.failOnMismatch && findings.mismatches > 0) || (options.failOnCrash && findings.crashes > 0)) {
+  const validErrors = (report.differential?.lezerFalseNegative || 0) + (report.fuzz?.lezerFalseNegative || 0);
+  const regressions = validErrors + (report.incremental?.mismatched || 0);
+  if ((options.failOnMismatch && findings.mismatches > 0) ||
+      (options.failOnRegression && regressions > 0) ||
+      (options.failOnCrash && findings.crashes > 0)) {
     process.exitCode = 1;
   }
 }

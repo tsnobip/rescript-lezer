@@ -1,0 +1,575 @@
+# array statements after an expression on the previous line
+
+foo()
+[
+  fn(x => {let _ = x}),
+  fn(y => {let _ = y}),
+]
+let indexed = values[0]
+let separated = {value /* newline
+comment */ [1, 2]}
+
+==>
+
+Script(CallExpression(VariableName,UnitToken),ArrayExpression("[",CallExpression(VariableName,"(",Argument(ArrowFunction(SingleParam(VariableName),"=>",BlockExpression("{",LetBinding(let,LetValueBinding(VariableDefinition,"=",VariableName)),"}"))),")"),",",CallExpression(VariableName,"(",Argument(ArrowFunction(SingleParam(VariableName),"=>",BlockExpression("{",LetBinding(let,LetValueBinding(VariableDefinition,"=",VariableName)),"}"))),")"),",","]"),LetBinding(let,LetValueBinding(VariableDefinition,"=",MemberExpression(VariableName,"[",Number,"]"))),LetBinding(let,LetValueBinding(VariableDefinition,"=",BlockExpression("{",VariableName,BlockComment,ArrayExpression("[",Number,",",Number,"]"),"}"))))
+
+# hash assignment with JSX values
+
+foo #= <bar />
+foo #=<bar />
+
+==>
+
+Script(BinaryExpression(VariableName,"#=",JSXElement(JSXSelfClosingTag(JSXStartTag,JSXIntrinsicElementName(JSXIdentifier),JSXSelfCloseEndTag))),BinaryExpression(VariableName,"#=",JSXElement(JSXSelfClosingTag(JSXStartTag,JSXIntrinsicElementName(JSXIdentifier),JSXSelfCloseEndTag))))
+
+# exotic identifiers containing literal backslashes
+
+if \"module\" { () }
+
+==>
+
+Script(IfExpression(if,VariableName,BlockExpression("{",UnitToken,"}")))
+
+# JSX expression children and whitespace around tag delimiters
+
+let x = <   div > list{a, b} dict{"x": a} `value ${name}` {name: value} {let child = value; child} <   / div >
+let y = < > <Icon /> value < / >
+
+==>
+
+Script(LetBinding(let,LetValueBinding(VariableDefinition,"=",JSXElement(JSXOpenTag(JSXStartTag,JSXIntrinsicElementName(JSXIdentifier),JSXEndTag),ListExpression(list,"{",VariableName,",",VariableName,"}"),DictExpression(dict,"{",DictEntry(String,":",VariableName),"}"),TemplateString("`",TemplateContent,Interpolation("${",VariableName,"}"),"`"),RecordExpression("{",Property(PropertyDefinition,":",VariableName),"}"),JSXExpressionContainer(BlockExpression("{",LetBinding(let,LetValueBinding(VariableDefinition,"=",VariableName)),";",VariableName,"}")),JSXCloseTag(JSXStartCloseTag,JSXIntrinsicElementName(JSXIdentifier),JSXEndTag)))),LetBinding(let,LetValueBinding(VariableDefinition,"=",JSXElement(JSXFragment(JSXFragmentOpenTag(JSXStartTag,JSXEndTag),JSXElement(JSXSelfClosingTag(JSXStartTag,JSXCustomComponentName(ModulePath(ModuleName)),JSXSelfCloseEndTag)),VariableName,JSXFragmentCloseTag(JSXStartCloseTag,JSXEndTag))))))
+
+# JSX optional, spread and atomic props and block containers
+
+let x = <Foo.custom-tag ?optional value=?value items=[a, b] tuple=(a, b) regex=/a/ inner=<Icon /> {...props} />
+let y = <div>{let x = 1; x}{/* empty */}</div>
+let z = <div record={name: value} callback={let x = 1; x} />
+
+==>
+
+Script(LetBinding(let,LetValueBinding(VariableDefinition,"=",JSXElement(JSXSelfClosingTag(JSXStartTag,JSXCustomComponentName(ModulePrefix,JSXIdentifier),JSXAttribute("?",JSXIdentifier),JSXAttribute(JSXIdentifier,"=","?",VariableName),JSXAttribute(JSXIdentifier,"=",ArrayExpression("[",VariableName,",",VariableName,"]")),JSXAttribute(JSXIdentifier,"=",TupleExpression("(",VariableName,",",VariableName,")")),JSXAttribute(JSXIdentifier,"=",RegExpLiteral),JSXAttribute(JSXIdentifier,"=",JSXElement(JSXSelfClosingTag(JSXStartTag,JSXCustomComponentName(ModulePath(ModuleName)),JSXSelfCloseEndTag))),JSXSpreadAttribute("{",SpreadOperator,VariableName,"}"),JSXSelfCloseEndTag)))),LetBinding(let,LetValueBinding(VariableDefinition,"=",JSXElement(JSXOpenTag(JSXStartTag,JSXIntrinsicElementName(JSXIdentifier),JSXEndTag),JSXExpressionContainer(BlockExpression("{",LetBinding(let,LetValueBinding(VariableDefinition,"=",Number)),";",VariableName,"}")),JSXExpressionContainer(BlockExpression("{",BlockComment,"}")),JSXCloseTag(JSXStartCloseTag,JSXIntrinsicElementName(JSXIdentifier),JSXEndTag)))),LetBinding(let,LetValueBinding(VariableDefinition,"=",JSXElement(JSXSelfClosingTag(JSXStartTag,JSXIntrinsicElementName(JSXIdentifier),JSXAttribute(JSXIdentifier,"=",RecordExpression("{",Property(PropertyDefinition,":",VariableName),"}")),JSXAttribute(JSXIdentifier,"=",BlockExpression("{",LetBinding(let,LetValueBinding(VariableDefinition,"=",Number)),";",VariableName,"}")),JSXSelfCloseEndTag)))))
+
+# annotated module unpacking
+
+module M = unpack(value: S)
+module M = unpack({let x = value; x}: S with type t = int)
+
+==>
+
+Script(ModuleDeclaration(module,ModuleName,ModuleDeclarationBody("=",ModuleExpression(ModuleUnpackExpression(unpack,"(",VariableName,ModuleUnpackSpec(":",ModuleTypeExpr(ModulePath(ModuleName))),")")))),ModuleDeclaration(module,ModuleName,ModuleDeclarationBody("=",ModuleExpression(ModuleUnpackExpression(unpack,"(",BlockExpression("{",LetBinding(let,LetValueBinding(VariableDefinition,"=",VariableName)),";",VariableName,"}"),ModuleUnpackSpec(":",ModuleTypeExpr(ModulePath(ModuleName)),ModuleWithConstraint(with,type,TypeName,ConstraintOperator("="),TypeName)),")")))))
+
+# extension, qualified field, signed range and template patterns
+
+let alt = (%first | %second) => ()
+let f = (%raw("x") as value) => value
+let {ReasonReact.state} = x
+let -1 .. -1. = x
+let `literal` = x
+switch value { | `literal` => true | _ => false }
+
+==>
+
+Script(LetBinding(let,LetValueBinding(VariableDefinition,"=",ArrowFunction(ParamList("(",ParamItems(SingleParameter(SimpleParameter(PatternParameter(Pattern(PatternPrimary(ExtensionExpression("%",AttributeIdentifier)),"|",PatternPrimary(ExtensionExpression("%",AttributeIdentifier))))))),")"),"=>",UnitToken))),LetBinding(let,LetValueBinding(VariableDefinition,"=",ArrowFunction(ParamList("(",ParamItems(SingleParameter(SimpleParameter(LiteralParameter(ExtensionExpression("%",AttributeIdentifier,AttributeArguments("(",String,")"))),PatternAlias(as,VariableName)))),")"),"=>",VariableName))),LetBinding(let,LetValueBinding(DestructuringPattern(RecordPattern("{",PatternField(ModulePrefix,PropertyName),"}")),"=",VariableName)),LetBinding(let,LetValueBinding(PatternBinding(Pattern(PatternPrimary(RangePattern(SignedPattern(ArithOp,Number),"..",SignedPattern(ArithOp,Number)))),"=",VariableName))),LetBinding(let,LetValueBinding(PatternBinding(Pattern(PatternPrimary(TemplateString("`",TemplateContent,"`"))),"=",VariableName))),SwitchExpression(switch,VariableName,"{",SwitchCase("|",Pattern(PatternPrimary(TemplateString("`",TemplateContent,"`"))),"=>",BooleanLiteral),SwitchCase("|",Pattern(PatternPrimary(VariableName)),"=>",BooleanLiteral),"}"))
+
+# bounded and decorated polymorphic variants
+
+type empty = [>]
+type t = [< | @a #A(int) & (string) | @b #B > #A #B]
+type openT = @attr ..
+type fn = (@attr ~a: int, @attr ~b: string, @attr float) => unit
+
+==>
+
+Script(TypeDeclaration(type,TypeBinding(TypeName,"=",TypeBody(TypeAlias(PolyVariantType("[",PolyVariantVarianceMarker(PolyVariantVarianceUpper(CompareOp)),"]"))))),TypeDeclaration(type,TypeBinding(TypeName,"=",TypeBody(TypeAlias(PolyVariantType("[",PolyVariantVarianceMarker(PolyVariantVarianceLower(CompareOp)),PolyVariantCaseList("|",PolyVariantCase(Decorator("@",AttributeIdentifier),PolyVariantTagCase(PolyVariantTag(Hash,PolyVariantName),PolyVariantPayload("(",TypeName,")"),PolyVariantPayload("(",TypeName,")"))),"|",PolyVariantCase(Decorator("@",AttributeIdentifier),PolyVariantTagCase(PolyVariantTag(Hash,PolyVariantName)))),PolyVariantVarianceUpper(CompareOp),PolyVariantTag(Hash,PolyVariantName),PolyVariantTag(Hash,PolyVariantName),"]"))))),TypeDeclaration(type,TypeBinding(TypeName,"=",TypeBody(ExtensibleVariantType(Decorator("@",AttributeIdentifier),"..")))),TypeDeclaration(type,TypeBinding(TypeName,"=",TypeBody(TypeAlias(FunctionType(FunctionTypeParamList("(",FunctionTypeParamItems(FunctionTypeLabeledParamList(FunctionTypeLabeledParam(Decorator("@",AttributeIdentifier),FunctionTypeLabeledParam("~",LabelName,FunctionTypeAnnotation(":",TypeName))),",",FunctionTypeParameter(FunctionTypeLabeledParam(Decorator("@",AttributeIdentifier),FunctionTypeLabeledParam("~",LabelName,FunctionTypeAnnotation(":",TypeName)))),",",FunctionTypeParameter(FunctionTypeSimpleParam(Decorator("@",AttributeIdentifier),FunctionTypeSimpleParam(TypeName))))),")"),FunctionArrow("=>"),TypeName))))))
+
+# nested comments and escaped template delimiters
+
+/* outer /* middle /* inner */ middle */ outer */
+let x = `escaped \${value and \`backtick and $`
+let y = `value ${name}`
+
+==>
+
+Script(BlockComment,LetBinding(let,LetValueBinding(VariableDefinition,"=",TemplateString("`",TemplateContent,TemplateEscape,TemplateContent,TemplateEscape,TemplateContent,TemplateContent,"`"))),LetBinding(let,LetValueBinding(VariableDefinition,"=",TemplateString("`",TemplateContent,Interpolation("${",VariableName,"}"),"`"))))
+
+# consecutive declaration attributes
+
+@a @a @a @a @a @a @a @a @a @a @a @a type t = int
+
+==>
+
+Script(Decorator("@",AttributeIdentifier),Decorator("@",AttributeIdentifier),Decorator("@",AttributeIdentifier),Decorator("@",AttributeIdentifier),Decorator("@",AttributeIdentifier),Decorator("@",AttributeIdentifier),Decorator("@",AttributeIdentifier),Decorator("@",AttributeIdentifier),Decorator("@",AttributeIdentifier),Decorator("@",AttributeIdentifier),Decorator("@",AttributeIdentifier),Decorator("@",AttributeIdentifier),TypeDeclaration(type,TypeBinding(TypeName,"=",TypeBody(TypeAlias(TypeName)))))
+
+# attribute payloads and assert expressions
+
+@attr(: int)
+@attr(?value if flag)
+@@private(@module("lib") external run: int => int = "run")
+%%ext("A"; "B")
+%signature(: let value: int)
+let check = assert Some(value)
+let decorate = @JSX child
+
+==>
+
+Script(Decorator("@",AttributeIdentifier,AttributeArguments("(",":",TypeName,")")),Decorator("@",AttributeIdentifier,AttributeArguments("(","?",Pattern(PatternPrimary(VariableName)),PatternGuard(if,VariableName),")")),Decorator("@@",AttributeIdentifier,AttributeArguments("(",AttributeStructurePayload(Decorator("@",AttributeIdentifier,AttributeArguments("(",String,")")),ExternalDeclaration(external,VariableDefinition,":",FunctionType(TypeName,FunctionArrow("=>"),TypeName),"=",ExternalBody(String))),")")),ExtensionExpression("%%",AttributeIdentifier,AttributeArguments("(",AttributeStructurePayload(String,";",String),")")),ExtensionExpression("%",AttributeIdentifier,AttributeArguments("(",":",ModuleTypeStatement(ValueSpec(let,VariableDefinition,":",TypeName)),")")),LetBinding(let,LetValueBinding(VariableDefinition,"=",AssertExpression(assert,VariantLiteral(VariantConstructor,VariantArguments("(",VariableName,")"))))),LetBinding(let,LetValueBinding(VariableDefinition,"=",DecoratedExpression(Decorator("@",AttributeIdentifier),VariableName))))
+
+# extensible variants, type extensions and punned record fields
+
+type t = ..
+type privateT = private ..
+type t += First(int) | Alias = M.First
+type M.t<'a> += @attr Other('a)
+type empty = {}
+type punned = {form, mutable answers}
+type extended = %extension("existential")
+type aliased = ({"name": string} as 'a) => unit
+type labeled = ~f:int => string
+
+==>
+
+Script(TypeDeclaration(type,TypeBinding(TypeName,"=",TypeBody(ExtensibleVariantType("..")))),TypeDeclaration(type,TypeBinding(TypeName,"=",TypeBody(private,ExtensibleVariantType("..")))),TypeExtension(type,TypeName,"+=",ExtensionConstructorList(ExtensionConstructor(VariantConstructorCase(VariantConstructorArgsToken,VariantConstructorArgs("(",TypeName,")"))),"|",ExtensionConstructor(VariantConstructorCase(VariantConstructor),"=",ModulePrefix,VariantConstructor))),TypeExtension(type,TypePath(ModulePrefix,TypeName),TypeParams(TypeAngleLeftNode(CompareOp),TypeParam(TypeParameter(Quote("'"),VariableName)),TypeAngleRightNode(CompareOp)),"+=",ExtensionConstructorList(ExtensionConstructor(VariantConstructorCase(Decorator("@",AttributeIdentifier),VariantConstructorArgsToken,VariantConstructorArgs("(",TypeParameter(Quote("'"),VariableName),")"))))),TypeDeclaration(type,TypeBinding(TypeName,"=",TypeBody(RecordType("{","}")))),TypeDeclaration(type,TypeBinding(TypeName,"=",TypeBody(RecordType("{",RecordTypeField(PropertyDefinition),",",RecordTypeField(mutable,PropertyDefinition),"}")))),TypeDeclaration(type,TypeBinding(TypeName,"=",TypeBody(TypeAlias(ExtensionType(ExtensionExpression("%",AttributeIdentifier,AttributeArguments("(",String,")"))))))),TypeDeclaration(type,TypeBinding(TypeName,"=",TypeBody(TypeAlias(FunctionType(FunctionTypeParamList("(",FunctionTypeParamItems(FunctionTypeSingleParam(FunctionTypeSimpleParam(AliasedType(RecordType("{",RecordTypeField(String,":",TypeName),"}"),as,TypeParameter(Quote("'"),VariableName))))),")"),FunctionArrow("=>"),TypeName))))),TypeDeclaration(type,TypeBinding(TypeName,"=",TypeBody(TypeAlias(FunctionType(FunctionTypeLabeledParam("~",LabelName,FunctionTypeAnnotation(":",TypeName)),FunctionArrow("=>"),TypeName))))))
+
+# recursive modules and decorated simultaneous bindings
+
+module rec A: S = {let x = 1}
+@attr and B: S = {let x = A.x}
+module type S = {
+  module rec A: {type t}
+  and B: {type t}
+  type t = int
+  @attr and u = string
+}
+let first = 1
+@attr and second = 2
+let rec f = () => g()
+@attr and g = () => ()
+let identity: type t. t => t = value => value
+
+==>
+
+Script(ModuleDeclaration(module,RecursiveModuleBindings(rec,ModuleName,ModuleDeclarationBody(ModuleSpec(":",ModuleTypeExpr(ModulePath(ModuleName))),"=",ModuleExpression(ModuleBody("{",LetBinding(let,LetValueBinding(VariableDefinition,"=",Number)),"}"))),Decorator("@",AttributeIdentifier),and,ModuleName,ModuleDeclarationBody(ModuleSpec(":",ModuleTypeExpr(ModulePath(ModuleName))),"=",ModuleExpression(ModuleBody("{",LetBinding(let,LetValueBinding(VariableDefinition,"=",MemberExpression(ModulePrefix,MemberLeaf(VariableName)))),"}"))))),ModuleTypeDeclaration(module,type,ModuleName,"=",ModuleTypeExpr(ModuleTypeBody("{",ModuleTypeStatement(RecursiveModuleSpec(module,rec,ModuleName,ModuleSpec(":",ModuleTypeExpr(ModuleTypeBody("{",ModuleTypeStatement(TypeSpec(type,TypeName)),"}"))),and,ModuleName,ModuleSpec(":",ModuleTypeExpr(ModuleTypeBody("{",ModuleTypeStatement(TypeSpec(type,TypeName)),"}"))))),ModuleTypeStatement(TypeSpec(type,TypeName,"=",TypeBody(TypeAlias(TypeName)),Decorator("@",AttributeIdentifier),and,TypeBinding(TypeName,"=",TypeBody(TypeAlias(TypeName))))),"}"))),LetBinding(let,LetValueBinding(VariableDefinition,"=",Number),Decorator("@",AttributeIdentifier),and,LetValueBinding(VariableDefinition,"=",Number)),LetBinding(let,LetRecBindings(rec,LetRecBinding(VariableDefinition,"=",ArrowFunction(UnitToken,"=>",CallExpression(VariableName,UnitToken))),Decorator("@",AttributeIdentifier),and,LetRecBinding(VariableDefinition,"=",ArrowFunction(UnitToken,"=>",UnitToken)))),LetBinding(let,LetValueBinding(VariableDefinition,":",LocallyAbstractType(type,TypeName,".",FunctionType(TypeName,FunctionArrow("=>"),TypeName)),"=",ArrowFunction(SingleParam(VariableName),"=>",VariableName))))
+
+# complete module signatures and aliased function parameters
+
+module type S = {
+  module type Abstract
+  open! M
+  include module type of M
+  @attr
+  external run: int => int = "run";
+  @@standalone
+  module Alias = M
+  type t = int and u = string
+}
+module type F = (_: S, S) => S
+let alias = (value as named, "hello" as text) => named
+switch value { | {x: ?None, ?name} => name | _ => None }
+
+==>
+
+Script(ModuleTypeDeclaration(module,type,ModuleName,"=",ModuleTypeExpr(ModuleTypeBody("{",ModuleTypeStatement(ModuleTypeDeclaration(module,type,ModuleName)),ModuleTypeStatement(OpenStatement(open,LogicOp,ModulePath(ModuleName))),ModuleTypeStatement(ModuleTypeInclude(include,ModuleTypeExpr(ModuleTypeOf(module,type,of,ModuleExpression(ModulePath(ModuleName)))))),ModuleTypeStatement(Decorator("@",AttributeIdentifier)),ModuleTypeStatement(ExternalDeclaration(external,VariableDefinition,":",FunctionType(TypeName,FunctionArrow("=>"),TypeName),"=",ExternalBody(String))),";",ModuleTypeStatement(Decorator("@@",AttributeIdentifier)),ModuleTypeStatement(ModuleTypeAlias(module,ModuleName,"=",ModulePath(ModuleName))),ModuleTypeStatement(TypeSpec(type,TypeName,"=",TypeBody(TypeAlias(TypeName)),and,TypeBinding(TypeName,"=",TypeBody(TypeAlias(TypeName))))),"}"))),ModuleTypeDeclaration(module,type,ModuleName,"=",ModuleTypeExpr(ModuleFunctorType("(",ModuleTypeParameter(TypeName,":",ModuleTypeExpr(ModulePath(ModuleName))),",",ModuleTypeParameter(ModuleTypeExpr(ModulePath(ModuleName))),")","=>",ModuleTypeExpr(ModulePath(ModuleName))))),LetBinding(let,LetValueBinding(VariableDefinition,"=",ArrowFunction(ParamList("(",ParamItems(UnlabeledParameter(SimpleParameter(VariableName,PatternAlias(as,VariableName))),",",SimpleParameter(LiteralParameter(String),PatternAlias(as,VariableName))),")"),"=>",VariableName))),SwitchExpression(switch,VariableName,"{",SwitchCase("|",Pattern(PatternPrimary(RecordPattern("{",PatternField(PropertyName,":","?",Pattern(PatternPrimary(ConstructorPattern(VariantConstructor)))),",",PatternField("?",VariableName),"}"))),"=>",VariableName),SwitchCase("|",Pattern(PatternPrimary(VariableName)),"=>",VariantLiteral(VariantConstructor)),"}"))
+
+# parenthesized, decorated and constrained module expressions and types
+
+module A = (M: S)
+module B = @attr (Make(@attr A))
+module C = await B
+include {let value = 1}
+include (A: S)
+module type F = S => S
+module type T = @attr (S with type t<'a> = private array<'a>)
+module type U = S with module M := A and type t = int
+module type Original = module type of {include A}
+module type lower = lower
+module Factory = (@attr M: S, ()): (S with type t = M.t) => M
+
+==>
+
+Script(ModuleDeclaration(module,ModuleName,ModuleDeclarationBody("=",ModuleExpression(ParenthesizedModuleExpression("(",ModuleExpression(ModulePath(ModuleName)),ModuleSpec(":",ModuleTypeExpr(ModulePath(ModuleName))),")")))),ModuleDeclaration(module,ModuleName,ModuleDeclarationBody("=",ModuleExpression(DecoratedModuleExpression(Decorator("@",AttributeIdentifier),ModuleExpression(ParenthesizedModuleExpression("(",ModuleExpression(ModuleApplication(ModuleExpression(ModulePath(ModuleName)),"(",ModuleArgument(ModuleExpression(DecoratedModuleExpression(Decorator("@",AttributeIdentifier),ModuleExpression(ModulePath(ModuleName))))),")")),")")))))),ModuleDeclaration(module,ModuleName,ModuleDeclarationBody("=",ModuleExpression(ModuleAwaitExpression(await,ModuleExpression(ModulePath(ModuleName)))))),IncludeStatement(include,ModuleBody("{",LetBinding(let,LetValueBinding(VariableDefinition,"=",Number)),"}")),IncludeStatement(include,ParenthesizedModuleExpression("(",ModuleExpression(ModulePath(ModuleName)),ModuleSpec(":",ModuleTypeExpr(ModulePath(ModuleName))),")")),ModuleTypeDeclaration(module,type,ModuleName,"=",ModuleTypeExpr(ModuleFunctorType(ModuleTypeExpr(ModulePath(ModuleName)),"=>",ModuleTypeExpr(ModulePath(ModuleName))))),ModuleTypeDeclaration(module,type,ModuleName,"=",ModuleTypeExpr(DecoratedModuleType(Decorator("@",AttributeIdentifier),ModuleTypeExpr(ParenthesizedModuleType("(",ModuleTypeExpr(ModulePath(ModuleName)),ModuleWithConstraint(with,type,TypeName,TypeParams(TypeAngleLeftNode(CompareOp),TypeParam(TypeParameter(Quote("'"),VariableName)),TypeAngleRightNode(CompareOp)),ConstraintOperator("="),private,TypeApplication(TypeName,TypeAngleLeftNode(CompareOp),TypeParameter(Quote("'"),VariableName),TypeAngleRightNode(CompareOp))),")"))))),ModuleTypeDeclaration(module,type,ModuleName,"=",ModuleTypeExpr(ModulePath(ModuleName)),ModuleWithConstraint(with,module,ModulePath(ModuleName),ConstraintOperator(":="),ModulePath(ModuleName),and,type,TypeName,ConstraintOperator("="),TypeName)),ModuleTypeDeclaration(module,type,ModuleName,"=",ModuleTypeExpr(ModuleTypeOf(module,type,of,ModuleExpression(ModuleBody("{",IncludeStatement(include,ModulePath(ModuleName)),"}"))))),ModuleTypeDeclaration(module,type,TypeName,"=",ModuleTypeExpr(TypeName)),ModuleDeclaration(module,ModuleName,ModuleDeclarationBody("=",ModuleExpression(ModuleFunctor("(",ModuleParameter(Decorator("@",AttributeIdentifier),ModuleParameter(ModuleName,ModuleSpec(":",ModuleTypeExpr(ModulePath(ModuleName))))),",",ModuleParameter(UnitToken),")",ModuleReturnSpec(":",ModuleTypeExpr(ParenthesizedModuleType("(",ModuleTypeExpr(ModulePath(ModuleName)),ModuleWithConstraint(with,type,TypeName,ConstraintOperator("="),TypePath(ModulePrefix,TypeName)),")"))),"=>",ModuleExpression(ModulePath(ModuleName)))))))
+
+# escaped characters, numeric suffixes and identifier apostrophes
+
+let l' = 42L
+let l'' = 42l
+let hex = 0XA_A.ff_ffp-10
+let chars = ['\xAA', '\o021', '\179', '\u2665', '\u{1F600}']
+type capital<'A> = 'A
+
+==>
+
+Script(LetBinding(let,LetValueBinding(VariableDefinition,"=",Number)),LetBinding(let,LetValueBinding(VariableDefinition,"=",Number)),LetBinding(let,LetValueBinding(VariableDefinition,"=",Number)),LetBinding(let,LetValueBinding(VariableDefinition,"=",ArrayExpression("[",Char,",",Char,",",Char,",",Char,",",Char,"]"))),TypeDeclaration(type,TypeBinding(TypeName,TypeParams(TypeAngleLeftNode(CompareOp),TypeParam(TypeParameter(Quote("'"))),TypeAngleRightNode(CompareOp)),"=",TypeBody(TypeAlias(TypeParameter(Quote("'")))))))
+
+# optional arguments, record values and legacy uncurried calls
+
+let value = call(~a?, ~b=?value, ~c)
+let record = {x: ?None, y: ?Some(value)}
+let fn = (.) => 42
+let result = call(. 1, 2)
+let unit = fn(.)
+
+==>
+
+Script(LetBinding(let,LetValueBinding(VariableDefinition,"=",CallExpression(VariableName,"(",Argument(LabeledArgument("~",LabelName,"?")),",",Argument(LabeledArgument("~",LabelName,"=",ArgumentValue("?",VariableName))),",",Argument(LabeledArgument("~",LabelName)),")"))),LetBinding(let,LetValueBinding(VariableDefinition,"=",RecordExpression("{",Property(PropertyDefinition,":","?",VariantLiteral(VariantConstructor)),",",Property(PropertyDefinition,":","?",VariantLiteral(VariantConstructor,VariantArguments("(",VariableName,")"))),"}"))),LetBinding(let,LetValueBinding(VariableDefinition,"=",ArrowFunction(ParamList("(",DotUncurried("."),")"),"=>",Number))),LetBinding(let,LetValueBinding(VariableDefinition,"=",CallExpression(VariableName,"(",DotUncurried("."),Argument(Number),",",Argument(Number),")"))),LetBinding(let,LetValueBinding(VariableDefinition,"=",CallExpression(VariableName,"(",DotUncurried("."),")"))))
+
+# general pattern bindings, aliases and record rest patterns
+
+let 123 = value
+let "hello" as text = value
+let Some(item) | None = value
+let {id} as record = value
+let (1, 2) as pair: (int, int) = value
+let {id, ...M.t<'a> as rest} = value
+let %pattern = value
+let labeled = (~value as @attr renamed) => renamed
+
+==>
+
+Script(LetBinding(let,LetValueBinding(PatternBinding(Pattern(PatternPrimary(Number)),"=",VariableName))),LetBinding(let,LetValueBinding(PatternBinding(Pattern(PatternPrimary(String),PatternAlias(as,VariableName)),"=",VariableName))),LetBinding(let,LetValueBinding(PatternBinding(Pattern(PatternPrimary(ConstructorPattern(VariantConstructor,PatternArguments("(",Pattern(PatternPrimary(VariableName)),")"))),"|",PatternPrimary(ConstructorPattern(VariantConstructor))),"=",VariableName))),LetBinding(let,LetValueBinding(PatternBinding(Pattern(PatternPrimary(RecordPattern("{",PatternField(VariableName),"}")),PatternAlias(as,VariableName)),"=",VariableName))),LetBinding(let,LetValueBinding(PatternBinding(Pattern(PatternPrimary(TuplePattern("(",Pattern(PatternPrimary(Number)),",",Pattern(PatternPrimary(Number)),")")),PatternAlias(as,VariableName),PatternAnnotation(":",TupleType("(",TypeName,",",TypeName,")"))),"=",VariableName))),LetBinding(let,LetValueBinding(DestructuringPattern(RecordPattern("{",PatternField(VariableName),",",PatternField(SpreadOperator,TypeApplication(TypePath(ModulePrefix,TypeName),TypeAngleLeftNode(CompareOp),TypeParameter(Quote("'"),VariableName),TypeAngleRightNode(CompareOp)),PatternAlias(as,VariableName)),"}")),"=",VariableName)),LetBinding(let,LetValueBinding(PatternBinding(Pattern(PatternPrimary(ExtensionExpression("%",AttributeIdentifier))),"=",VariableName))),LetBinding(let,LetValueBinding(VariableDefinition,"=",ArrowFunction(ParamList("(",ParamItems(LabeledParameterList(LabeledParameter("~",LabelName,PatternAlias(as,Decorator("@",AttributeIdentifier),VariableName)))),")"),"=>",VariableName))))
+
+# for-of, asynchronous loops and parenthesized loop headers
+
+for (index in 0 to 3) {ignore(index)}
+for value of values {ignore(value)}
+for await value of iterable {ignore(value)}
+for (id of values) {ignore(id)}
+
+==>
+
+Script(ForExpression(for,"(",Pattern(PatternPrimary(VariableName)),in,Number,ForDirection(to),Number,")",BlockExpression("{",CallExpression(VariableName,"(",Argument(VariableName),")"),"}")),ForExpression(for,VariableName,of,VariableName,BlockExpression("{",CallExpression(VariableName,"(",Argument(VariableName),")"),"}")),ForExpression(for,await,VariableName,of,VariableName,BlockExpression("{",CallExpression(VariableName,"(",Argument(VariableName),")"),"}")),ForExpression(for,"(",VariableName,of,VariableName,")",BlockExpression("{",CallExpression(VariableName,"(",Argument(VariableName),")"),"}")))
+
+# decorated parameters, mixed local types and module patterns
+
+let decorated = (@attr ~a, @attr b, @attr ~c) => (a, b, c)
+let local = (type t, xs: list<t>, type s, ys: list<s>) => (xs, ys)
+let unpack = (module(M: S), value) => M.run(value)
+let nested = ((@attr value), other) => value
+let choose = value => switch value { | 1 .. 3 => true | _ => false }
+
+==>
+
+Script(LetBinding(let,LetValueBinding(VariableDefinition,"=",ArrowFunction(ParamList("(",ParamItems(Decorator("@",AttributeIdentifier),ParamItems(LabeledParameterList(LabeledParameter("~",LabelName),",",Decorator("@",AttributeIdentifier),SimpleParameter(VariableName),",",Decorator("@",AttributeIdentifier),LabeledParameter("~",LabelName)))),")"),"=>",TupleExpression("(",VariableName,",",VariableName,",",VariableName,")")))),LetBinding(let,LetValueBinding(VariableDefinition,"=",ArrowFunction(ParamList("(",ParamItems(LocalTypeParameter(type,TypeName),",",SimpleParameter(VariableName,ParameterAnnotation(":",ListType(list,TypeAngleLeftNode(CompareOp),TypeName,TypeAngleRightNode(CompareOp)))),",",LocalTypeParameter(type,TypeName),",",SimpleParameter(VariableName,ParameterAnnotation(":",ListType(list,TypeAngleLeftNode(CompareOp),TypeName,TypeAngleRightNode(CompareOp))))),")"),"=>",TupleExpression("(",VariableName,",",VariableName,")")))),LetBinding(let,LetValueBinding(VariableDefinition,"=",ArrowFunction(ParamList("(",ParamItems(UnlabeledParameter(SimpleParameter(DestructuringPattern(ModulePattern(module,"(",ModulePath(ModuleName),ModuleSpec(":",ModuleTypeExpr(ModulePath(ModuleName))),")")))),",",SimpleParameter(VariableName)),")"),"=>",CallExpression(MemberExpression(ModulePrefix,MemberLeaf(VariableName)),"(",Argument(VariableName),")")))),LetBinding(let,LetValueBinding(VariableDefinition,"=",ArrowFunction(ParamList("(",ParamItems(UnlabeledParameter(SimpleParameter(DestructuringPattern(ParenthesizedPattern("(",Pattern(PatternPrimary(DecoratedPattern(Decorator("@",AttributeIdentifier),PatternPrimary(VariableName)))),")")))),",",SimpleParameter(VariableName)),")"),"=>",VariableName))),LetBinding(let,LetValueBinding(VariableDefinition,"=",ArrowFunction(SingleParam(VariableName),"=>",SwitchExpression(switch,VariableName,"{",SwitchCase("|",Pattern(PatternPrimary(RangePattern(Number,"..",Number))),"=>",BooleanLiteral),SwitchCase("|",Pattern(PatternPrimary(VariableName)),"=>",BooleanLiteral),"}")))))
+
+# decorated expressions and nested parameter annotations
+
+let fn = @attr async (value) => value
+let higher = use(@attr (type a, value: a) => value)
+let add = ((a: int), (b: int)) => a + b
+let pair = (first: int, second :> float)
+let items = [1: int, 2: int]
+let coercion = (value: int :> float)
+
+==>
+
+Script(LetBinding(let,LetValueBinding(VariableDefinition,"=",DecoratedExpression(Decorator("@",AttributeIdentifier),AsyncExpression(async,ArrowFunction(ParamList("(",ParamItems(SingleParameter(SimpleParameter(VariableName))),")"),"=>",VariableName))))),LetBinding(let,LetValueBinding(VariableDefinition,"=",CallExpression(VariableName,"(",Argument(DecoratedExpression(Decorator("@",AttributeIdentifier),ArrowFunction(ParamList("(",ParamItems(LocalTypeParameter(type,TypeName),",",SimpleParameter(VariableName,ParameterAnnotation(":",TypeName))),")"),"=>",VariableName))),")"))),LetBinding(let,LetValueBinding(VariableDefinition,"=",ArrowFunction(ParamList("(",ParamItems(UnlabeledParameter(SimpleParameter(DestructuringPattern(ParenthesizedPattern("(",Pattern(PatternPrimary(VariableName),PatternAnnotation(":",TypeName)),")")))),",",SimpleParameter(DestructuringPattern(ParenthesizedPattern("(",Pattern(PatternPrimary(VariableName),PatternAnnotation(":",TypeName)),")")))),")"),"=>",BinaryExpression(VariableName,ArithOp,VariableName)))),LetBinding(let,LetValueBinding(VariableDefinition,"=",TupleExpression("(",ConstrainedExpression(VariableName,IndexConstraint(":",TypeName)),",",ConstrainedExpression(VariableName,IndexConstraint(":>",TypeName)),")"))),LetBinding(let,LetValueBinding(VariableDefinition,"=",ArrayExpression("[",ConstrainedExpression(Number,IndexConstraint(":",TypeName)),",",ConstrainedExpression(Number,IndexConstraint(":",TypeName)),"]"))),LetBinding(let,LetValueBinding(VariableDefinition,"=",ParenthesizedExpression("(",VariableName,IndexConstraint(":",TypeName,":>",TypeName),")"))))
+
+# floating-point divisions beside regular expressions
+
+let ratio = (position -. separatorSize /. 2.0) /. available
+let pattern = /[<>]+>>=/g
+let fraction = numerator / denominator
+
+==>
+
+Script(LetBinding(let,LetValueBinding(VariableDefinition,"=",BinaryExpression(ParenthesizedExpression("(",BinaryExpression(VariableName,ArithOp,BinaryExpression(VariableName,ArithOp,Number)),")"),ArithOp,VariableName))),LetBinding(let,LetValueBinding(VariableDefinition,"=",RegExpLiteral)),LetBinding(let,LetValueBinding(VariableDefinition,"=",BinaryExpression(VariableName,ArithOp,VariableName))))
+
+# JSX fragments, hyphenated names and bare attribute values
+
+let view = <div data-value={a >> 1} title=name>
+  <option value=version.id>{View.text(version.label)}</option>
+  <>{`value ${a >>> 1}`}</>
+</div>
+let short = <input value=1 checked=true onChange=handler />
+
+==>
+
+Script(LetBinding(let,LetValueBinding(VariableDefinition,"=",JSXElement(JSXOpenTag(JSXStartTag,JSXIntrinsicElementName(JSXIdentifier),JSXAttribute(JSXIdentifier,"=","{",BinaryExpression(VariableName,ShiftOp,Number),"}"),JSXAttribute(JSXIdentifier,"=",VariableName),JSXEndTag),JSXElement(JSXOpenTag(JSXStartTag,JSXIntrinsicElementName(JSXIdentifier),JSXAttribute(JSXIdentifier,"=",MemberExpression(RecordFieldAccess(VariableName,".",PropertyName))),JSXEndTag),JSXExpressionContainer("{",CallExpression(MemberExpression(ModulePrefix,MemberLeaf(VariableName)),"(",Argument(MemberExpression(RecordFieldAccess(VariableName,".",PropertyName))),")"),"}"),JSXCloseTag(JSXStartCloseTag,JSXIntrinsicElementName(JSXIdentifier),JSXEndTag)),JSXElement(JSXFragment(JSXFragmentOpenTag(JSXStartTag,JSXEndTag),JSXExpressionContainer("{",TemplateString("`",TemplateContent,Interpolation("${",BinaryExpression(VariableName,ShiftOp,Number),"}"),"`"),"}"),JSXFragmentCloseTag(JSXStartCloseTag,JSXEndTag))),JSXCloseTag(JSXStartCloseTag,JSXIntrinsicElementName(JSXIdentifier),JSXEndTag)))),LetBinding(let,LetValueBinding(VariableDefinition,"=",JSXElement(JSXSelfClosingTag(JSXStartTag,JSXIntrinsicElementName(JSXIdentifier),JSXAttribute(JSXIdentifier,"=",Number),JSXAttribute(JSXIdentifier,"=",BooleanLiteral),JSXAttribute(JSXIdentifier,"=",VariableName),JSXSelfCloseEndTag)))))
+
+# exception and optional record patterns, literal parameters and partial calls
+
+let get = value => switch value {
+| exception _ => None
+| {id, ?deprecated} => Some(id)
+}
+let literal = (1, "hello") => ()
+let partial = call(3, ...)
+type t = ((), ()) => unit
+
+==>
+
+Script(LetBinding(let,LetValueBinding(VariableDefinition,"=",ArrowFunction(SingleParam(VariableName),"=>",SwitchExpression(switch,VariableName,"{",SwitchCase("|",Pattern(PatternPrimary(ExceptionPattern(exception,PatternPrimary(VariableName)))),"=>",VariantLiteral(VariantConstructor)),SwitchCase("|",Pattern(PatternPrimary(RecordPattern("{",PatternField(VariableName),",",PatternField("?",VariableName),"}"))),"=>",VariantLiteral(VariantConstructor,VariantArguments("(",VariableName,")"))),"}")))),LetBinding(let,LetValueBinding(VariableDefinition,"=",ArrowFunction(ParamList("(",ParamItems(UnlabeledParameter(SimpleParameter(LiteralParameter(Number))),",",SimpleParameter(LiteralParameter(String))),")"),"=>",UnitToken))),LetBinding(let,LetValueBinding(VariableDefinition,"=",CallExpression(VariableName,"(",Argument(Number),",",Argument(SpreadOperator),")"))),TypeDeclaration(type,TypeBinding(TypeName,"=",TypeBody(TypeAlias(FunctionType(FunctionTypeParamList("(",FunctionTypeParamItems(FunctionTypeUnlabeledParam(FunctionTypeSimpleParam(UnitType("(",")"))),",",FunctionTypeParameter(FunctionTypeSimpleParam(UnitType("(",")")))),")"),FunctionArrow("=>"),TypeName))))))
+
+# signed patterns, tagged templates and object function types
+
+let find = index => switch index { | -1 => None | _ => Some(index) }
+let classify = char => switch char { | 'a' .. 'z' => true | _ => false }
+external create: {..} => {..} = "Object.create"
+external stringify: (int, @as(json`null`) _) => string = "stringify"
+type privateRecord = private {value: int}
+type constrained<'a> = {value: 'a} constraint 'a = int
+
+==>
+
+Script(LetBinding(let,LetValueBinding(VariableDefinition,"=",ArrowFunction(SingleParam(VariableName),"=>",SwitchExpression(switch,VariableName,"{",SwitchCase("|",Pattern(PatternPrimary(SignedPattern(ArithOp,Number))),"=>",VariantLiteral(VariantConstructor)),SwitchCase("|",Pattern(PatternPrimary(VariableName)),"=>",VariantLiteral(VariantConstructor,VariantArguments("(",VariableName,")"))),"}")))),LetBinding(let,LetValueBinding(VariableDefinition,"=",ArrowFunction(SingleParam(VariableName),"=>",SwitchExpression(switch,VariableName,"{",SwitchCase("|",Pattern(PatternPrimary(RangePattern(Char,"..",Char))),"=>",BooleanLiteral),SwitchCase("|",Pattern(PatternPrimary(VariableName)),"=>",BooleanLiteral),"}")))),ExternalDeclaration(external,VariableDefinition,":",FunctionType(ObjectType("{","..","}"),FunctionArrow("=>"),ObjectType("{","..","}")),"=",ExternalBody(String)),ExternalDeclaration(external,VariableDefinition,":",FunctionType(FunctionTypeParamList("(",FunctionTypeParamItems(FunctionTypeUnlabeledParam(FunctionTypeSimpleParam(TypeName)),",",FunctionTypeParameter(FunctionTypeSimpleParam(Decorator("@",AttributeIdentifier,AttributeArguments("(",TaggedTemplateExpression(VariableName,TemplateString("`",TemplateContent,"`")),")")),FunctionTypeSimpleParam(TypeName)))),")"),FunctionArrow("=>"),TypeName),"=",ExternalBody(String)),TypeDeclaration(type,TypeBinding(TypeName,"=",TypeBody(private,RecordType("{",RecordTypeField(PropertyDefinition,":",TypeName),"}")))),TypeDeclaration(type,TypeBinding(TypeName,TypeParams(TypeAngleLeftNode(CompareOp),TypeParam(TypeParameter(Quote("'"),VariableName)),TypeAngleRightNode(CompareOp)),"=",TypeBody(RecordType("{",RecordTypeField(PropertyDefinition,":",TypeParameter(Quote("'"),VariableName)),"}")),TypeConstraint(constraint,TypeParameter(Quote("'"),VariableName),"=",TypeName))))
+
+# open objects, nested types and exotic field names
+
+type object = {..}
+type empty = {.}
+type props = {to?: string, \"type"?: string, nested: {value: int}}
+external get: unit => {.. "value": int} = "get"
+external with: (object, int) => object = "with"
+type mode = [M.t | #default]
+type quantified = {send: 'a. ('a, 'a) => 'a}
+type decorated = @attr array<@attr int>
+type alias = (int as 'a)
+
+==>
+
+Script(TypeDeclaration(type,TypeBinding(TypeName,"=",TypeBody(TypeAlias(ObjectType("{","..","}"))))),TypeDeclaration(type,TypeBinding(TypeName,"=",TypeBody(TypeAlias(ObjectType("{",".","}"))))),TypeDeclaration(type,TypeBinding(TypeName,"=",TypeBody(RecordType("{",RecordTypeField(PropertyDefinition,"?",":",TypeName),",",RecordTypeField(PropertyDefinition,"?",":",TypeName),",",RecordTypeField(PropertyDefinition,":",RecordType("{",RecordTypeField(PropertyDefinition,":",TypeName),"}")),"}")))),ExternalDeclaration(external,VariableDefinition,":",FunctionType(TypeName,FunctionArrow("=>"),ObjectType("{","..",RecordTypeField(String,":",TypeName),"}")),"=",ExternalBody(String)),ExternalDeclaration(external,VariableDefinition,":",FunctionType(FunctionTypeParamList("(",FunctionTypeParamItems(FunctionTypeUnlabeledParam(FunctionTypeSimpleParam(TypeName)),",",FunctionTypeParameter(FunctionTypeSimpleParam(TypeName))),")"),FunctionArrow("=>"),TypeName),"=",ExternalBody(String)),TypeDeclaration(type,TypeBinding(TypeName,"=",TypeBody(TypeAlias(PolyVariantType("[",PolyVariantCaseList(PolyVariantCase(PolyVariantTypeReference(TypePath(ModulePrefix,TypeName))),"|",PolyVariantCase(PolyVariantTagCase(PolyVariantTag(Hash,PolyVariantName)))),"]"))))),TypeDeclaration(type,TypeBinding(TypeName,"=",TypeBody(RecordType("{",RecordTypeField(PropertyDefinition,":",QuantifiedType(TypeParameter(Quote("'"),VariableName),".",FunctionType(FunctionTypeParamList("(",FunctionTypeParamItems(FunctionTypeUnlabeledParam(FunctionTypeSimpleParam(TypeParameter(Quote("'"),VariableName))),",",FunctionTypeParameter(FunctionTypeSimpleParam(TypeParameter(Quote("'"),VariableName)))),")"),FunctionArrow("=>"),TypeParameter(Quote("'"),VariableName)))),"}")))),TypeDeclaration(type,TypeBinding(TypeName,"=",TypeBody(TypeAlias(DecoratedType(Decorator("@",AttributeIdentifier),TypeApplication(TypeName,TypeAngleLeftNode(CompareOp),DecoratedType(Decorator("@",AttributeIdentifier),TypeName),TypeAngleRightNode(CompareOp))))))),TypeDeclaration(type,TypeBinding(TypeName,"=",TypeBody(TypeAlias(ParenthesizedType("(",AliasedType(TypeName,as,TypeParameter(Quote("'"),VariableName)),")"))))))
+
+# ternaries, bare try expressions and typed destructuring
+
+let compare = (a, b) => a < b ? Less : a > b ? Greater : Equal
+let parse = value => try Some(parseOrThrow(value)) catch { | _ => None }
+let {depth}: nested = value
+let pair: (int, int) = flag ? (1, 2) : (3, 4)
+
+==>
+
+Script(LetBinding(let,LetValueBinding(VariableDefinition,"=",ArrowFunction(ParamList("(",ParamItems(UnlabeledParameter(SimpleParameter(VariableName)),",",SimpleParameter(VariableName)),")"),"=>",TernaryExpression(BinaryExpression(VariableName,CompareOp,VariableName),"?",VariantLiteral(VariantConstructor),":",TernaryExpression(BinaryExpression(VariableName,CompareOp,VariableName),"?",VariantLiteral(VariantConstructor),":",VariantLiteral(VariantConstructor)))))),LetBinding(let,LetValueBinding(VariableDefinition,"=",ArrowFunction(SingleParam(VariableName),"=>",TryExpression(try,VariantLiteral(VariantConstructor,VariantArguments("(",CallExpression(VariableName,"(",Argument(VariableName),")"),")")),catch,"{",SwitchCase("|",Pattern(PatternPrimary(VariableName)),"=>",VariantLiteral(VariantConstructor)),"}")))),LetBinding(let,LetValueBinding(DestructuringPattern(RecordPattern("{",PatternField(VariableName),"}")),":",TypeName,"=",VariableName)),LetBinding(let,LetValueBinding(VariableDefinition,":",TupleType("(",TypeName,",",TypeName,")"),"=",TernaryExpression(VariableName,"?",TupleExpression("(",Number,",",Number,")"),":",TupleExpression("(",Number,",",Number,")")))))
+
+# contextual keyword identifiers
+
+let map = (list, dict) => switch list { | list{} => dict | list{head, ...tail} => head }
+external mod: (int, int) => int = "%mod"
+let result = mod(10, 3)
+type mode = [#list | #dict | #async | #mod]
+
+==>
+
+Script(LetBinding(let,LetValueBinding(VariableDefinition,"=",ArrowFunction(ParamList("(",ParamItems(UnlabeledParameter(SimpleParameter(VariableName)),",",SimpleParameter(VariableName)),")"),"=>",SwitchExpression(switch,VariableName,"{",SwitchCase("|",Pattern(PatternPrimary(ListPattern(list,"{","}"))),"=>",VariableName),SwitchCase("|",Pattern(PatternPrimary(ListPattern(list,"{",Pattern(PatternPrimary(VariableName)),",",Pattern(PatternPrimary(VariantSpreadPattern(SpreadOperator,TypeName))),"}"))),"=>",VariableName),"}")))),ExternalDeclaration(external,VariableDefinition,":",FunctionType(FunctionTypeParamList("(",FunctionTypeParamItems(FunctionTypeUnlabeledParam(FunctionTypeSimpleParam(TypeName)),",",FunctionTypeParameter(FunctionTypeSimpleParam(TypeName))),")"),FunctionArrow("=>"),TypeName),"=",ExternalBody(String)),LetBinding(let,LetValueBinding(VariableDefinition,"=",CallExpression(VariableName,"(",Argument(Number),",",Argument(Number),")"))),TypeDeclaration(type,TypeBinding(TypeName,"=",TypeBody(TypeAlias(PolyVariantType("[",PolyVariantCaseList(PolyVariantCase(PolyVariantTagCase(PolyVariantTag(Hash,PolyVariantName))),"|",PolyVariantCase(PolyVariantTagCase(PolyVariantTag(Hash,PolyVariantName))),"|",PolyVariantCase(PolyVariantTagCase(PolyVariantTag(Hash,PolyVariantName))),"|",PolyVariantCase(PolyVariantTagCase(PolyVariantTag(Hash,PolyVariantName)))),"]"))))))
+
+# variant decorations and type parameter variance
+
+type component<-'props>
+type nullable<+'a> = Value('a) | @as(null) Null
+type mode = @as("auto") Auto | @as("manual") Manual
+type spaced = | First (int) | Second : spaced
+
+==>
+
+Script(TypeDeclaration(type,TypeBinding(TypeName,TypeParams(TypeAngleLeftNode(CompareOp),TypeParam(ArithOp,TypeParameter(Quote("'"),VariableName)),TypeAngleRightNode(CompareOp)))),TypeDeclaration(type,TypeBinding(TypeName,TypeParams(TypeAngleLeftNode(CompareOp),TypeParam(ArithOp,TypeParameter(Quote("'"),VariableName)),TypeAngleRightNode(CompareOp)),"=",TypeBody(VariantType(VariantConstructorCase(VariantConstructorArgsToken,VariantConstructorArgs("(",TypeParameter(Quote("'"),VariableName),")")),"|",VariantConstructorCase(Decorator("@",AttributeIdentifier,AttributeArguments("(",VariableName,")")),VariantConstructor))))),TypeDeclaration(type,TypeBinding(TypeName,"=",TypeBody(VariantType(VariantConstructorCase(Decorator("@",AttributeIdentifier,AttributeArguments("(",String,")")),VariantConstructor),"|",VariantConstructorCase(Decorator("@",AttributeIdentifier,AttributeArguments("(",String,")")),VariantConstructor))))),TypeDeclaration(type,TypeBinding(TypeName,"=",TypeBody(VariantType("|",VariantConstructorCase(VariantConstructor,VariantConstructorArgs("(",TypeName,")")),"|",VariantConstructorCase(VariantConstructor,VariantConstructorResult(":",TypeName)))))))
+
+# destructured function parameters
+
+let compare = ((x, _), (y, _)) => x < y
+let merge = ({cmp} as m, values) => cmp(m, values)
+let sum = ((a, b): (int, int)) => a + b
+let unwrap = (Some(value)) => value
+
+==>
+
+Script(LetBinding(let,LetValueBinding(VariableDefinition,"=",ArrowFunction(ParamList("(",ParamItems(UnlabeledParameter(SimpleParameter(DestructuringPattern(TuplePattern("(",Pattern(PatternPrimary(VariableName)),",",Pattern(PatternPrimary(VariableName)),")")))),",",SimpleParameter(DestructuringPattern(TuplePattern("(",Pattern(PatternPrimary(VariableName)),",",Pattern(PatternPrimary(VariableName)),")")))),")"),"=>",BinaryExpression(VariableName,CompareOp,VariableName)))),LetBinding(let,LetValueBinding(VariableDefinition,"=",ArrowFunction(ParamList("(",ParamItems(UnlabeledParameter(SimpleParameter(DestructuringPattern(RecordPattern("{",PatternField(VariableName),"}")),PatternAlias(as,VariableName))),",",SimpleParameter(VariableName)),")"),"=>",CallExpression(VariableName,"(",Argument(VariableName),",",Argument(VariableName),")")))),LetBinding(let,LetValueBinding(VariableDefinition,"=",ArrowFunction(ParamList("(",ParamItems(SingleParameter(SimpleParameter(DestructuringPattern(TuplePattern("(",Pattern(PatternPrimary(VariableName)),",",Pattern(PatternPrimary(VariableName)),")")),ParameterAnnotation(":",TupleType("(",TypeName,",",TypeName,")"))))),")"),"=>",BinaryExpression(VariableName,ArithOp,VariableName)))),LetBinding(let,LetValueBinding(VariableDefinition,"=",ArrowFunction(ParamList("(",ParamItems(SingleParameter(SimpleParameter(DestructuringPattern(ConstructorPattern(VariantConstructor,PatternArguments("(",Pattern(PatternPrimary(VariableName)),")")))))),")"),"=>",VariableName))))
+
+# expression after a local module body
+
+let run = () => {
+  module M = {let value = 1}
+  (if M.value > 0 {1} else {0}, 2)
+}
+
+==>
+
+Script(LetBinding(let,LetValueBinding(VariableDefinition,"=",ArrowFunction(UnitToken,"=>",BlockExpression("{",ModuleDeclaration(module,ModuleName,ModuleDeclarationBody("=",ModuleExpression(ModuleBody("{",LetBinding(let,LetValueBinding(VariableDefinition,"=",Number)),"}")))),TupleExpression("(",IfExpression(if,BinaryExpression(MemberExpression(ModulePrefix,MemberLeaf(VariableName)),CompareOp,Number),BlockExpression("{",Number,"}"),ElseClause(else,BlockExpression("{",Number,"}"))),",",Number,")"),"}")))))
+
+# module functors and applications
+
+module type S = {type t}
+module Make = (M: S, ()) => {
+  type t = M.t
+}
+module Applied = Make({type t = int}, ())
+module AppliedAgain = Make({type t = string}, ())
+let pack = (value: module(S)) => module(Make(unpack(value), ()))
+module MakeTyped = (M: S): S => M
+module type F = (M: S, S) => S
+
+==>
+
+Script(ModuleTypeDeclaration(module,type,ModuleName,"=",ModuleTypeExpr(ModuleTypeBody("{",ModuleTypeStatement(TypeSpec(type,TypeName)),"}"))),ModuleDeclaration(module,ModuleName,ModuleDeclarationBody("=",ModuleExpression(ModuleFunctor("(",ModuleParameter(ModuleName,ModuleSpec(":",ModuleTypeExpr(ModulePath(ModuleName)))),",",ModuleParameter(UnitToken),")","=>",ModuleExpression(ModuleBody("{",TypeDeclaration(type,TypeBinding(TypeName,"=",TypeBody(TypeAlias(TypePath(ModulePrefix,TypeName))))),"}")))))),ModuleDeclaration(module,ModuleName,ModuleDeclarationBody("=",ModuleExpression(ModuleApplication(ModuleExpression(ModulePath(ModuleName)),"(",ModuleArgument(ModuleExpression(ModuleBody("{",TypeDeclaration(type,TypeBinding(TypeName,"=",TypeBody(TypeAlias(TypeName)))),"}"))),",",ModuleArgument(UnitToken),")")))),ModuleDeclaration(module,ModuleName,ModuleDeclarationBody("=",ModuleExpression(ModuleApplication(ModuleExpression(ModulePath(ModuleName)),"(",ModuleArgument(ModuleExpression(ModuleBody("{",TypeDeclaration(type,TypeBinding(TypeName,"=",TypeBody(TypeAlias(TypeName)))),"}"))),",",ModuleArgument(UnitToken),")")))),LetBinding(let,LetValueBinding(VariableDefinition,"=",ArrowFunction(ParamList("(",ParamItems(SingleParameter(SimpleParameter(VariableName,ParameterAnnotation(":",ModulePackageType(module,"(",ModuleTypeExpr(ModulePath(ModuleName)),")"))))),")"),"=>",ModulePackExpression(module,"(",ModulePackContent(ModuleApplication(ModuleExpression(ModulePath(ModuleName)),"(",ModuleArgument(ModuleExpression(ModuleUnpackExpression(unpack,"(",VariableName,")"))),",",ModuleArgument(UnitToken),")")),")")))),ModuleDeclaration(module,ModuleName,ModuleDeclarationBody("=",ModuleExpression(ModuleFunctor("(",ModuleParameter(ModuleName,ModuleSpec(":",ModuleTypeExpr(ModulePath(ModuleName)))),")",ModuleReturnSpec(":",ModuleTypeExpr(ModulePath(ModuleName))),"=>",ModuleExpression(ModulePath(ModuleName)))))),ModuleTypeDeclaration(module,type,ModuleName,"=",ModuleTypeExpr(ModuleFunctorType("(",ModuleTypeParameter(ModuleName,":",ModuleTypeExpr(ModulePath(ModuleName))),",",ModuleTypeParameter(ModuleTypeExpr(ModulePath(ModuleName))),")","=>",ModuleTypeExpr(ModulePath(ModuleName))))))
+
+# module unpacking and first-class module types
+
+module type S = {
+  type t
+  type identity
+  let value: t
+}
+type packed<'a, 'id> = module(S with type t = 'a and type identity = 'id)
+let use = (id: packed<int, int>) => {
+  module M = unpack(id)
+  M.value
+}
+let pack = (): module(S with type t = int) => module({
+  type t = int
+  let value = 1
+}: S)
+
+==>
+
+Script(ModuleTypeDeclaration(module,type,ModuleName,"=",ModuleTypeExpr(ModuleTypeBody("{",ModuleTypeStatement(TypeSpec(type,TypeName)),ModuleTypeStatement(TypeSpec(type,TypeName)),ModuleTypeStatement(ValueSpec(let,VariableDefinition,":",TypeName)),"}"))),TypeDeclaration(type,TypeBinding(TypeName,TypeParams(TypeAngleLeftNode(CompareOp),TypeParam(TypeParameter(Quote("'"),VariableName)),",",TypeParam(TypeParameter(Quote("'"),VariableName)),TypeAngleRightNode(CompareOp)),"=",TypeBody(TypeAlias(ModulePackageType(module,"(",ModuleTypeExpr(ModulePath(ModuleName)),ModuleWithConstraint(with,type,TypeName,ConstraintOperator("="),TypeParameter(Quote("'"),VariableName),and,type,TypeName,ConstraintOperator("="),TypeParameter(Quote("'"),VariableName)),")"))))),LetBinding(let,LetValueBinding(VariableDefinition,"=",ArrowFunction(ParamList("(",ParamItems(SingleParameter(SimpleParameter(VariableName,ParameterAnnotation(":",TypeApplication(TypeName,TypeAngleLeftNode(CompareOp),TypeName,",",TypeName,TypeAngleRightNode(CompareOp)))))),")"),"=>",BlockExpression("{",ModuleDeclaration(module,ModuleName,ModuleDeclarationBody("=",ModuleExpression(ModuleUnpackExpression(unpack,"(",VariableName,")")))),MemberExpression(ModulePrefix,MemberLeaf(VariableName)),"}")))),LetBinding(let,LetValueBinding(VariableDefinition,"=",ArrowFunction(UnitToken,ReturnTypeAnnotation(":",ModulePackageType(module,"(",ModuleTypeExpr(ModulePath(ModuleName)),ModuleWithConstraint(with,type,TypeName,ConstraintOperator("="),TypeName),")")),"=>",ModulePackExpression(module,"(",ModulePackContent(ModuleBody("{",TypeDeclaration(type,TypeBinding(TypeName,"=",TypeBody(TypeAlias(TypeName)))),LetBinding(let,LetValueBinding(VariableDefinition,"=",Number)),"}"),ModuleSpec(":",ModuleTypeExpr(ModulePath(ModuleName)))),")")))))
+
+# labeled aliases and locally abstract function types
+
+let make = (type key identity, ~id: id<key, identity>, ~cmp as compare) => compare(id)
+let copy = (~src as source, ~len as length=1) => source
+let () = sideEffect()
+let first = 1 and second = 2
+
+==>
+
+Script(LetBinding(let,LetValueBinding(VariableDefinition,"=",ArrowFunction(ParamList("(",ParamItems(LocalTypeParameter(type,TypeName,TypeName),",",LabeledParameter("~",LabelName,ParameterAnnotation(":",TypeApplication(TypeName,TypeAngleLeftNode(CompareOp),TypeName,",",TypeName,TypeAngleRightNode(CompareOp)))),",",LabeledParameter("~",LabelName,PatternAlias(as,VariableName))),")"),"=>",CallExpression(VariableName,"(",Argument(VariableName),")")))),LetBinding(let,LetValueBinding(VariableDefinition,"=",ArrowFunction(ParamList("(",ParamItems(LabeledParameterList(LabeledParameter("~",LabelName,PatternAlias(as,VariableName)),",",LabeledParameter("~",LabelName,PatternAlias(as,VariableName),ParameterDefault("=",Number)))),")"),"=>",VariableName))),LetBinding(let,LetValueBinding(DestructuringPattern(UnitPattern(UnitToken)),"=",CallExpression(VariableName,UnitToken))),LetBinding(let,LetValueBinding(VariableDefinition,"=",Number),and,LetValueBinding(VariableDefinition,"=",Number)))
+
+# typed patterns
+
+let (first: int, second) = pair
+switch value { | Some(cell: N.bucket<_>) => cell | _ => other }
+
+==>
+
+Script(LetBinding(let,LetValueBinding(DestructuringPattern(TuplePattern("(",Pattern(PatternPrimary(VariableName),PatternAnnotation(":",TypeName)),",",Pattern(PatternPrimary(VariableName)),")")),"=",VariableName)),SwitchExpression(switch,VariableName,"{",SwitchCase("|",Pattern(PatternPrimary(ConstructorPattern(VariantConstructor,PatternArguments("(",Pattern(PatternPrimary(VariableName),PatternAnnotation(":",TypeApplication(TypePath(ModulePrefix,TypeName),TypeAngleLeftNode(CompareOp),TypeName,TypeAngleRightNode(CompareOp)))),")")))),"=>",VariableName),SwitchCase("|",Pattern(PatternPrimary(VariableName)),"=>",VariableName),"}"))
+
+# JSX statement after an effect
+
+let make = () => {
+  effect(_ => {play(); None})
+  <div><span /> <Input value={<span>{React.string("hi")}</span>} /></div>
+}
+
+==>
+
+Script(LetBinding(let,LetValueBinding(VariableDefinition,"=",ArrowFunction(UnitToken,"=>",BlockExpression("{",CallExpression(VariableName,"(",Argument(ArrowFunction(SingleParam(VariableName),"=>",BlockExpression("{",CallExpression(VariableName,UnitToken),";",VariantLiteral(VariantConstructor),"}"))),")"),JSXElement(JSXOpenTag(JSXStartTag,JSXIntrinsicElementName(JSXIdentifier),JSXEndTag),JSXElement(JSXSelfClosingTag(JSXStartTag,JSXIntrinsicElementName(JSXIdentifier),JSXSelfCloseEndTag)),JSXElement(JSXSelfClosingTag(JSXStartTag,JSXCustomComponentName(ModulePath(ModuleName)),JSXAttribute(JSXIdentifier,"=","{",JSXElement(JSXOpenTag(JSXStartTag,JSXIntrinsicElementName(JSXIdentifier),JSXEndTag),JSXExpressionContainer("{",CallExpression(MemberExpression(ModulePrefix,MemberLeaf(VariableName)),"(",Argument(String),")"),"}"),JSXCloseTag(JSXStartCloseTag,JSXIntrinsicElementName(JSXIdentifier),JSXEndTag)),"}"),JSXSelfCloseEndTag)),JSXCloseTag(JSXStartCloseTag,JSXIntrinsicElementName(JSXIdentifier),JSXEndTag)),"}")))))
+
+# JSX siblings with nested attribute expressions
+
+let ui = <div>
+  <SignaturePicker />
+  <div className="h-8" />
+  <FatSlider meterSuffix={<span>{React.string("BPM")}</span>} />
+  <div />
+</div>
+
+==>
+
+Script(LetBinding(let,LetValueBinding(VariableDefinition,"=",JSXElement(JSXOpenTag(JSXStartTag,JSXIntrinsicElementName(JSXIdentifier),JSXEndTag),JSXElement(JSXSelfClosingTag(JSXStartTag,JSXCustomComponentName(ModulePath(ModuleName)),JSXSelfCloseEndTag)),JSXElement(JSXSelfClosingTag(JSXStartTag,JSXIntrinsicElementName(JSXIdentifier),JSXAttribute(JSXIdentifier,"=",String),JSXSelfCloseEndTag)),JSXElement(JSXSelfClosingTag(JSXStartTag,JSXCustomComponentName(ModulePath(ModuleName)),JSXAttribute(JSXIdentifier,"=","{",JSXElement(JSXOpenTag(JSXStartTag,JSXIntrinsicElementName(JSXIdentifier),JSXEndTag),JSXExpressionContainer("{",CallExpression(MemberExpression(ModulePrefix,MemberLeaf(VariableName)),"(",Argument(String),")"),"}"),JSXCloseTag(JSXStartCloseTag,JSXIntrinsicElementName(JSXIdentifier),JSXEndTag)),"}"),JSXSelfCloseEndTag)),JSXElement(JSXSelfClosingTag(JSXStartTag,JSXIntrinsicElementName(JSXIdentifier),JSXSelfCloseEndTag)),JSXCloseTag(JSXStartCloseTag,JSXIntrinsicElementName(JSXIdentifier),JSXEndTag)))))
+
+# comparisons beside JSX and generics
+
+let compare = (a, b) => (a<b, a<=b, a<<b)
+let el = <div>{compare(1, 2)}</div>
+type nested = array<array<int>>
+
+==>
+
+Script(LetBinding(let,LetValueBinding(VariableDefinition,"=",ArrowFunction(ParamList("(",ParamItems(UnlabeledParameter(SimpleParameter(VariableName)),",",SimpleParameter(VariableName)),")"),"=>",TupleExpression("(",BinaryExpression(VariableName,CompareOp,VariableName),",",BinaryExpression(VariableName,CompareOp,VariableName),",",BinaryExpression(VariableName,ShiftOp,VariableName),")")))),LetBinding(let,LetValueBinding(VariableDefinition,"=",JSXElement(JSXOpenTag(JSXStartTag,JSXIntrinsicElementName(JSXIdentifier),JSXEndTag),JSXExpressionContainer("{",CallExpression(VariableName,"(",Argument(Number),",",Argument(Number),")"),"}"),JSXCloseTag(JSXStartCloseTag,JSXIntrinsicElementName(JSXIdentifier),JSXEndTag)))),TypeDeclaration(type,TypeBinding(TypeName,"=",TypeBody(TypeAlias(TypeApplication(TypeName,TypeAngleLeftNode(CompareOp),TypeApplication(TypeName,TypeAngleLeftNode(CompareOp),TypeName,TypeAngleRightNode(CompareOp)),TypeAngleRightNode(CompareOp)))))))
+
+# record punning and collection spreads
+
+let record = {...old, N.key, value, next: None}
+let array = [1, ...rest, 2]
+let values = list{1, ...tail}
+let data = dict{...old, "key": value}
+type values<'a> = list<'a>
+
+==>
+
+Script(LetBinding(let,LetValueBinding(VariableDefinition,"=",RecordExpression("{",Property(SpreadExpression(SpreadOperator,VariableName)),",",Property(PropertyPun(PropertyDefinition(ModulePrefix))),",",Property(PropertyPun(PropertyDefinition)),",",Property(PropertyDefinition,":",VariantLiteral(VariantConstructor)),"}"))),LetBinding(let,LetValueBinding(VariableDefinition,"=",ArrayExpression("[",Number,",",SpreadExpression(SpreadOperator,VariableName),",",Number,"]"))),LetBinding(let,LetValueBinding(VariableDefinition,"=",ListExpression(list,"{",Number,",",SpreadExpression(SpreadOperator,VariableName),"}"))),LetBinding(let,LetValueBinding(VariableDefinition,"=",DictExpression(dict,"{",DictEntry(SpreadExpression(SpreadOperator,VariableName)),",",DictEntry(String,":",VariableName),"}"))),TypeDeclaration(type,TypeBinding(TypeName,TypeParams(TypeAngleLeftNode(CompareOp),TypeParam(TypeParameter(Quote("'"),VariableName)),TypeAngleRightNode(CompareOp)),"=",TypeBody(TypeAlias(ListType(list,TypeAngleLeftNode(CompareOp),TypeParameter(Quote("'"),VariableName),TypeAngleRightNode(CompareOp)))))))
+
+# switch branch statement sequences
+
+let read = value => switch value {
+| Some(cell) =>
+  let key = cell.key
+  log(key)
+  Some(key)
+| None => None
+}
+
+==>
+
+Script(LetBinding(let,LetValueBinding(VariableDefinition,"=",ArrowFunction(SingleParam(VariableName),"=>",SwitchExpression(switch,VariableName,"{",SwitchCase("|",Pattern(PatternPrimary(ConstructorPattern(VariantConstructor,PatternArguments("(",Pattern(PatternPrimary(VariableName)),")")))),"=>",LetBinding(let,LetValueBinding(VariableDefinition,"=",MemberExpression(RecordFieldAccess(VariableName,".",PropertyName)))),CallExpression(VariableName,"(",Argument(VariableName),")"),VariantLiteral(VariantConstructor,VariantArguments("(",VariableName,")"))),SwitchCase("|",Pattern(PatternPrimary(ConstructorPattern(VariantConstructor))),"=>",VariantLiteral(VariantConstructor)),"}")))))
+
+# qualified record patterns
+
+let {N.left: l, right: r} = node
+switch value { | Lib.Some({N.left: l}) => l | _ => 0 }
+
+==>
+
+Script(LetBinding(let,LetValueBinding(DestructuringPattern(RecordPattern("{",PatternField(ModulePrefix,PropertyName,":",Pattern(PatternPrimary(VariableName))),",",PatternField(PropertyName,":",Pattern(PatternPrimary(VariableName))),"}")),"=",VariableName)),SwitchExpression(switch,VariableName,"{",SwitchCase("|",Pattern(PatternPrimary(ConstructorPattern(ModulePrefix,VariantConstructor,PatternArguments("(",Pattern(PatternPrimary(RecordPattern("{",PatternField(ModulePrefix,PropertyName,":",Pattern(PatternPrimary(VariableName))),"}"))),")")))),"=>",VariableName),SwitchCase("|",Pattern(PatternPrimary(VariableName)),"=>",Number),"}"))
+
+# expression constraints and coercions
+
+let run = () => {(action(): unit); (value :> int)}
+
+==>
+
+Script(LetBinding(let,LetValueBinding(VariableDefinition,"=",ArrowFunction(UnitToken,"=>",BlockExpression("{",ParenthesizedExpression("(",CallExpression(VariableName,UnitToken),IndexConstraint(":",TypeName),")"),";",ParenthesizedExpression("(",VariableName,IndexConstraint(":>",TypeName),")"),"}")))))
+
+# unnamed and nested function type parameters
+
+external get: (array<'a>, int) => 'a = "%array_unsafe_get"
+external map: (array<'a>, 'a => 'b, ~start: int=?) => array<'b> = "map"
+type cmp<'a> = ('a, 'a) => int
+
+==>
+
+Script(ExternalDeclaration(external,VariableDefinition,":",FunctionType(FunctionTypeParamList("(",FunctionTypeParamItems(FunctionTypeUnlabeledParam(FunctionTypeSimpleParam(TypeApplication(TypeName,TypeAngleLeftNode(CompareOp),TypeParameter(Quote("'"),VariableName),TypeAngleRightNode(CompareOp)))),",",FunctionTypeParameter(FunctionTypeSimpleParam(TypeName))),")"),FunctionArrow("=>"),TypeParameter(Quote("'"),VariableName)),"=",ExternalBody(String)),ExternalDeclaration(external,VariableDefinition,":",FunctionType(FunctionTypeParamList("(",FunctionTypeParamItems(FunctionTypeUnlabeledParam(FunctionTypeSimpleParam(TypeApplication(TypeName,TypeAngleLeftNode(CompareOp),TypeParameter(Quote("'"),VariableName),TypeAngleRightNode(CompareOp)))),",",FunctionTypeParameter(FunctionTypeSimpleParam(FunctionType(TypeParameter(Quote("'"),VariableName),FunctionArrow("=>"),TypeParameter(Quote("'"),VariableName)))),",",FunctionTypeParameter(FunctionTypeLabeledParam("~",LabelName,FunctionTypeAnnotation(":",TypeName),ParameterDefault("=","?")))),")"),FunctionArrow("=>"),TypeApplication(TypeName,TypeAngleLeftNode(CompareOp),TypeParameter(Quote("'"),VariableName),TypeAngleRightNode(CompareOp))),"=",ExternalBody(String)),TypeDeclaration(type,TypeBinding(TypeName,TypeParams(TypeAngleLeftNode(CompareOp),TypeParam(TypeParameter(Quote("'"),VariableName)),TypeAngleRightNode(CompareOp)),"=",TypeBody(TypeAlias(FunctionType(FunctionTypeParamList("(",FunctionTypeParamItems(FunctionTypeUnlabeledParam(FunctionTypeSimpleParam(TypeParameter(Quote("'"),VariableName))),",",FunctionTypeParameter(FunctionTypeSimpleParam(TypeParameter(Quote("'"),VariableName)))),")"),FunctionArrow("=>"),TypeName))))))
+
+# abstract implementation types
+
+type arrayLike<'a>
+type t
+let x = 1
+
+==>
+
+Script(TypeDeclaration(type,TypeBinding(TypeName,TypeParams(TypeAngleLeftNode(CompareOp),TypeParam(TypeParameter(Quote("'"),VariableName)),TypeAngleRightNode(CompareOp)))),TypeDeclaration(type,TypeBinding(TypeName)),LetBinding(let,LetValueBinding(VariableDefinition,"=",Number)))
+
+# tuple expressions and tuple types
+
+type pair = (int, string)
+let pair = (1, "one")
+let swap = (a, b) => (b, a)
+switch (pair, pair) { | ((x, y), _) => (x, y) }
+
+==>
+
+Script(TypeDeclaration(type,TypeBinding(TypeName,"=",TypeBody(TypeAlias(TupleType("(",TypeName,",",TypeName,")"))))),LetBinding(let,LetValueBinding(VariableDefinition,"=",TupleExpression("(",Number,",",String,")"))),LetBinding(let,LetValueBinding(VariableDefinition,"=",ArrowFunction(ParamList("(",ParamItems(UnlabeledParameter(SimpleParameter(VariableName)),",",SimpleParameter(VariableName)),")"),"=>",TupleExpression("(",VariableName,",",VariableName,")")))),SwitchExpression(switch,TupleExpression("(",VariableName,",",VariableName,")"),"{",SwitchCase("|",Pattern(PatternPrimary(TuplePattern("(",Pattern(PatternPrimary(TuplePattern("(",Pattern(PatternPrimary(VariableName)),",",Pattern(PatternPrimary(VariableName)),")"))),",",Pattern(PatternPrimary(VariableName)),")"))),"=>",TupleExpression("(",VariableName,",",VariableName,")")),"}"))
+
+# return type annotations
+
+let make = (): option<int> => Some(1)
+let add = (a: int, b: int): int => a + b
+let identity = (value): int => value
+
+==>
+
+Script(LetBinding(let,LetValueBinding(VariableDefinition,"=",ArrowFunction(UnitToken,ReturnTypeAnnotation(":",TypeApplication(TypeName,TypeAngleLeftNode(CompareOp),TypeName,TypeAngleRightNode(CompareOp))),"=>",VariantLiteral(VariantConstructor,VariantArguments("(",Number,")"))))),LetBinding(let,LetValueBinding(VariableDefinition,"=",ArrowFunction(ParamList("(",ParamItems(UnlabeledParameter(SimpleParameter(VariableName,ParameterAnnotation(":",TypeName))),",",SimpleParameter(VariableName,ParameterAnnotation(":",TypeName))),")"),ReturnTypeAnnotation(":",TypeName),"=>",BinaryExpression(VariableName,ArithOp,VariableName)))),LetBinding(let,LetValueBinding(VariableDefinition,"=",ArrowFunction(ParamList("(",ParamItems(SingleParameter(SimpleParameter(VariableName))),")"),ReturnTypeAnnotation(":",TypeName),"=>",VariableName))))
+
+# mutable and decorated record fields
+
+type t = {@as("v") mutable value: int, @as("next") next: option<t>}
+
+==>
+
+Script(TypeDeclaration(type,TypeBinding(TypeName,"=",TypeBody(RecordType("{",RecordTypeField(Decorator("@",AttributeIdentifier,AttributeArguments("(",String,")")),mutable,PropertyDefinition,":",TypeName),",",RecordTypeField(Decorator("@",AttributeIdentifier,AttributeArguments("(",String,")")),PropertyDefinition,":",TypeApplication(TypeName,TypeAngleLeftNode(CompareOp),TypeName,TypeAngleRightNode(CompareOp))),"}")))))
+
+# decorated unnamed external arguments
+
+@send external copy: (array<'a>, @as(0) _) => array<'a> = "slice"
+
+==>
+
+Script(Decorator("@",AttributeIdentifier),ExternalDeclaration(external,VariableDefinition,":",FunctionType(FunctionTypeParamList("(",FunctionTypeParamItems(FunctionTypeUnlabeledParam(FunctionTypeSimpleParam(TypeApplication(TypeName,TypeAngleLeftNode(CompareOp),TypeParameter(Quote("'"),VariableName),TypeAngleRightNode(CompareOp)))),",",FunctionTypeParameter(FunctionTypeSimpleParam(Decorator("@",AttributeIdentifier,AttributeArguments("(",Number,")")),FunctionTypeSimpleParam(TypeName)))),")"),FunctionArrow("=>"),TypeApplication(TypeName,TypeAngleLeftNode(CompareOp),TypeParameter(Quote("'"),VariableName),TypeAngleRightNode(CompareOp))),"=",ExternalBody(String)))

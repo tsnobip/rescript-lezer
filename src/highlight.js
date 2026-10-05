@@ -2,10 +2,12 @@ import { styleTags, tags as t } from "@lezer/highlight";
 
 export const rescriptHighlight = styleTags({
   "let type external exception := and as": t.definitionKeyword,
-  "if else switch when while for in to downto try catch async await":
+  "if else switch when while for in of to downto try catch async await assert":
     t.controlKeyword,
   "module open include with": t.moduleKeyword,
-  "private rec mutable": t.typeOperator,
+  "private rec mutable constraint": t.typeOperator,
+
+  "list dict": t.keyword,
 
   BooleanLiteral: t.bool,
 
@@ -49,7 +51,8 @@ export const rescriptHighlight = styleTags({
 
   VariantType: t.typeName,
   VariantConstructorCase: t.atom,
-  VariantConstructor: t.atom,
+  "VariantConstructor VariantConstructorArgsToken VariantConstructorResultToken": t.atom,
+  ExceptionName: t.definition(t.atom),
   VariantSpreadCase: t.operator,
   VariantLiteral: t.atom,
 
@@ -67,6 +70,7 @@ export const rescriptHighlight = styleTags({
   RegExpLiteral: t.regexp,
 
   PatternGuard: t.controlKeyword,
+  "Pattern/|": t.operator,
   VariantSpreadPattern: t.operator,
   PolyVariantPattern: t.atom,
   PolyVariantSpreadPattern: t.operator,
@@ -76,6 +80,7 @@ export const rescriptHighlight = styleTags({
   "ExtensionExpression ExtensionExpression/% ExtensionExpression/%%":
     t.annotation,
   PropertyDefinition: t.definition(t.propertyName),
+  "SpreadOperator SpreadExpression": t.operator,
   PropertyName: t.propertyName,
   "MemberExpression/String": t.propertyName,
   "MemberExpression/RecordFieldAccess/PropertyName": t.propertyName,
@@ -89,12 +94,11 @@ export const rescriptHighlight = styleTags({
   LabelName: t.labelName,
   "ArrowFunction/UnitToken": t.labelName,
   "ArrowFunction/SingleParam/VariableName": t.labelName,
-  "ArrowFunction/ParenthesizedExpression/VariableName": t.labelName,
   "ArrowFunction/ParamList/ParamItems/UnlabeledParameter/VariableName":
     t.labelName,
   "ArrowFunction/ParamList/ParamItems/LabelParameter/VariableName": t.labelName,
 
-  ParameterAnnotation: t.typeName,
+  "ParameterAnnotation ReturnTypeAnnotation": t.typeName,
 
   Quote: t.string,
   Hash: t.operator,
@@ -110,7 +114,7 @@ export const rescriptHighlight = styleTags({
   TemplateString: t.string,
   TemplateContent: t.special(t.string),
   Char: t.character,
-  Escape: t.escape,
+  "Escape TemplateEscape": t.escape,
   ShiftOp: t.bitwiseOperator,
   BitAndOp: t.bitwiseOperator,
   BitOrOp: t.bitwiseOperator,
@@ -125,7 +129,7 @@ export const rescriptHighlight = styleTags({
   "[ ]": t.squareBracket,
   "{ }": t.brace,
   ". , : ;": t.separator,
-  "=> =": t.definitionOperator,
+  "=> = #=": t.definitionOperator,
   "~ ?": t.modifier,
   "|": t.separator,
   _: t.keyword,
@@ -137,8 +141,7 @@ export const rescriptHighlight = styleTags({
     t.angleBracket
   ),
   "JSXIntrinsicElementName/JSXIdentifier": t.tagName,
-  "JSXCustomComponentName/ModulePath/ModuleName": t.special(t.tagName),
+  "JSXCustomComponentName/ModulePath/ModuleName JSXCustomComponentName/JSXIdentifier": t.special(t.tagName),
   "JSXAttribute/JSXIdentifier": t.attributeName,
   JSXExpressionContainer: t.content,
-  JSXText: t.content,
 });

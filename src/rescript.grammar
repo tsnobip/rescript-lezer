@@ -3,6 +3,7 @@
   variant,
   polyvariant,
   call,
+  parenConstraint,
   prefix,
   times @left,
   plus @left,
@@ -17,7 +18,10 @@
   or @left,
   typearg @left,
   assign @right,
+  ternary @right,
+  annotation @left,
   arrow @right,
+  decoratorStatement,
   decorator,
   statement @cut
 }
@@ -32,28 +36,35 @@ scriptItem {
 @top SingleExpression { expression }
 
 statement[@isGroup=Statement] {
+  Decorator !decoratorStatement |
   LetBinding |
   ModuleDeclaration |
   ModuleTypeDeclaration |
   TypeDeclaration |
+  TypeExtension |
   OpenStatement |
   IncludeStatement |
   ExternalDeclaration |
-  expression
+  ExceptionDeclaration |
+  expression ~jsxAttribute
 }
 
 ModuleDeclaration {
-  kw<"module"> ModuleName ModuleDeclarationBody
+  kw<"module"> (ModuleName ModuleDeclarationBody | RecursiveModuleBindings)
+}
+
+RecursiveModuleBindings {
+  kw<"rec"> ModuleName ModuleDeclarationBody (~binding Decorator* kw<"and"> ModuleName ModuleDeclarationBody)* ~binding
 }
 
 ModuleTypeDeclaration {
-  kw<"module"> kw<"type"> ModuleName "=" ModuleTypeExpr
+  kw<"module"> kw<"type"> (ModuleName | TypeName) ("=" ModuleTypeExpr ModuleWithConstraint*)?
 }
 
 ModuleDeclarationBody {
-  ModuleSpec "=" ModuleExpression |
+  ModuleSpec "=" ModuleExpression ~moduleCall |
   ModuleSpec |
-  "=" ModuleExpression
+  "=" ModuleExpression ~moduleCall
 }
 
 ModuleSpec {
@@ -61,7 +72,12 @@ ModuleSpec {
 }
 
 ModuleWithConstraint {
-  kw<"with"> kw<"type"> ModulePrefix? TypeName ConstraintOperator type
+  softkw<"with"> moduleTypeConstraint (~moduleAnd kw<"and"> moduleTypeConstraint)* ~moduleAnd
+}
+
+moduleTypeConstraint {
+  kw<"type"> ModulePrefix? TypeName TypeParams? ConstraintOperator kw<"private">? type TypeConstraint* |
+  kw<"module"> ModulePath ConstraintOperator ModulePath
 }
 
 ConstraintOperator {
@@ -71,14 +87,60 @@ ConstraintOperator {
 
 ModuleTypeExpr {
   ModuleTypeBody |
-  ModulePath
+  ModulePath |
+  ModuleFunctorType |
+  TypeName |
+  TypePath |
+  ParenthesizedModuleType |
+  DecoratedModuleType |
+  ModuleTypeOf |
+  ExtensionExpression
 }
 
-ModuleExpression {
+ParenthesizedModuleType { "(" ModuleTypeExpr ~modulePattern ModuleWithConstraint* ")" }
+DecoratedModuleType { Decorator ModuleTypeExpr }
+ModuleTypeOf { kw<"module"> kw<"type"> kw<"of"> ModuleExpression ~moduleCall }
+
+ModuleFunctorType {
+  "(" commaSep<ModuleTypeParameter> ")" "=>" ModuleTypeExpr |
+  UnitToken "=>" ModuleTypeExpr |
+  ModuleTypeExpr !arrow "=>" ModuleTypeExpr
+}
+
+ModuleTypeParameter {
+  (ModuleName | TypeName) ~modulePattern ":" ModuleTypeExpr |
+  ModuleTypeExpr ~modulePattern |
+  UnitToken |
+  Decorator ModuleTypeParameter
+}
+
+ModuleExpression { moduleExpression ~moduleCall }
+
+moduleExpression {
   ModuleBody |
   ModulePath |
-  ModulePackExpression
+  ModulePackExpression |
+  ModuleUnpackExpression |
+  ModuleFunctor |
+  ModuleApplication |
+  ParenthesizedModuleExpression |
+  DecoratedModuleExpression |
+  ModuleAwaitExpression |
+  ExtensionExpression
 }
+
+ParenthesizedModuleExpression { "(" ModuleExpression ModuleSpec? ")" }
+DecoratedModuleExpression { Decorator ModuleExpression ~moduleCall }
+ModuleAwaitExpression { kw<"await"> ModuleExpression ~moduleCall }
+
+ModuleFunctor { ("(" commaSep<ModuleParameter> ")" | UnitToken) ModuleReturnSpec? "=>" ModuleExpression }
+ModuleReturnSpec { ":" ModuleTypeExpr !parenConstraint }
+ModuleParameter { ModuleName ~modulePattern ModuleSpec? | UnitToken | Decorator ModuleParameter }
+ModuleApplication[@dynamicPrecedence=1] { ModuleExpression ~moduleCall ("(" commaSep<ModuleArgument> ")" | UnitToken) }
+ModuleArgument { ModuleExpression ModuleSpec? | UnitToken }
+
+ModuleUnpackSpec { ModuleUnpackColon ModuleTypeExpr ModuleWithConstraint* }
+ModuleUnpackExpression { softkw<"unpack"> "(" expression ModuleUnpackSpec? ")" }
 
 ModuleName { uppercaseIdentifier }
 
@@ -87,30 +149,44 @@ ModulePackExpression {
 }
 
 ModulePackContent {
-  ModulePath ModuleSpec?
+  moduleExpression ~modulePattern ModuleSpec? ~modulePattern
 }
 
 ModuleBody {
-  "{" statement* "}"
+  "{" blockItem* "}"
 }
 
 ModuleTypeBody {
-  "{" ModuleTypeStatement* "}"
+  "{" (ModuleTypeStatement | ";")* "}"
 }
 
 ModuleTypeStatement {
   ModuleTypeDeclaration |
   ModuleTypeModuleSpec |
   TypeSpec |
-  ValueSpec
+  ValueSpec |
+  ExceptionDeclaration |
+  Decorator ~decorated |
+  ExtensionExpression ~payload |
+  ExternalDeclaration |
+  OpenStatement |
+  ModuleTypeInclude |
+  ModuleTypeAlias
+  | RecursiveModuleSpec
+  | TypeExtension
 }
+
+RecursiveModuleSpec { kw<"module"> kw<"rec"> ModuleName ModuleSpec (~binding Decorator* kw<"and"> ModuleName ModuleSpec)* ~binding }
+
+ModuleTypeInclude { kw<"include"> ModuleTypeExpr ModuleWithConstraint* }
+ModuleTypeAlias { kw<"module"> ModuleName "=" ModulePath }
 
 ModuleTypeModuleSpec {
   kw<"module"> ModuleName ModuleSpec
 }
 
 TypeSpec {
-  kw<"type"> TypeName (TypeParams)? ( "=" TypeBody)?
+  kw<"type"> kw<"rec">? TypeName TypeParams? ("=" TypeBody)? TypeConstraint* (~binding Decorator* kw<"and"> TypeBinding)* ~binding
 }
 
 ValueSpec {
@@ -118,15 +194,15 @@ ValueSpec {
 }
 
 ModulePath {
-  ModulePrefix? ModuleName
+  ModulePrefix? ModuleName ~modulePattern
 }
 
 OpenStatement {
-  kw<"open"> ModulePath
+  kw<"open"> LogicOp<"!">? ModulePath
 }
 
 IncludeStatement {
-  kw<"include"> ModulePath
+  kw<"include"> moduleExpression ~moduleCall
 }
 
 ExternalDeclaration {
@@ -138,29 +214,52 @@ ExternalBody {
   TemplateString
 }
 
+ExceptionDeclaration {
+  kw<"exception"> ExceptionName (
+    VariantConstructorArgs VariantConstructorResult? |
+    VariantConstructorResult |
+    "=" ModulePrefix? VariantConstructor
+  )?
+}
+
+ExceptionName { uppercaseIdentifier }
+
 LetBinding {
   kw<"let"> (
     kw<"module"> ModuleUnpackBinding |
     LetRecBindings |
-    LetValueBinding
+    LetValueBinding (~binding Decorator* kw<"and"> LetValueBinding)* ~binding
   )
 }
 
 LetValueBinding {
-  DestructuringPattern "=" expression |
-  VariableDefinition ParamList? (":" type)? "=" expression
+  DestructuringPattern (":" type)? "=" expression |
+  VariableDefinition ParamList? (":" type)? "=" expression |
+  PatternBinding
+}
+
+PatternBinding { BindingPattern "=" expression }
+BindingPattern[@name=Pattern] {
+  BindingLiteral ~parameter (PatternAnnotation | PatternAlias)* ~parameter ("|" PatternPrimary ~parameter (PatternAnnotation | PatternAlias)* ~parameter)* |
+  PatternPrimary ~parameter PatternAnnotation* (
+    PatternAlias (PatternAnnotation | PatternAlias)* ~parameter ("|" PatternPrimary ~parameter (PatternAnnotation | PatternAlias)* ~parameter)* |
+    ("|" PatternPrimary ~parameter (PatternAnnotation | PatternAlias)* ~parameter)+
+  )
+}
+BindingLiteral[@name=PatternPrimary] {
+  (Number | SignedPattern | RangePattern | String | Char | boolean | TemplateString | ExtensionExpression | DecoratedPattern) ~parameter
 }
 
 LetRecBindings {
-  kw<"rec"> LetRecBinding (kw<"and"> LetRecBinding)*
+  kw<"rec"> LetRecBinding (~binding Decorator* kw<"and"> LetRecBinding)* ~binding
 }
 
 LetRecBinding {
   VariableDefinition ParamList? (":" type)? "=" expression
 }
 
-ModuleUnpackBinding {
-  "(" ModuleName ")" "=" expression
+ModuleUnpackBinding[@dynamicPrecedence=1] {
+  "(" ModuleName ~modulePattern ")" "=" expression
 }
 
 SwitchExpression[@dynamicPrecedence=1] {
@@ -168,7 +267,7 @@ SwitchExpression[@dynamicPrecedence=1] {
 }
 
 SwitchCase[@dynamicPrecedence=-1] {
-  "|" Pattern (PatternGuard)? "=>" expression
+  "|" Pattern (PatternGuard)? "=>" blockItem+
 }
 
 IfExpression {
@@ -184,16 +283,21 @@ WhileExpression {
 }
 
 ForExpression {
-  kw<"for"> Pattern kw<"in"> expression ForDirection expression BlockExpression
+  kw<"for"> (forHeader | "(" forHeader ")") BlockExpression
+}
+
+forHeader {
+  Pattern kw<"in"> expression ForDirection expression |
+  kw<"await">? VariableName kw<"of"> expression
 }
 
 ForDirection {
-  kw<"to"> |
-  kw<"downto">
+  softkw<"to"> |
+  softkw<"downto">
 }
 
 TryExpression {
-  kw<"try"> BlockExpression kw<"catch"> "{" SwitchCase* "}"
+  kw<"try"> expression softkw<"catch"> "{" SwitchCase* "}"
 }
 
 BlockExpression {
@@ -213,31 +317,53 @@ PatternGuard {
 }
 
 Pattern {
-  PatternPrimary PatternAlias?
+  PatternPrimary ~parameter (PatternAnnotation | PatternAlias)* ~parameter ("|" PatternPrimary ~parameter (PatternAnnotation | PatternAlias)* ~parameter)*
 }
 
+PatternAnnotation { ":" annotationType ~typeAlias }
+
 PatternAlias {
-  kw<"as"> VariableName
+  ~typeAlias kw<"as"> Decorator* VariableName
 }
 
 Decorator {
-  ("@" | "@@") AttributeIdentifier |
-  ("@" | "@@") AttributeIdentifier !decorator AttributeArguments
+  decorator<"@" | "@@">
+}
+
+decorator<prefix> {
+  prefix AttributeIdentifier ~decorated |
+  prefix AttributeIdentifier !decorator AttributeArguments ~decorated
 }
 
 AttributeArguments {
-  "(" commaSep<expression> ")"
+  AttributeArgsOpen attributePayload ")"
 }
+
+attributePayload {
+  commaSep<expression> |
+  AttributeStructurePayload |
+  ":" (type | ModuleTypeStatement+) |
+  "?" Pattern PatternGuard?
+}
+AttributeStructurePayload[@dynamicPrecedence=-1] { blockItem+ }
 
 Wildcard { "_" }
 
 PatternPrimary {
+  (
   Wildcard |
   VariantSpreadPattern |
   PolyVariantSpreadPattern |
   TuplePattern |
   VariableName |
   Number |
+  SignedPattern |
+  RangePattern |
+  ExceptionPattern |
+  DecoratedPattern |
+  ModulePattern |
+  ExtensionExpression |
+  TemplateString |
   String |
   Char |
   boolean |
@@ -249,16 +375,23 @@ PatternPrimary {
   RecordPattern |
   PolyVariantPattern |
   ParenthesizedPattern
+  ) ~parameter
 }
 
 VariantSpreadPattern {
-  SpreadOperator TypeName
+  SpreadOperator (TypeName | TypePath | TypeApplication)
 }
 
-UnitPattern { "(" ")" }
+SignedPattern { (ArithOp<"-"> | ArithOp<"-."> | ArithOp<"+"> | ArithOp<"+.">) Number }
+RangePattern { (Char | Number | SignedPattern) ".." (Char | Number | SignedPattern) }
+ExceptionPattern { kw<"exception"> PatternPrimary }
+DecoratedPattern { Decorator ~decorated PatternPrimary ~parameter }
+ModulePattern { kw<"module"> "(" ModulePath ~modulePattern ModuleSpec? ~modulePattern ")" }
+
+UnitPattern { UnitToken ~annotation | "(" ")" }
 
 ConstructorPattern {
-  VariantConstructor PatternArguments?
+  ModulePrefix? VariantConstructor ~pattern PatternArguments? ~pattern
 }
 
 ArrayPattern {
@@ -266,14 +399,15 @@ ArrayPattern {
 }
 
 ListPattern {
-  kw<"list"> "{" commaSep<Pattern> "}"
+  softkw<"list"> "{" commaSep<Pattern> "}"
 }
 
 TuplePattern {
-  "(" Pattern "," commaSep1<Pattern> ")"
+  "(" Pattern ~parameter "," commaSep1<Pattern> ")"
 }
 
 DestructuringPattern {
+  (
   TuplePattern |
   ArrayPattern |
   ListPattern |
@@ -285,6 +419,10 @@ DestructuringPattern {
   VariantSpreadPattern |
   PolyVariantSpreadPattern |
   Wildcard
+  | ParenthesizedPattern
+  | ExceptionPattern
+  | ModulePattern
+  ) ~parameter
 }
 
 RecordPattern {
@@ -292,12 +430,15 @@ RecordPattern {
 }
 
 PatternField {
-  VariableName |
-  PropertyName (":" Pattern)
+  SpreadOperator (TypeName | TypePath | TypeApplication) PatternAlias? |
+  "?" VariableName |
+  VariableName ~parameter |
+  ModulePrefix PropertyName |
+  ModulePrefix? PropertyName ":" "?"? Pattern
 }
 
 DictPattern {
-  kw<"dict"> "{" commaSep<DictPatternField> "}"
+  softkw<"dict"> "{" commaSep<DictPatternField> "}"
 }
 
 DictPatternField {
@@ -310,19 +451,19 @@ DictPatternValue {
 }
 
 PolyVariantPattern {
-  PolyVariantTag PatternArguments?
+  PolyVariantTag PatternArguments? ~pattern
 }
 
 PolyVariantSpreadPattern {
-  Hash SpreadOperator TypeName
+  Hash SpreadOperator (TypeName | TypePath | TypeApplication)
 }
 
 PatternArguments {
-  "(" commaSep<Pattern> ")"
+  ~pattern "(" commaSep<Pattern> ")"
 }
 
 VariantLiteral {
-  VariantConstructor VariantArguments?
+  VariantConstructor VariantArguments? ~pattern
 }
 
 VariantArguments {
@@ -330,7 +471,7 @@ VariantArguments {
 }
 
 PolyVariantLiteral {
-  PolyVariantTag PolyVariantArguments?
+  PolyVariantTag PolyVariantArguments? ~pattern
 }
 
 PolyVariantArguments {
@@ -338,11 +479,13 @@ PolyVariantArguments {
 }
 
 ParenthesizedPattern {
-  "(" Pattern ")"
+  "(" Pattern ~parameter ")"
 }
 
 expression {
+  (
   AwaitExpression |
+  AssertExpression |
   IfExpression |
   WhileExpression |
   ForExpression |
@@ -352,31 +495,32 @@ expression {
   Number |
   String |
   TemplateString |
+  TaggedTemplateExpression { VariableName !call TemplateString } |
   Char |
   boolean |
   AsyncExpression |
   ArrowFunction |
-  VariableName !arrow |
+  VariableName ~parameter |
   VariantLiteral |
   PolyVariantLiteral |
   RegExpLiteral |
-  UnitToken |
-  ArrayExpression { "[" commaSep<expression> "]" } |
-  ListExpression { kw<"list"> "{" commaSep<expression> "}" } |
-  DictExpression { kw<"dict"> "{" commaSep<DictEntry> "}" } |
-  RecordExpression { "{" commaSep1<Property> "}" } |
-  Decorator |
-  ExtensionExpression {
-    ("%" | "%%") AttributeIdentifier |
-    ("%" | "%%") AttributeIdentifier !decorator AttributeArguments
-  } |
+  UnitToken ~annotation |
+  ArrayExpression |
+  ListExpression |
+  DictExpression |
+  RecordExpression |
+  DecoratedExpression { Decorator !decorator expression } |
+  ExtensionExpression |
   ModulePackExpression |
   CallExpression |
   MemberExpression |
+  ConstrainedExpression[@dynamicPrecedence=-2] { expression ~annotation !annotation IndexConstraint } |
+  TernaryExpression { expression !ternary "?" expression TernaryColon expression } |
   BinaryExpression {
     expression !assign "=" expression |
     expression !assign ":=" expression |
-    expression !times (ArithOp<"**"> | ArithOp<"*"> | ArithOp<"/"> | ArithOp<"*."> | ArithOp<"/."> | kw<"mod">) expression |
+    expression !assign "#=" expression |
+    expression !times (ArithOp<"**"> | ArithOp<"*"> | DivisionOp | ArithOp<"*."> | softkw<"mod">) expression |
     expression !plus (ArithOp<"+"> | ArithOp<"-"> | ArithOp<"+."> | ArithOp<"-.">) expression |
     expression !shift ShiftOp expression |
     expression !bitand BitAndOp expression |
@@ -389,33 +533,53 @@ expression {
     expression !or LogicOp<"||"> expression
   } |
   UnaryExpression { !prefix (ArithOp<"-"> | ArithOp<"-."> | ArithOp<"+"> | ArithOp<"+."> | LogicOp<"!"> | BitNotOp) expression } |
-  ParenthesizedExpression |
+  ParenthesizedExpression ~annotation |
+  TupleExpression |
   JSXElement
+  ) ~parameter ~jsxAttribute
 }
 
+ArrayExpression { "[" commaSep<collectionItem> "]" }
+ListExpression[@dynamicPrecedence=2] { softkw<"list"> "{" commaSep<collectionItem> "}" }
+DictExpression[@dynamicPrecedence=2] { softkw<"dict"> "{" commaSep<DictEntry> "}" }
+RecordExpression[@dynamicPrecedence=1] { "{" commaSep1<Property> "}" }
+
 AwaitExpression { kw<"await"> expression }
-AsyncExpression { kw<"async"> expression }
+AssertExpression { !prefix kw<"assert"> expression }
+ExtensionExpression {
+  ("%" | "%%") AttributeIdentifier |
+  ("%" | "%%") AttributeIdentifier !decorator AttributeArguments
+}
+AsyncExpression { softkw<"async"> expression }
 ParenthesizedExpression[@dynamicPrecedence=-1] {
-  "(" expression ~parenthesized ")" !arrow
+  "(" expression ~annotation (IndexConstraint !parenConstraint)? ~parenthesized ")" !arrow
 }
 
 ArrowFunction[@dynamicPrecedence=1] {
-  ParenthesizedExpression !arrow "=>" expression |
-  ParamList !arrow "=>" expression |
-  UnitToken !arrow "=>" expression |
+  ParamList ReturnTypeAnnotation? !arrow "=>" expression |
+  UnitToken ~annotation ReturnTypeAnnotation? !arrow "=>" expression |
   SingleParam !arrow "=>" expression
 }
 
-SingleParam { VariableName }
+ReturnTypeAnnotation {
+  ":" annotationType
+}
+
+annotationType {
+  type ~typeAlias
+}
+TupleExpression { "(" expression "," commaSep1<expression> ")" }
+
+SingleParam { VariableName ~parameter }
 
 MemberExpression {
   ModulePrefix MemberLeaf |
   RecordFieldAccess |
-  expression !member "[" expression IndexConstraint? "]"
+  expression !member IndexOpen expression ~annotation (IndexConstraint !parenConstraint)? "]"
 }
 
 IndexConstraint {
-  ":" type |
+  ":" type ~annotation (":>" type)? ~annotation |
   ":>" type
 }
 
@@ -425,24 +589,32 @@ RecordFieldAccess {
 }
 
 CallExpression {
-  expression !call "(" commaSep<Argument> ")" |
+  expression !call "(" DotUncurried? commaSep<Argument> ")" |
   expression !call UnitToken
 }
 
 MemberLeaf {
-  VariantConstructor |
+  VariantConstructor ~pattern |
   VariableName
 }
 
 
 DictEntry {
-  String ":" expression
+  String ":" expression |
+  SpreadExpression
 }
+
+collectionItem { expression | SpreadExpression }
+SpreadExpression { SpreadOperator expression }
 
 Property {
   OptionalPropertyPun |
-  (PropertyDefinition | String) ":" expression
+  (PropertyDefinition | String) ~parameter ":" "?"? expression |
+  PropertyPun |
+  SpreadExpression
 }
+
+PropertyPun { PropertyDefinition }
 
 OptionalPropertyPun {
   "?" PropertyDefinition
@@ -450,11 +622,12 @@ OptionalPropertyPun {
 
 Argument {
   LabeledArgument |
-  expression
+  expression |
+  SpreadOperator
 }
 
 LabeledArgument {
-  "~" LabelName LabeledArgumentAnnotation? ("=" ArgumentValue)?
+  "~" LabelName "?"? LabeledArgumentAnnotation? ("=" ArgumentValue)?
 }
 
 LabeledArgumentAnnotation {
@@ -467,37 +640,50 @@ ArgumentValue {
 }
 
 ParamList {
-  "(" DotUncurried? ParamItems ")"
+  "(" DotUncurried? ParamItems ")" |
+  "(" DotUncurried ")"
 }
 
 DotUncurried { "." }
 
 ParamItems {
+  Decorator ParamItems |
   LabeledParameterList |
+  LocalTypeParameter ("," parameter?)* |
   SingleParameter |
   UnlabeledParameter "," parameter ("," parameter?)*
 }
+
+LocalTypeParameter { kw<"type"> TypeName+ }
 
 LabeledParameterList {
   LabeledParameter ("," parameter?)*
 }
 
-SingleParameter { SimpleParameter }
+SingleParameter[@dynamicPrecedence=-1] { SimpleParameter }
 
 parameter {
   LabeledParameter |
-  SimpleParameter
+  SimpleParameter |
+  Decorator parameter |
+  LocalTypeParameter
 }
 
 LabeledParameter {
-  "~" LabelName ParameterAnnotation? ParameterDefault?
+  "~" LabelName PatternAlias? ParameterAnnotation? ParameterDefault?
 }
 
 UnlabeledParameter { SimpleParameter }
 
 SimpleParameter {
-  VariableName ParameterAnnotation? ParameterDefault?
+  VariableName ~parameter PatternAlias? ParameterAnnotation? ParameterDefault? |
+  DestructuringPattern PatternAlias? ParameterAnnotation? ParameterDefault? |
+  LiteralParameter PatternAlias? ParameterAnnotation? ParameterDefault? |
+  PatternParameter ParameterDefault?
 }
+
+LiteralParameter { (Number | String | Char | boolean | ExtensionExpression | TemplateString) ~parameter }
+PatternParameter[@dynamicPrecedence=-1] { Pattern ~parameter }
 
 ParameterAnnotation {
   ":" type
@@ -508,11 +694,11 @@ ParameterDefault {
 }
 
 FunctionTypeParamList {
-  "(" DotUncurried? FunctionTypeParamItems ")"
+  "(" DotUncurried? FunctionTypeParamItems ")" ~functionType
 }
 
 FunctionTypeParamItems {
-  "" |
+  "" ~functionType |
   FunctionTypeLabeledParamList |
   FunctionTypeSingleParam |
   FunctionTypeUnlabeledParam "," FunctionTypeParameter ("," FunctionTypeParameter?)*
@@ -530,12 +716,15 @@ FunctionTypeParameter {
 }
 
 FunctionTypeLabeledParam {
+  Decorator FunctionTypeLabeledParam |
   "~" LabelName FunctionTypeAnnotation ParameterDefault?
 }
 
 FunctionTypeUnlabeledParam { FunctionTypeSimpleParam }
 
-FunctionTypeSimpleParam {
+FunctionTypeSimpleParam[@dynamicPrecedence=1] {
+  Decorator FunctionTypeSimpleParam |
+  type ~functionType |
   VariableName FunctionTypeAnnotation ParameterDefault?
 }
 
@@ -543,52 +732,78 @@ FunctionTypeAnnotation {
   ":" type
 }
 
-ParenthesizedType { "(" type ")" }
+ParenthesizedType { "(" type ~functionType ")" }
+TupleType { "(" tupleTypeItem "," commaSep1<tupleTypeItem> ")" }
+tupleTypeItem { type ~functionType }
 
 Quote { "'" }
 Hash { "#" }
 
-TypeParameter { Quote VariableName }
+TypeParameter { Quote (VariableName | uppercaseIdentifier) }
 
 FunctionType {
-  (FunctionTypeParamList | TypeName | TypePath | TypeParameter | TypeApplication | DictType | ParenthesizedType) FunctionArrow type
+  (FunctionTypeParamList | TypeName | TypePath | TypeParameter | TypeApplication | DictType | ListType | ParenthesizedType | RecordType | ObjectType | ModulePackageType | PolyVariantType | AliasedType | FunctionTypeLabeledParam) ~typeAlias FunctionArrow type
 }
 
-FunctionArrow { "->" | "=>" }
+FunctionArrow { "=>" }
 
 type[@isGroup=Type] {
+  (
   TypePath |
   TypeName |
   TypeParameter |
   PolyVariantType |
   DictType |
+  ListType |
   TypeApplication |
   ParenthesizedType |
-  FunctionType
+  TupleType |
+  FunctionType |
+  ModulePackageType |
+  RecordType |
+  ObjectType |
+  DecoratedType |
+  QuantifiedType |
+  AliasedType
+  | UnitType
+  | LocallyAbstractType
+  | ExtensionType
+  ) ~typeBody ~typeAlias
 }
 
+ObjectType { "{" (".." | ".") commaSep<RecordTypeField> "}" }
+UnitType { "(" ~functionType ")" ~functionType }
+LocallyAbstractType { kw<"type"> TypeName+ "." type }
+ExtensionType { ExtensionExpression ~payload }
+DecoratedType { Decorator ~decorated type }
+QuantifiedType { (TypeParameter ~typeAlias)+ "." type }
+AliasedType { type ~typeAlias kw<"as"> TypeParameter }
 
-TypeAngleLeftNode { CompareOp<"<"> }
-TypeAngleRightNode { CompareOp<">"> }
+ModulePackageType { kw<"module"> "(" ModuleTypeExpr ModuleWithConstraint* ")" }
 
-DictType { kw<"dict"> TypeAngleLeftNode type TypeAngleRightNode }
+
+TypeAngleLeftNode { TypeAngleLeftToken }
+TypeAngleRightNode { TypeAngleRightToken }
+
+DictType[@dynamicPrecedence=1] { softkw<"dict"> TypeAngleLeftNode type TypeAngleRightNode }
+ListType[@dynamicPrecedence=1] { softkw<"list"> TypeAngleLeftNode type TypeAngleRightNode }
 
 TypeApplication { (TypeName | TypePath) TypeAngleLeftNode commaSep<type> TypeAngleRightNode }
 
 TypeParams { TypeAngleLeftNode commaSep<TypeParam> TypeAngleRightNode }
 
-TypeParam { "_" | VariableDefinition | TypeParameter }
+TypeParam { (ArithOp<"+"> | ArithOp<"-">)? ("_" | VariableDefinition | TypeParameter) }
 
 RecordType {
-  "{" commaSep1<RecordTypeField> "}"
+  "{" commaSep<RecordTypeField> "}"
 }
 
 RecordTypeField {
-  (PropertyDefinition "?"? | String) ":" type |
+  Decorator* kw<"mutable">? (PropertyDefinition "?"? (":" type)? | String ":" type) |
   SpreadOperator (TypeName | TypePath)
 }
 
-PolyVariantName { uppercaseIdentifier | identifier | Number | String }
+PolyVariantName { uppercaseIdentifier | identifier | exoticIdentifier | Number | String }
 PolyVariantTag { Hash PolyVariantName }
 
 // Variance marker for polymorphic variants: lower-bound '>' or upper-bound '<'
@@ -598,7 +813,7 @@ PolyVariantVarianceMarker { PolyVariantVarianceUpper | PolyVariantVarianceLower 
 
 // PolyVariantType: one-or-more variant tags separated by pipe `|` (e.g. [#A | #B])
 PolyVariantType {
-  "[" PolyVariantVarianceMarker? PolyVariantCaseList "]" (kw<"as"> TypeParameter)?
+  "[" PolyVariantVarianceMarker? (PolyVariantCaseList (PolyVariantVarianceUpper PolyVariantTag+)?)? "]" (~typeAlias kw<"as"> TypeParameter)? ~typeAlias
 }
 
 PolyVariantCaseList {
@@ -606,9 +821,11 @@ PolyVariantCaseList {
 }
 
 PolyVariantCase {
+  Decorator* (
   PolyVariantSpreadCase |
   PolyVariantTagCase |
   PolyVariantTypeReference
+  )
 }
 
 PolyVariantPayload {
@@ -616,7 +833,7 @@ PolyVariantPayload {
 }
 
 PolyVariantTagCase {
-  PolyVariantTag PolyVariantPayload?
+  PolyVariantTag PolyVariantPayload? ("&" PolyVariantPayload)*
 }
 
 PolyVariantSpreadCase {
@@ -624,35 +841,49 @@ PolyVariantSpreadCase {
 }
 
 PolyVariantTypeReference {
-  TypeName
+  TypeName | TypePath | TypeApplication
 }
 
 // Type declaration supports optional `rec` and optional type parameters
 TypeDeclaration {
-  kw<"type"> (kw<"rec">)? TypeBinding (kw<"and"> TypeBinding)*
+  kw<"type"> (kw<"rec">)? TypeBinding (~binding Decorator* kw<"and"> TypeBinding)* ~binding
 }
 
 TypeBinding {
-  TypeName (TypeParams)? "=" TypeBody
+  TypeName (TypeParams)? ("=" TypeBody)? TypeConstraint*
 }
+
+TypeConstraint { kw<"constraint"> type "=" type }
 
 TypeBody {
+  kw<"private">? (
   VariantType |
-  RecordType |
-  TypeAlias
+  ExtensibleVariantType |
+  RecordType ~typeBody |
+  TypeAlias ("=" kw<"private">? (RecordType | VariantType))?
+  )
 }
 
-TypeAlias { type }
+TypeAlias[@dynamicPrecedence=-1] { type }
+ExtensibleVariantType { (Decorator ~decorated)* ".." }
+
+TypeExtension {
+  kw<"type"> (TypeName | TypePath) TypeParams? "+=" kw<"private">? ExtensionConstructorList
+}
+ExtensionConstructorList { "|"? ExtensionConstructor (~case "|" ExtensionConstructor)* ~case }
+ExtensionConstructor { VariantConstructorCase ("=" ModulePrefix? VariantConstructor)? }
 
 VariantType {
-  "|" VariantConstructorCase ("|" VariantConstructorCase)*
+  "|"? VariantConstructorCase (~case "|" VariantConstructorCase)* ~case
 }
 
 VariantConstructorCase {
+  (Decorator ~decorated)* (
   VariantSpreadCase |
   VariantConstructorArgsToken VariantConstructorArgs VariantConstructorResult? |
   VariantConstructorResultToken VariantConstructorResult |
-  VariantConstructor
+  VariantConstructor VariantConstructorArgs? VariantConstructorResult?
+  )
 }
 
 VariantSpreadCase {
@@ -660,7 +891,7 @@ VariantSpreadCase {
 }
 
 VariantConstructorArgs {
-  "(" commaSep1<type> ")"
+  !variant "(" commaSep1<type> ")"
 }
 
 VariantConstructorResult {
@@ -668,7 +899,7 @@ VariantConstructorResult {
 }
 
 commaSep<content> {
-  "" | content ("," content?)*
+  "" ~pattern | content ("," content?)* ~jsxAttribute
 }
 
 commaSep1<content> {
@@ -678,24 +909,35 @@ commaSep1<content> {
 // Keywords
 kw<term> { @specialize[@name={term}]<identifier, term> }
 
+softkw<term> { @extend[@name={term}]<identifier, term> }
+
 boolean { @specialize[@name=BooleanLiteral]<identifier, "true" | "false"> }
 
-VariableName { identifier | exoticIdentifier }
-VariableDefinition { identifier | exoticIdentifier }
+VariableName { (identifier | exoticIdentifier) ~record }
+VariableDefinition { (identifier | exoticIdentifier) ~record }
 TypePath {
   ModulePrefix TypeName
 }
-TypeName { identifier }
+TypeName { (identifier | exoticIdentifier) ~record }
 VariantConstructor { uppercaseIdentifier }
-PropertyName { identifier }
-PropertyDefinition { identifier | ModulePrefix identifier }
-LabelName { identifier }
+PropertyName { (identifier | exoticIdentifier) ~record }
+PropertyDefinition { (identifier | exoticIdentifier | ModulePrefix (identifier | exoticIdentifier)) ~record }
+LabelName { identifier | exoticIdentifier }
 
 @skip { spaces | newline | LineComment | BlockComment }
 
-@context trackNewline from "./tokens.js"
+@context trackContext from "./tokens.js"
 
 @external tokens variant from "./tokens" { VariantConstructorArgsToken, VariantConstructorResultToken }
+@external tokens comments from "./tokens" { BlockComment[isolate] }
+@external tokens regexp from "./tokens" { RegExpLiteral }
+@external tokens ternaryColon from "./tokens" { TernaryColon[@name=":"], ModuleUnpackColon[@name=":"] }
+@external tokens attributeArgs from "./tokens" { AttributeArgsOpen[@name="("] }
+@external tokens postfix from "./tokens" { IndexOpen[@name="["] }
+@external tokens unit from "./tokens" { UnitToken }
+@external tokens typeAngle from "./tokens" { TypeAngleLeftToken[@name=CompareOp], TypeAngleRightToken[@name=CompareOp] }
+@external tokens jsxTag from "./tokens" { JSXIdentifier, JSXEndTag }
+@external tokens jsx from "./tokens" { JSXStartTag, JSXStartCloseTag, LessThan[@name=CompareOp] }
 
 @skip {} {
   String[isolate] {
@@ -703,10 +945,10 @@ LabelName { identifier }
   }
   
   TemplateString[isolate] {
-    "`" (TemplateContent | Interpolation)* "`"
+    "`" (TemplateContent | TemplateEscape | Interpolation)* "`"
   }
   
-  BlockComment[isolate] { "/*" (blockCommentContent | blockCommentNewline)* blockCommentEnd }
+
 }
 
 TemplateContent {
@@ -717,12 +959,6 @@ Interpolation {
   "${" expression "}"
 }
 
-@local tokens {
-  blockCommentEnd { "*/" }
-  blockCommentNewline { "\n" }
-  @else blockCommentContent
-}
-
 @tokens {
   spaces[@export] { $[\u0009 \u000b\u00a0\u1680\u2000-\u200a\u202f\u205f\u3000\ufeff]+ }
   newline[@export] { $[\r\n\u2028\u2029] }
@@ -731,76 +967,39 @@ Interpolation {
 
   identifierChar { @asciiLetter | $[_$] }
   
-  identifier { $[a-z_] (identifierChar | @digit)* }
+  identifier { $[a-z_] (identifierChar | @digit | "'" )* }
   
-  ModulePrefix { $[A-Z] (identifierChar | @digit)* ("." $[A-Z] (identifierChar | @digit)*)* "." }
-  exoticIdentifier { "\\\"" (!["\\\n] | ExoticEscape)* "\"" }
-  UnitToken { "()" }
+  ModulePrefix { $[A-Z] (identifierChar | @digit | "'" )* ("." $[A-Z] (identifierChar | @digit | "'" )*)* "." }
+  exoticIdentifier { "\\\"" !["\n\r]* "\"" }
   SpreadOperator { "..." }
   
-  uppercaseIdentifier { $[A-Z] (identifierChar | @digit)* }
+  uppercaseIdentifier { $[A-Z] (identifierChar | @digit | "'" )* }
 
-  @precedence { ModulePrefix, UnitToken, SpreadOperator, uppercaseIdentifier }
+  @precedence { ModulePrefix, SpreadOperator, uppercaseIdentifier }
 
   @precedence { spaces, newline, identifier, "_" }
 
   Number {
     (@digit ("_" | @digit)* ("." ("_" | @digit)*)? | "." @digit ("_" | @digit)*)
-      (("e" | "E") ("+" | "-")? ("_" | @digit)+)? |
-    @digit ("_" | @digit)* "n" |
-    "0x" $[0-9a-fA-F_]+ |
-    "0b" $[01_]+ |
-    "0o" $[0-7_]+
+      (("e" | "E") ("+" | "-")? ("_" | @digit)+)? $[nlL]? |
+    "0" $[xX] $[0-9a-fA-F_]+ ("." $[0-9a-fA-F_]*)?
+      ($[pP] $[+-]? $[0-9_]+)? $[nlL]? |
+    "0" $[bB] $[01_]+ $[nlL]? |
+    "0" $[oO] $[0-7_]+ $[nlL]?
   }
 
   @precedence { Number, "." }
 
-  Char { "'" (![\\\n'] | "\\" _) "'" }
+  Char { "'" (![\\\n'] | "\\" ("x" $[0-9a-fA-F] $[0-9a-fA-F] | "o" $[0-7] $[0-7] $[0-7] | @digit @digit @digit | "u" ("{" $[0-9a-fA-F]+ "}" | $[0-9a-fA-F] $[0-9a-fA-F] $[0-9a-fA-F] $[0-9a-fA-F]) | _)) "'" }
 
   Escape {
     "\\" ("x" $[0-9a-fA-F] $[0-9a-fA-F] | "u" ("{" $[0-9a-fA-F]+ "}" | $[0-9a-fA-F] $[0-9a-fA-F] $[0-9a-fA-F] $[0-9a-fA-F]) | ![xu])
   }
 
-  ExoticEscape {
-    "\\" ("x" $[0-9a-fA-F] $[0-9a-fA-F] | "u" ("{" $[0-9a-fA-F]+ "}" | $[0-9a-fA-F] $[0-9a-fA-F] $[0-9a-fA-F] $[0-9a-fA-F]) | ![xu\n])
-  }
 
   stringContentDouble { ![\\"]+ }
   
-  RegExpLiteral {
-    "/" RegExpFirstChunk RegExpBody "/" RegExpFlags?
-  }
-
-  RegExpFirstChunk {
-    RegExpClass |
-    RegExpBackslash |
-    RegExpStartChar
-  }
-
-  RegExpStartChar { ![*/\n[] }
-
-  RegExpBody { RegExpChunk* }
-
-  RegExpChunk {
-    RegExpBackslash |
-    RegExpClass |
-    RegExpChar
-  }
-
-  RegExpBackslash { "\\" _ }
-
-  RegExpClass { "[" RegExpClassChunk* "]" }
-
-  RegExpClassChunk { RegExpClassBackslash | RegExpClassChar }
-
-  RegExpClassBackslash { "\\" _ }
-
-  RegExpClassChar { ![\]\n] }
-
-  RegExpChar { ![\\/\n[] }
-
-  RegExpFlags { $[a-zA-Z]+ }
-
+  DivisionOp[@name=ArithOp,@export] { "/" | "/." }
   ArithOp<expr> { expr }
   ShiftOp { "<<<" | ">>>" | "<<" | ">>" }
   BitAndOp { "&&&" }
@@ -812,54 +1011,54 @@ Interpolation {
   StringOp<expr> { expr }
   PipeOp<expr> { expr }
   
-  templateText { ![\`$]+ | "$" ![\{] }
+  templateText { ![\\`$]+ | "$" }
+  TemplateEscape { "\\" _ }
+  @precedence { "${", templateText }
 
-  @precedence { LineComment, RegExpLiteral, BitNotOp, ShiftOp, BitAndOp, BitXorOp, BitOrOp, ArithOp }
+  @precedence { LineComment, BitNotOp, ShiftOp, BitAndOp, BitXorOp, BitOrOp, ArithOp, DivisionOp }
 
   "=>"
   "..."
   "("  ")" "[" "]" "{" "}"
-  "." "," ":" ";"
+  "." ".." "," ":" ";"
   "=" "?" "|" "~" "'" "@" "%" "_" "`" "${" ":=" ":>"
   "@@" "%%"
+  "+=" "#="
 
   "+." "-." "*." "/."
 
-  JSXEndTag { ">" }
   
   JSXSelfCloseEndTag { "/>" }
-  JSXStartCloseTag { "</" }
-  JSXText { ![<{]+ }
-  JSXIdentifier { identifier }
 
   AttributeIdentifier {
-    identifier ("." identifier)* 
+    (identifier | uppercaseIdentifier | exoticIdentifier) ("." (identifier | uppercaseIdentifier | exoticIdentifier))*
   }
 }
 
-@skip {} {
-  JSXElement {
-    JSXSelfClosingTag |
-    JSXOpenTag jsxChildren* JSXCloseTag
-  }
+JSXElement {
+  JSXSelfClosingTag |
+  JSXOpenTag jsxChildren* JSXCloseTag |
+  JSXFragment
 }
 
-jsxChildren {
-  JSXText |
-  JSXElement |
-  JSXExpressionContainer
-}
+JSXFragment { JSXFragmentOpenTag jsxChildren* JSXFragmentCloseTag }
+jsxChildren { jsxChildValue | JSXExpressionContainer }
 
-JSXExpressionContainer {
-  "{" expression "}"
+jsxBlock[@dynamicPrecedence=-1] { BlockExpression ~jsxAttribute }
+
+JSXExpressionContainer[@dynamicPrecedence=2] {
+  "{" expression ~jsxAttribute "}" |
+  jsxBlock
 }
 
 JSXSelfClosingTag { JSXStartTag jsxElementName jsxAttribute* JSXSelfCloseEndTag }
+JSXFragmentOpenTag { JSXStartTag JSXEndTag }
+JSXFragmentCloseTag { JSXStartCloseTag JSXEndTag }
 JSXOpenTag { JSXStartTag jsxElementName jsxAttribute* JSXEndTag }
 JSXCloseTag { JSXStartCloseTag jsxElementName? JSXEndTag }
 
 JSXIntrinsicElementName { JSXIdentifier }
-JSXCustomComponentName { ModulePath }
+JSXCustomComponentName { ModulePath | ModulePrefix JSXIdentifier }
 
 jsxElementName {
   JSXIntrinsicElementName |
@@ -867,16 +1066,37 @@ jsxElementName {
 }
 
 jsxAttribute {
-  JSXAttribute { JSXIdentifier ("=" jsxAttributeValue)? }
+  JSXAttribute { "?"? (JSXIdentifier | exoticIdentifier) ("=" "?"? jsxAttributeValue)? } |
+  JSXSpreadAttribute { "{" SpreadOperator expression "}" }
 }
 
-jsxAttributeValue {
-  String |
-  "{" expression "}"
+jsxAttributeValue { (jsxAtomicValue | "{" expression ~jsxAttribute "}" | jsxBlock) ~jsxAttribute }
+
+jsxAtomicValue { (jsxAtom | JSXMemberExpression | JSXCallExpression) ~jsxAttribute }
+jsxChildValue { (jsxAtom | JSXChildMemberExpression) ~jsxAttribute }
+jsxAtom { (
+  String | Number | Char | boolean | VariableName |
+  ParenthesizedExpression | TupleExpression |
+  RegExpLiteral | TemplateString | UnitToken |
+  ArrayExpression | ListExpression | DictExpression | RecordExpression |
+  VariantLiteral | PolyVariantLiteral | ModulePackExpression | JSXElement | ExtensionExpression
+) ~jsxAttribute }
+JSXChildMemberExpression[@name=MemberExpression] {
+  ModulePrefix MemberLeaf | JSXChildFieldAccess
 }
+JSXChildFieldAccess[@name=RecordFieldAccess] { jsxChildValue !member "." ModulePrefix? PropertyName }
+
+JSXCallExpression[@name=CallExpression] {
+  jsxAtomicValue !call "(" DotUncurried? commaSep<Argument> ")" |
+  jsxAtomicValue !call UnitToken
+}
+JSXMemberExpression[@name=MemberExpression] {
+  ModulePrefix MemberLeaf |
+  JSXRecordFieldAccess |
+  jsxAtomicValue !member IndexOpen expression ~annotation (IndexConstraint !parenConstraint)? "]"
+}
+JSXRecordFieldAccess[@name=RecordFieldAccess] { jsxAtomicValue !member "." ModulePrefix? PropertyName }
 
 @external propSource rescriptHighlight from "./highlight"
-
-@external tokens jsx from "./tokens" { JSXStartTag, LessThan[@name=CompareOp] }
 
 @detectDelim
