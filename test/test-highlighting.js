@@ -23,6 +23,27 @@ function checkHighlighting(source, expected, tree = parser.parse(source)) {
 }
 
 describe("highlighting regressions", () => {
+  it("highlights nested comments, template escapes, JSX children and newer operators", () => {
+    const source = [
+      '/* outer /* inner */ outer */',
+      'let escaped = `escaped \\` text`',
+      'let x = <Foo.custom-tag ?optional name=?name> {items} list{1, 2} </Foo.custom-tag>',
+      'for value of values {assert true}',
+      'foo #= x',
+      'type t = int constraint int = int',
+    ].join("\n")
+    checkHighlighting(source, [
+      ["/* outer /* inner */ outer */", t.blockComment],
+      ["\\`", t.escape],
+      ["custom-tag", t.special(t.tagName)],
+      ["optional", t.attributeName],
+      ["name", t.attributeName, source.indexOf("name=?")],
+      ["items", t.variableName], ["1", t.number], ["list", t.keyword],
+      ["of", t.controlKeyword], ["assert", t.controlKeyword],
+      ["#=", t.definitionOperator], ["constraint", t.typeOperator],
+    ])
+  })
+
   it("parses and highlights exception declarations with inline record payloads", () => {
     const source = `exception HttpError({status: int})
 let isRetriable: exn => bool = error =>
