@@ -52,9 +52,9 @@ ModuleTypeDeclaration {
 }
 
 ModuleDeclarationBody {
-  ModuleSpec "=" ModuleExpression |
+  ModuleSpec "=" ModuleExpression ~moduleCall |
   ModuleSpec |
-  "=" ModuleExpression
+  "=" ModuleExpression ~moduleCall
 }
 
 ModuleSpec {
@@ -74,15 +74,31 @@ ConstraintOperator {
 
 ModuleTypeExpr {
   ModuleTypeBody |
-  ModulePath
+  ModulePath |
+  ModuleFunctorType
 }
+
+ModuleFunctorType {
+  "(" commaSep<ModuleTypeParameter> ")" "=>" ModuleTypeExpr |
+  UnitToken "=>" ModuleTypeExpr
+}
+
+ModuleTypeParameter { (ModuleName ":")? ModuleTypeExpr }
 
 ModuleExpression {
   ModuleBody |
   ModulePath |
   ModulePackExpression |
-  ModuleUnpackExpression
+  ModuleUnpackExpression |
+  ModuleFunctor |
+  ModuleApplication
 }
+
+ModuleFunctor { ("(" commaSep<ModuleParameter> ")" | UnitToken) ModuleReturnSpec? "=>" ModuleExpression }
+ModuleReturnSpec { ":" ModuleTypeExpr }
+ModuleParameter { ModuleName ModuleSpec? | UnitToken }
+ModuleApplication[@dynamicPrecedence=1] { ModuleExpression ~moduleCall ("(" commaSep<ModuleArgument> ")" | UnitToken) }
+ModuleArgument { ModuleExpression ModuleSpec? | UnitToken }
 
 ModuleUnpackExpression { kw<"unpack"> "(" expression ")" }
 
@@ -93,7 +109,7 @@ ModulePackExpression {
 }
 
 ModulePackContent {
-  (ModulePath | ModuleBody) ModuleSpec?
+  (ModulePath | ModuleBody | ModuleApplication) ModuleSpec?
 }
 
 ModuleBody {

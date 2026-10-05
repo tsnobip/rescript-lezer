@@ -1,3 +1,30 @@
+# expression after a local module body
+
+let run = () => {
+  module M = {let value = 1}
+  (if M.value > 0 {1} else {0}, 2)
+}
+
+==>
+
+Script(LetBinding(let,LetValueBinding(VariableDefinition,"=",ArrowFunction(UnitToken,"=>",BlockExpression("{",ModuleDeclaration(module,ModuleName,ModuleDeclarationBody("=",ModuleExpression(ModuleBody("{",LetBinding(let,LetValueBinding(VariableDefinition,"=",Number)),"}")))),TupleExpression("(",IfExpression(if,BinaryExpression(MemberExpression(ModulePrefix,MemberLeaf(VariableName)),CompareOp,Number),BlockExpression("{",Number,"}"),ElseClause(else,BlockExpression("{",Number,"}"))),",",Number,")"),"}")))))
+
+# module functors and applications
+
+module type S = {type t}
+module Make = (M: S, ()) => {
+  type t = M.t
+}
+module Applied = Make({type t = int}, ())
+module AppliedAgain = Make({type t = string}, ())
+let pack = (value: module(S)) => module(Make(unpack(value), ()))
+module MakeTyped = (M: S): S => M
+module type F = (M: S, S) => S
+
+==>
+
+Script(ModuleTypeDeclaration(module,type,ModuleName,"=",ModuleTypeExpr(ModuleTypeBody("{",ModuleTypeStatement(TypeSpec(type,TypeName)),"}"))),ModuleDeclaration(module,ModuleName,ModuleDeclarationBody("=",ModuleExpression(ModuleFunctor("(",ModuleParameter(ModuleName,ModuleSpec(":",ModuleTypeExpr(ModulePath(ModuleName)))),",",ModuleParameter(UnitToken),")","=>",ModuleExpression(ModuleBody("{",TypeDeclaration(type,TypeBinding(TypeName,"=",TypeBody(TypeAlias(TypePath(ModulePrefix,TypeName))))),"}")))))),ModuleDeclaration(module,ModuleName,ModuleDeclarationBody("=",ModuleExpression(ModuleApplication(ModuleExpression(ModulePath(ModuleName)),"(",ModuleArgument(ModuleExpression(ModuleBody("{",TypeDeclaration(type,TypeBinding(TypeName,"=",TypeBody(TypeAlias(TypeName)))),"}"))),",",ModuleArgument(UnitToken),")")))),ModuleDeclaration(module,ModuleName,ModuleDeclarationBody("=",ModuleExpression(ModuleApplication(ModuleExpression(ModulePath(ModuleName)),"(",ModuleArgument(ModuleExpression(ModuleBody("{",TypeDeclaration(type,TypeBinding(TypeName,"=",TypeBody(TypeAlias(TypeName)))),"}"))),",",ModuleArgument(UnitToken),")")))),LetBinding(let,LetValueBinding(VariableDefinition,"=",ArrowFunction(ParenthesizedExpression("(",VariableName,IndexConstraint(":",ModulePackageType(module,"(",ModuleTypeExpr(ModulePath(ModuleName)),")")),")"),"=>",ModulePackExpression(module,"(",ModulePackContent(ModuleApplication(ModuleExpression(ModulePath(ModuleName)),"(",ModuleArgument(ModuleExpression(ModuleUnpackExpression(unpack,"(",VariableName,")"))),",",ModuleArgument(UnitToken),")")),")")))),ModuleDeclaration(module,ModuleName,ModuleDeclarationBody("=",ModuleExpression(ModuleFunctor("(",ModuleParameter(ModuleName,ModuleSpec(":",ModuleTypeExpr(ModulePath(ModuleName)))),")",ModuleReturnSpec(":",ModuleTypeExpr(ModulePath(ModuleName))),"=>",ModuleExpression(ModulePath(ModuleName)))))),ModuleTypeDeclaration(module,type,ModuleName,"=",ModuleTypeExpr(ModuleFunctorType("(",ModuleTypeParameter(ModuleName,":",ModuleTypeExpr(ModulePath(ModuleName))),",",ModuleTypeParameter(ModuleTypeExpr(ModulePath(ModuleName))),")","=>",ModuleTypeExpr(ModulePath(ModuleName))))))
+
 # module unpacking and first-class module types
 
 module type S = {
