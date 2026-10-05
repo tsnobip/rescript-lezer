@@ -51,7 +51,7 @@ ModuleDeclaration {
 }
 
 ModuleTypeDeclaration {
-  kw<"module"> kw<"type"> ModuleName "=" ModuleTypeExpr
+  kw<"module"> kw<"type"> (ModuleName | TypeName) "=" ModuleTypeExpr ModuleWithConstraint*
 }
 
 ModuleDeclarationBody {
@@ -68,7 +68,10 @@ ModuleWithConstraint {
   softkw<"with"> moduleTypeConstraint (kw<"and"> moduleTypeConstraint)*
 }
 
-moduleTypeConstraint { kw<"type"> ModulePrefix? TypeName ConstraintOperator type }
+moduleTypeConstraint {
+  kw<"type"> ModulePrefix? TypeName TypeParams? ConstraintOperator kw<"private">? type TypeConstraint* |
+  kw<"module"> ModulePath ConstraintOperator ModulePath
+}
 
 ConstraintOperator {
   "=" |
@@ -78,28 +81,54 @@ ConstraintOperator {
 ModuleTypeExpr {
   ModuleTypeBody |
   ModulePath |
-  ModuleFunctorType
+  ModuleFunctorType |
+  TypeName |
+  TypePath |
+  ParenthesizedModuleType |
+  DecoratedModuleType |
+  ModuleTypeOf |
+  ExtensionExpression
 }
+
+ParenthesizedModuleType { "(" ModuleTypeExpr ~modulePattern ModuleWithConstraint* ")" }
+DecoratedModuleType { Decorator ModuleTypeExpr }
+ModuleTypeOf { kw<"module"> kw<"type"> kw<"of"> ModuleExpression ~moduleCall }
 
 ModuleFunctorType {
   "(" commaSep<ModuleTypeParameter> ")" "=>" ModuleTypeExpr |
-  UnitToken "=>" ModuleTypeExpr
+  UnitToken "=>" ModuleTypeExpr |
+  ModuleTypeExpr !arrow "=>" ModuleTypeExpr
 }
 
-ModuleTypeParameter { (ModuleName ":")? ModuleTypeExpr }
+ModuleTypeParameter {
+  (ModuleName | Wildcard) ~modulePattern ":" ModuleTypeExpr |
+  ModuleTypeExpr ~modulePattern |
+  UnitToken |
+  Decorator ModuleTypeParameter
+}
 
-ModuleExpression {
+ModuleExpression { moduleExpression ~moduleCall }
+
+moduleExpression {
   ModuleBody |
   ModulePath |
   ModulePackExpression |
   ModuleUnpackExpression |
   ModuleFunctor |
-  ModuleApplication
+  ModuleApplication |
+  ParenthesizedModuleExpression |
+  DecoratedModuleExpression |
+  ModuleAwaitExpression |
+  ExtensionExpression
 }
 
+ParenthesizedModuleExpression { "(" ModuleExpression ModuleSpec? ")" }
+DecoratedModuleExpression { Decorator ModuleExpression ~moduleCall }
+ModuleAwaitExpression { kw<"await"> ModuleExpression ~moduleCall }
+
 ModuleFunctor { ("(" commaSep<ModuleParameter> ")" | UnitToken) ModuleReturnSpec? "=>" ModuleExpression }
-ModuleReturnSpec { ":" ModuleTypeExpr }
-ModuleParameter { ModuleName ModuleSpec? | UnitToken }
+ModuleReturnSpec { ":" ModuleTypeExpr !parenConstraint }
+ModuleParameter { ModuleName ~modulePattern ModuleSpec? | UnitToken | Decorator ModuleParameter }
 ModuleApplication[@dynamicPrecedence=1] { ModuleExpression ~moduleCall ("(" commaSep<ModuleArgument> ")" | UnitToken) }
 ModuleArgument { ModuleExpression ModuleSpec? | UnitToken }
 
@@ -112,7 +141,7 @@ ModulePackExpression {
 }
 
 ModulePackContent {
-  (ModulePath | ModuleBody | ModuleApplication) ~modulePattern ModuleSpec? ~modulePattern
+  moduleExpression ~modulePattern ModuleSpec? ~modulePattern
 }
 
 ModuleBody {
@@ -152,7 +181,7 @@ OpenStatement {
 }
 
 IncludeStatement {
-  kw<"include"> ModulePath
+  kw<"include"> moduleExpression ~moduleCall
 }
 
 ExternalDeclaration {

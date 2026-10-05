@@ -1,3 +1,21 @@
+# parenthesized, decorated and constrained module expressions and types
+
+module A = (M: S)
+module B = @attr (Make(@attr A))
+module C = await B
+include {let value = 1}
+include (A: S)
+module type F = S => S
+module type T = @attr (S with type t<'a> = private array<'a>)
+module type U = S with module M := A and type t = int
+module type Original = module type of {include A}
+module type lower = lower
+module Factory = (@attr M: S, ()): (S with type t = M.t) => M
+
+==>
+
+Script(ModuleDeclaration(module,ModuleName,ModuleDeclarationBody("=",ModuleExpression(ParenthesizedModuleExpression("(",ModuleExpression(ModulePath(ModuleName)),ModuleSpec(":",ModuleTypeExpr(ModulePath(ModuleName))),")")))),ModuleDeclaration(module,ModuleName,ModuleDeclarationBody("=",ModuleExpression(DecoratedModuleExpression(Decorator("@",AttributeIdentifier),ModuleExpression(ParenthesizedModuleExpression("(",ModuleExpression(ModuleApplication(ModuleExpression(ModulePath(ModuleName)),"(",ModuleArgument(ModuleExpression(DecoratedModuleExpression(Decorator("@",AttributeIdentifier),ModuleExpression(ModulePath(ModuleName))))),")")),")")))))),ModuleDeclaration(module,ModuleName,ModuleDeclarationBody("=",ModuleExpression(ModuleAwaitExpression(await,ModuleExpression(ModulePath(ModuleName)))))),IncludeStatement(include,ModuleBody("{",LetBinding(let,LetValueBinding(VariableDefinition,"=",Number)),"}")),IncludeStatement(include,ParenthesizedModuleExpression("(",ModuleExpression(ModulePath(ModuleName)),ModuleSpec(":",ModuleTypeExpr(ModulePath(ModuleName))),")")),ModuleTypeDeclaration(module,type,ModuleName,"=",ModuleTypeExpr(ModuleFunctorType(ModuleTypeExpr(ModulePath(ModuleName)),"=>",ModuleTypeExpr(ModulePath(ModuleName))))),ModuleTypeDeclaration(module,type,ModuleName,"=",ModuleTypeExpr(DecoratedModuleType(Decorator("@",AttributeIdentifier),ModuleTypeExpr(ParenthesizedModuleType("(",ModuleTypeExpr(ModulePath(ModuleName)),ModuleWithConstraint(with,type,TypeName,TypeParams(TypeAngleLeftNode(CompareOp),TypeParam(TypeParameter(Quote("'"),VariableName)),TypeAngleRightNode(CompareOp)),ConstraintOperator("="),private,TypeApplication(TypeName,TypeAngleLeftNode(CompareOp),TypeParameter(Quote("'"),VariableName),TypeAngleRightNode(CompareOp))),")"))))),ModuleTypeDeclaration(module,type,ModuleName,"=",ModuleTypeExpr(ModulePath(ModuleName)),ModuleWithConstraint(with,module,ModulePath(ModuleName),ConstraintOperator(":="),ModulePath(ModuleName),and,type,TypeName,ConstraintOperator("="),TypeName)),ModuleTypeDeclaration(module,type,ModuleName,"=",ModuleTypeExpr(ModuleTypeOf(module,type,of,ModuleExpression(ModuleBody("{",IncludeStatement(include,ModulePath(ModuleName)),"}"))))),ModuleTypeDeclaration(module,type,TypeName,"=",ModuleTypeExpr(TypeName)),ModuleDeclaration(module,ModuleName,ModuleDeclarationBody("=",ModuleExpression(ModuleFunctor("(",ModuleParameter(Decorator("@",AttributeIdentifier),ModuleParameter(ModuleName,ModuleSpec(":",ModuleTypeExpr(ModulePath(ModuleName))))),",",ModuleParameter(UnitToken),")",ModuleReturnSpec(":",ModuleTypeExpr(ParenthesizedModuleType("(",ModuleTypeExpr(ModulePath(ModuleName)),ModuleWithConstraint(with,type,TypeName,ConstraintOperator("="),TypePath(ModulePrefix,TypeName)),")"))),"=>",ModuleExpression(ModulePath(ModuleName)))))))
+
 # escaped characters, numeric suffixes and identifier apostrophes
 
 let l' = 42L
