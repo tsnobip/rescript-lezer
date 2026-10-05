@@ -51,7 +51,7 @@ ModuleDeclaration {
 }
 
 ModuleTypeDeclaration {
-  kw<"module"> kw<"type"> (ModuleName | TypeName) "=" ModuleTypeExpr ModuleWithConstraint*
+  kw<"module"> kw<"type"> (ModuleName | TypeName) ("=" ModuleTypeExpr ModuleWithConstraint*)?
 }
 
 ModuleDeclarationBody {
@@ -101,7 +101,7 @@ ModuleFunctorType {
 }
 
 ModuleTypeParameter {
-  (ModuleName | Wildcard) ~modulePattern ":" ModuleTypeExpr |
+  (ModuleName | TypeName) ~modulePattern ":" ModuleTypeExpr |
   ModuleTypeExpr ~modulePattern |
   UnitToken |
   Decorator ModuleTypeParameter
@@ -149,7 +149,7 @@ ModuleBody {
 }
 
 ModuleTypeBody {
-  "{" ModuleTypeStatement* "}"
+  "{" (ModuleTypeStatement | ";")* "}"
 }
 
 ModuleTypeStatement {
@@ -157,15 +157,24 @@ ModuleTypeStatement {
   ModuleTypeModuleSpec |
   TypeSpec |
   ValueSpec |
-  ExceptionDeclaration
+  ExceptionDeclaration |
+  Decorator |
+  ExtensionExpression |
+  ExternalDeclaration |
+  OpenStatement |
+  ModuleTypeInclude |
+  ModuleTypeAlias
 }
+
+ModuleTypeInclude { kw<"include"> ModuleTypeExpr ModuleWithConstraint* }
+ModuleTypeAlias { kw<"module"> ModuleName "=" ModulePath }
 
 ModuleTypeModuleSpec {
   kw<"module"> ModuleName ModuleSpec
 }
 
 TypeSpec {
-  kw<"type"> TypeName (TypeParams)? ( "=" TypeBody)?
+  kw<"type"> kw<"rec">? TypeName TypeParams? ("=" TypeBody)? TypeConstraint* (kw<"and"> TypeBinding)*
 }
 
 ValueSpec {
@@ -177,7 +186,7 @@ ModulePath {
 }
 
 OpenStatement {
-  kw<"open"> ModulePath
+  kw<"open"> LogicOp<"!">? ModulePath
 }
 
 IncludeStatement {
@@ -389,7 +398,7 @@ PatternField {
   SpreadOperator (TypeName | TypePath | TypeApplication) PatternAlias? |
   "?" VariableName |
   VariableName ~parameter |
-  ModulePrefix? PropertyName (":" Pattern)
+  ModulePrefix? PropertyName ":" "?"? Pattern
 }
 
 DictPattern {
@@ -625,9 +634,9 @@ LabeledParameter {
 UnlabeledParameter { SimpleParameter }
 
 SimpleParameter {
-  VariableName ~parameter ParameterAnnotation? ParameterDefault? |
+  VariableName ~parameter PatternAlias? ParameterAnnotation? ParameterDefault? |
   DestructuringPattern PatternAlias? ParameterAnnotation? ParameterDefault? |
-  LiteralParameter
+  LiteralParameter PatternAlias? ParameterAnnotation? ParameterDefault?
 }
 
 LiteralParameter { (Number | String | Char | boolean) ~parameter }

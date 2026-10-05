@@ -1,3 +1,23 @@
+# complete module signatures and aliased function parameters
+
+module type S = {
+  module type Abstract
+  open! M
+  include module type of M
+  @attr
+  external run: int => int = "run";
+  @@standalone
+  module Alias = M
+  type t = int and u = string
+}
+module type F = (_: S, S) => S
+let alias = (value as named, "hello" as text) => named
+switch value { | {x: ?None, ?name} => name | _ => None }
+
+==>
+
+Script(ModuleTypeDeclaration(module,type,ModuleName,"=",ModuleTypeExpr(ModuleTypeBody("{",ModuleTypeStatement(ModuleTypeDeclaration(module,type,ModuleName)),ModuleTypeStatement(OpenStatement(open,LogicOp,ModulePath(ModuleName))),ModuleTypeStatement(ModuleTypeInclude(include,ModuleTypeExpr(ModuleTypeOf(module,type,of,ModuleExpression(ModulePath(ModuleName)))))),ModuleTypeStatement(Decorator("@",AttributeIdentifier)),ModuleTypeStatement(ExternalDeclaration(external,VariableDefinition,":",FunctionType(TypeName,FunctionArrow("=>"),TypeName),"=",ExternalBody(String))),";",ModuleTypeStatement(Decorator("@@",AttributeIdentifier)),ModuleTypeStatement(ModuleTypeAlias(module,ModuleName,"=",ModulePath(ModuleName))),ModuleTypeStatement(TypeSpec(type,TypeName,"=",TypeBody(TypeAlias(TypeName)),and,TypeBinding(TypeName,"=",TypeBody(TypeAlias(TypeName))))),"}"))),ModuleTypeDeclaration(module,type,ModuleName,"=",ModuleTypeExpr(ModuleFunctorType("(",ModuleTypeParameter(TypeName,":",ModuleTypeExpr(ModulePath(ModuleName))),",",ModuleTypeParameter(ModuleTypeExpr(ModulePath(ModuleName))),")","=>",ModuleTypeExpr(ModulePath(ModuleName))))),LetBinding(let,LetValueBinding(VariableDefinition,"=",ArrowFunction(ParamList("(",ParamItems(UnlabeledParameter(SimpleParameter(VariableName,PatternAlias(as,VariableName))),",",SimpleParameter(LiteralParameter(String),PatternAlias(as,VariableName))),")"),"=>",VariableName))),SwitchExpression(switch,VariableName,"{",SwitchCase("|",Pattern(PatternPrimary(RecordPattern("{",PatternField(PropertyName,":","?",Pattern(PatternPrimary(ConstructorPattern(VariantConstructor)))),",",PatternField("?",VariableName),"}"))),"=>",VariableName),SwitchCase("|",Pattern(PatternPrimary(VariableName)),"=>",VariantLiteral(VariantConstructor)),"}"))
+
 # parenthesized, decorated and constrained module expressions and types
 
 module A = (M: S)
