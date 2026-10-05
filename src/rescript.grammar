@@ -39,6 +39,7 @@ statement[@isGroup=Statement] {
   OpenStatement |
   IncludeStatement |
   ExternalDeclaration |
+  ExceptionDeclaration |
   expression
 }
 
@@ -102,7 +103,8 @@ ModuleTypeStatement {
   ModuleTypeDeclaration |
   ModuleTypeModuleSpec |
   TypeSpec |
-  ValueSpec
+  ValueSpec |
+  ExceptionDeclaration
 }
 
 ModuleTypeModuleSpec {
@@ -137,6 +139,16 @@ ExternalBody {
   String |
   TemplateString
 }
+
+ExceptionDeclaration {
+  kw<"exception"> ExceptionName (
+    VariantConstructorArgs VariantConstructorResult? |
+    VariantConstructorResult |
+    "=" ModulePrefix? VariantConstructor
+  )?
+}
+
+ExceptionName { uppercaseIdentifier }
 
 LetBinding {
   kw<"let"> (
@@ -660,7 +672,7 @@ VariantSpreadCase {
 }
 
 VariantConstructorArgs {
-  "(" commaSep1<type> ")"
+  !variant "(" commaSep1<type | RecordType> ")"
 }
 
 VariantConstructorResult {

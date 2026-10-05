@@ -49,7 +49,8 @@ export const rescriptHighlight = styleTags({
 
   VariantType: t.typeName,
   VariantConstructorCase: t.atom,
-  VariantConstructor: t.atom,
+  "VariantConstructor VariantConstructorArgsToken VariantConstructorResultToken": t.atom,
+  ExceptionName: t.definition(t.atom),
   VariantSpreadCase: t.operator,
   VariantLiteral: t.atom,
 
