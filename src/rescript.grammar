@@ -3,6 +3,7 @@
   variant,
   polyvariant,
   call,
+  parenConstraint,
   prefix,
   times @left,
   plus @left,
@@ -18,6 +19,7 @@
   typearg @left,
   assign @right,
   ternary @right,
+  annotation @left,
   arrow @right,
   decorator,
   statement @cut
@@ -262,7 +264,7 @@ Decorator {
 }
 
 AttributeArguments {
-  "(" commaSep<expression> ")"
+  AttributeArgsOpen commaSep<expression> ")"
 }
 
 Wildcard { "_" }
@@ -331,6 +333,8 @@ DestructuringPattern {
   VariantSpreadPattern |
   PolyVariantSpreadPattern |
   Wildcard
+  | ParenthesizedPattern
+  | ExceptionPattern
   ) ~parameter
 }
 
@@ -415,7 +419,8 @@ expression {
   ListExpression[@dynamicPrecedence=1] { softkw<"list"> "{" commaSep<collectionItem> "}" } |
   DictExpression[@dynamicPrecedence=2] { softkw<"dict"> "{" commaSep<DictEntry> "}" } |
   RecordExpression[@dynamicPrecedence=1] { "{" commaSep1<Property> "}" } |
-  Decorator |
+  Decorator ~decorated |
+  DecoratedExpression { Decorator ~decorated expression } |
   ExtensionExpression {
     ("%" | "%%") AttributeIdentifier |
     ("%" | "%%") AttributeIdentifier !decorator AttributeArguments
@@ -423,7 +428,8 @@ expression {
   ModulePackExpression |
   CallExpression |
   MemberExpression |
-  TernaryExpression { expression !ternary "?" expression ":" expression } |
+  ConstrainedExpression[@dynamicPrecedence=-1] { expression ~annotation !annotation IndexConstraint } |
+  TernaryExpression { expression !ternary "?" expression TernaryColon expression } |
   BinaryExpression {
     expression !assign "=" expression |
     expression !assign ":=" expression |
@@ -449,7 +455,7 @@ expression {
 AwaitExpression { kw<"await"> expression }
 AsyncExpression { softkw<"async"> expression }
 ParenthesizedExpression[@dynamicPrecedence=-1] {
-  "(" expression IndexConstraint? ~parenthesized ")" !arrow
+  "(" expression ~annotation (IndexConstraint !parenConstraint)? ~parenthesized ")" !arrow
 }
 
 ArrowFunction[@dynamicPrecedence=1] {
@@ -473,11 +479,11 @@ SingleParam { VariableName ~parameter }
 MemberExpression {
   ModulePrefix MemberLeaf |
   RecordFieldAccess |
-  expression !member "[" expression IndexConstraint? "]"
+  expression !member "[" expression ~annotation (IndexConstraint !parenConstraint)? "]"
 }
 
 IndexConstraint {
-  ":" type |
+  ":" type ~annotation (":>" type)? ~annotation |
   ":>" type
 }
 
@@ -507,7 +513,7 @@ SpreadExpression { SpreadOperator expression }
 
 Property {
   OptionalPropertyPun |
-  (PropertyDefinition | String) ":" expression |
+  (PropertyDefinition | String) ~parameter ":" expression |
   PropertyPun |
   SpreadExpression
 }
@@ -560,7 +566,8 @@ SingleParameter[@dynamicPrecedence=-1] { SimpleParameter }
 
 parameter {
   LabeledParameter |
-  SimpleParameter
+  SimpleParameter |
+  Decorator parameter
 }
 
 LabeledParameter {
@@ -633,10 +640,10 @@ Hash { "#" }
 TypeParameter { Quote VariableName }
 
 FunctionType {
-  (FunctionTypeParamList | TypeName | TypePath | TypeParameter | TypeApplication | DictType | ListType | ParenthesizedType | RecordType | ObjectType | ModulePackageType | PolyVariantType) FunctionArrow type
+  (FunctionTypeParamList | TypeName | TypePath | TypeParameter | TypeApplication | DictType | ListType | ParenthesizedType | RecordType | ObjectType | ModulePackageType | PolyVariantType) ~typeAlias FunctionArrow type
 }
 
-FunctionArrow { "->" | "=>" }
+FunctionArrow { "=>" }
 
 type[@isGroup=Type] {
   (
@@ -663,7 +670,7 @@ type[@isGroup=Type] {
 ObjectType { "{" (".." | ".") commaSep<RecordTypeField> "}" }
 UnitType { "(" ~functionType ")" ~functionType }
 DecoratedType { Decorator ~decorated type }
-QuantifiedType { TypeParameter+ "." type }
+QuantifiedType { (TypeParameter ~typeAlias)+ "." type }
 AliasedType { type ~typeAlias kw<"as"> TypeParameter }
 
 ModulePackageType { kw<"module"> "(" ModuleTypeExpr ModuleWithConstraint* ")" }
@@ -807,6 +814,8 @@ LabelName { identifier | exoticIdentifier }
 
 @external tokens variant from "./tokens" { VariantConstructorArgsToken, VariantConstructorResultToken }
 @external tokens regexp from "./tokens" { RegExpLiteral }
+@external tokens ternaryColon from "./tokens" { TernaryColon[@name=":"] }
+@external tokens attributeArgs from "./tokens" { AttributeArgsOpen[@name="("] }
 @external tokens unit from "./tokens" { UnitToken }
 @external tokens typeAngle from "./tokens" { TypeAngleLeftToken[@name=CompareOp], TypeAngleRightToken[@name=CompareOp] }
 @external tokens jsxTag from "./tokens" { JSXIdentifier, JSXEndTag }

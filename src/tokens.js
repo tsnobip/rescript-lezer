@@ -19,6 +19,8 @@ import {
   UnitToken,
   RegExpLiteral,
   DivisionOp,
+  TernaryColon,
+  AttributeArgsOpen,
 } from "./parser.terms.js";
 
 const space = [
@@ -85,6 +87,20 @@ export const regexp = new ExternalTokenizer((input, stack) => {
       input.peek(length) >= 97 && input.peek(length) <= 122) length++;
   input.advance(length);
   input.acceptToken(RegExpLiteral);
+}, { contextual: true });
+
+export const ternaryColon = new ExternalTokenizer((input, stack) => {
+  if (input.next == colon && input.peek(1) != 62 && input.peek(1) != 61 && stack.canShift(TernaryColon)) {
+    input.advance();
+    input.acceptToken(TernaryColon);
+  }
+}, { contextual: true });
+
+export const attributeArgs = new ExternalTokenizer((input, stack) => {
+  if (input.next == parenL && identifierChar(input.peek(-1), false) && stack.canShift(AttributeArgsOpen)) {
+    input.advance();
+    input.acceptToken(AttributeArgsOpen);
+  }
 }, { contextual: true });
 
 export const typeAngle = new ExternalTokenizer((input, stack) => {

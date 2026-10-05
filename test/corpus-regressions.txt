@@ -1,3 +1,16 @@
+# decorated expressions and nested parameter annotations
+
+let fn = @attr async (value) => value
+let higher = use(@attr (type a, value: a) => value)
+let add = ((a: int), (b: int)) => a + b
+let pair = (first: int, second :> float)
+let items = [1: int, 2: int]
+let coercion = (value: int :> float)
+
+==>
+
+Script(LetBinding(let,LetValueBinding(VariableDefinition,"=",DecoratedExpression(Decorator("@",AttributeIdentifier),AsyncExpression(async,ArrowFunction(ParamList("(",ParamItems(SingleParameter(SimpleParameter(VariableName))),")"),"=>",VariableName))))),LetBinding(let,LetValueBinding(VariableDefinition,"=",CallExpression(VariableName,"(",Argument(DecoratedExpression(Decorator("@",AttributeIdentifier),ArrowFunction(ParamList("(",ParamItems(LocalTypeParameter(type,TypeName),",",SimpleParameter(VariableName,ParameterAnnotation(":",TypeName))),")"),"=>",VariableName))),")"))),LetBinding(let,LetValueBinding(VariableDefinition,"=",ArrowFunction(ParamList("(",ParamItems(UnlabeledParameter(SimpleParameter(DestructuringPattern(ParenthesizedPattern("(",Pattern(PatternPrimary(VariableName),PatternAnnotation(":",TypeName)),")")))),",",SimpleParameter(DestructuringPattern(ParenthesizedPattern("(",Pattern(PatternPrimary(VariableName),PatternAnnotation(":",TypeName)),")")))),")"),"=>",BinaryExpression(VariableName,ArithOp,VariableName)))),LetBinding(let,LetValueBinding(VariableDefinition,"=",TupleExpression("(",ConstrainedExpression(VariableName,IndexConstraint(":",TypeName)),",",ConstrainedExpression(VariableName,IndexConstraint(":>",TypeName)),")"))),LetBinding(let,LetValueBinding(VariableDefinition,"=",ArrayExpression("[",ConstrainedExpression(Number,IndexConstraint(":",TypeName)),",",ConstrainedExpression(Number,IndexConstraint(":",TypeName)),"]"))),LetBinding(let,LetValueBinding(VariableDefinition,"=",ParenthesizedExpression("(",VariableName,IndexConstraint(":",TypeName,":>",TypeName),")"))))
+
 # floating-point divisions beside regular expressions
 
 let ratio = (position -. separatorSize /. 2.0) /. available
