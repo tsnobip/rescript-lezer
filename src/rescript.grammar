@@ -548,6 +548,7 @@ FunctionTypeLabeledParam {
 FunctionTypeUnlabeledParam { FunctionTypeSimpleParam }
 
 FunctionTypeSimpleParam {
+  type ~functionType |
   VariableName FunctionTypeAnnotation ParameterDefault?
 }
 
@@ -555,7 +556,7 @@ FunctionTypeAnnotation {
   ":" type
 }
 
-ParenthesizedType { "(" type ")" }
+ParenthesizedType { "(" type ~functionType ")" }
 
 Quote { "'" }
 Hash { "#" }
@@ -645,7 +646,7 @@ TypeDeclaration {
 }
 
 TypeBinding {
-  TypeName (TypeParams)? "=" TypeBody
+  TypeName (TypeParams)? ("=" TypeBody)?
 }
 
 TypeBody {
