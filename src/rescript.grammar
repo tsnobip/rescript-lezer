@@ -495,10 +495,10 @@ expression {
   PolyVariantLiteral |
   RegExpLiteral |
   UnitToken ~annotation |
-  ArrayExpression { "[" commaSep<collectionItem> "]" } |
-  ListExpression[@dynamicPrecedence=1] { softkw<"list"> "{" commaSep<collectionItem> "}" } |
-  DictExpression[@dynamicPrecedence=2] { softkw<"dict"> "{" commaSep<DictEntry> "}" } |
-  RecordExpression[@dynamicPrecedence=1] { "{" commaSep1<Property> "}" } |
+  ArrayExpression |
+  ListExpression |
+  DictExpression |
+  RecordExpression |
   DecoratedExpression { Decorator !decorator expression } |
   ExtensionExpression |
   ModulePackExpression |
@@ -525,8 +525,13 @@ expression {
   ParenthesizedExpression ~annotation |
   TupleExpression |
   JSXElement
-  ) ~parameter
+  ) ~parameter ~jsxAttribute
 }
+
+ArrayExpression { "[" commaSep<collectionItem> "]" }
+ListExpression[@dynamicPrecedence=1] { softkw<"list"> "{" commaSep<collectionItem> "}" }
+DictExpression[@dynamicPrecedence=2] { softkw<"dict"> "{" commaSep<DictEntry> "}" }
+RecordExpression[@dynamicPrecedence=1] { "{" commaSep1<Property> "}" }
 
 AwaitExpression { kw<"await"> expression }
 AssertExpression { !prefix kw<"assert"> expression }
@@ -1019,7 +1024,7 @@ Interpolation {
   JSXText { ![<{]+ }
 
   AttributeIdentifier {
-    (identifier | uppercaseIdentifier) ("." (identifier | uppercaseIdentifier))*
+    (identifier | uppercaseIdentifier | exoticIdentifier) ("." (identifier | uppercaseIdentifier | exoticIdentifier))*
   }
 }
 
@@ -1039,8 +1044,11 @@ jsxChildren {
   JSXExpressionContainer
 }
 
+jsxBlock[@dynamicPrecedence=-1] { BlockExpression }
+
 JSXExpressionContainer {
-  "{" expression ~jsxAttribute "}"
+  "{" expression ~jsxAttribute "}" |
+  jsxBlock
 }
 
 JSXSelfClosingTag { JSXStartTag jsxElementName jsxAttribute* JSXSelfCloseEndTag }
@@ -1050,7 +1058,7 @@ JSXOpenTag { JSXStartTag jsxElementName jsxAttribute* JSXEndTag }
 JSXCloseTag { JSXStartCloseTag jsxElementName? JSXEndTag }
 
 JSXIntrinsicElementName { JSXIdentifier }
-JSXCustomComponentName { ModulePath }
+JSXCustomComponentName { ModulePath | ModulePrefix JSXIdentifier }
 
 jsxElementName {
   JSXIntrinsicElementName |
@@ -1058,18 +1066,18 @@ jsxElementName {
 }
 
 jsxAttribute {
-  JSXAttribute { JSXIdentifier ("=" jsxAttributeValue)? }
+  JSXAttribute { "?"? (JSXIdentifier | exoticIdentifier) ("=" "?"? jsxAttributeValue)? } |
+  JSXSpreadAttribute { "{" SpreadOperator expression "}" }
 }
 
-jsxAttributeValue {
-  String |
-  Number |
-  boolean |
-  VariableName |
-  MemberExpression |
-  CallExpression |
-  "{" expression ~jsxAttribute "}"
-}
+jsxAttributeValue { (
+  String | Number | Char | boolean | VariableName |
+  MemberExpression | CallExpression | ParenthesizedExpression | TupleExpression |
+  RegExpLiteral | TemplateString | UnitToken |
+  ArrayExpression | ListExpression | DictExpression | RecordExpression |
+  VariantLiteral | PolyVariantLiteral | ModulePackExpression | JSXElement | ExtensionExpression |
+  "{" expression ~jsxAttribute "}" | jsxBlock
+) ~jsxAttribute }
 
 @external propSource rescriptHighlight from "./highlight"
 

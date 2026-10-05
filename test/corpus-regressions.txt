@@ -1,3 +1,13 @@
+# JSX optional, spread and atomic props and block containers
+
+let x = <Foo.custom-tag ?optional value=?value items=[a, b] tuple=(a, b) regex=/a/ inner=<Icon /> {...props} />
+let y = <div>{let x = 1; x}{/* empty */}</div>
+let z = <div record={name: value} callback={let x = 1; x} />
+
+==>
+
+Script(LetBinding(let,LetValueBinding(VariableDefinition,"=",JSXElement(JSXSelfClosingTag(JSXStartTag,JSXCustomComponentName(ModulePrefix,JSXIdentifier),JSXAttribute("?",JSXIdentifier),JSXAttribute(JSXIdentifier,"=","?",VariableName),JSXAttribute(JSXIdentifier,"=",ArrayExpression("[",VariableName,",",VariableName,"]")),JSXAttribute(JSXIdentifier,"=",TupleExpression("(",VariableName,",",VariableName,")")),JSXAttribute(JSXIdentifier,"=",RegExpLiteral),JSXAttribute(JSXIdentifier,"=",JSXElement(JSXSelfClosingTag(JSXStartTag,JSXCustomComponentName(ModulePath(ModuleName)),JSXSelfCloseEndTag))),JSXSpreadAttribute("{",SpreadOperator,VariableName,"}"),JSXSelfCloseEndTag)))),LetBinding(let,LetValueBinding(VariableDefinition,"=",JSXElement(JSXOpenTag(JSXStartTag,JSXIntrinsicElementName(JSXIdentifier),JSXEndTag),JSXExpressionContainer(BlockExpression("{",LetBinding(let,LetValueBinding(VariableDefinition,"=",Number)),";",VariableName,"}")),JSXExpressionContainer(BlockExpression("{",BlockComment,"}")),JSXCloseTag(JSXStartCloseTag,JSXIntrinsicElementName(JSXIdentifier),JSXEndTag)))),LetBinding(let,LetValueBinding(VariableDefinition,"=",JSXElement(JSXSelfClosingTag(JSXStartTag,JSXIntrinsicElementName(JSXIdentifier),JSXAttribute(JSXIdentifier,"=",RecordExpression("{",Property(PropertyDefinition,":",VariableName),"}")),JSXAttribute(JSXIdentifier,"=",BlockExpression("{",LetBinding(let,LetValueBinding(VariableDefinition,"=",Number)),";",VariableName,"}")),JSXSelfCloseEndTag)))))
+
 # annotated module unpacking
 
 module M = unpack(value: S)
