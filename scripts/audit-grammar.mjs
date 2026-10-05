@@ -57,7 +57,7 @@ Runs grammar audit checks for rescript-lezer:
 
 Options:
   --mode <all|differential|fuzz|incremental>   Audit mode (default: ${DEFAULT_MODE})
-  --rescript-root <path>                        Path to rescript monorepo (default: ../rescript)
+  --rescript-root <path>                        Path to rescript monorepo (default: vendored/rescript)
   --corpus <path>                               Extra corpus directory (repeatable)
   --include-idempotency                         Include syntax_tests/data/idempotency corpus
   --include-resi                                Include .resi files (default: .res only)
@@ -83,7 +83,7 @@ function parseArgs(argv) {
     mode: DEFAULT_MODE,
     rescriptRoot: process.env.RESCRIPT_ROOT
       ? path.resolve(process.env.RESCRIPT_ROOT)
-      : path.resolve(repoRoot, "../rescript"),
+      : path.resolve(repoRoot, "vendored/rescript"),
     corpus: [],
     includeIdempotency: false,
     includeResi: false,
@@ -765,7 +765,7 @@ function ensureToolchain(options) {
   };
 
   if (!fs.existsSync(toolchain.bscExe)) {
-    throw new Error(`ReScript compiler not found at ${toolchain.bscExe}. Run build in rescript repo.`);
+    throw new Error(`ReScript compiler not found at ${toolchain.bscExe}. Initialize with git submodule update --init vendored/rescript, then run dune build compiler/bsc/rescript_compiler_main.exe in ${toolchain.rescriptRoot}.`);
   }
   if (!fs.existsSync(toolchain.runtimePath)) {
     throw new Error(`ReScript runtime not found at ${toolchain.runtimePath}`);
