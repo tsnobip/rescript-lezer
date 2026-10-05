@@ -1,3 +1,19 @@
+# extensible variants, type extensions and punned record fields
+
+type t = ..
+type privateT = private ..
+type t += First(int) | Alias = M.First
+type M.t<'a> += @attr Other('a)
+type empty = {}
+type punned = {form, mutable answers}
+type extended = %extension("existential")
+type aliased = ({"name": string} as 'a) => unit
+type labeled = ~f:int => string
+
+==>
+
+Script(TypeDeclaration(type,TypeBinding(TypeName,"=",TypeBody(ExtensibleVariantType("..")))),TypeDeclaration(type,TypeBinding(TypeName,"=",TypeBody(private,ExtensibleVariantType("..")))),TypeExtension(type,TypeName,"+=",ExtensionConstructorList(ExtensionConstructor(VariantConstructorCase(VariantConstructorArgsToken,VariantConstructorArgs("(",TypeName,")"))),"|",ExtensionConstructor(VariantConstructorCase(VariantConstructor),"=",ModulePrefix,VariantConstructor))),TypeExtension(type,TypePath(ModulePrefix,TypeName),TypeParams(TypeAngleLeftNode(CompareOp),TypeParam(TypeParameter(Quote("'"),VariableName)),TypeAngleRightNode(CompareOp)),"+=",ExtensionConstructorList(ExtensionConstructor(VariantConstructorCase(Decorator("@",AttributeIdentifier),VariantConstructorArgsToken,VariantConstructorArgs("(",TypeParameter(Quote("'"),VariableName),")"))))),TypeDeclaration(type,TypeBinding(TypeName,"=",TypeBody(RecordType("{","}")))),TypeDeclaration(type,TypeBinding(TypeName,"=",TypeBody(RecordType("{",RecordTypeField(PropertyDefinition),",",RecordTypeField(mutable,PropertyDefinition),"}")))),TypeDeclaration(type,TypeBinding(TypeName,"=",TypeBody(TypeAlias(ExtensionType(ExtensionExpression("%",AttributeIdentifier,AttributeArguments("(",String,")"))))))),TypeDeclaration(type,TypeBinding(TypeName,"=",TypeBody(TypeAlias(FunctionType(FunctionTypeParamList("(",FunctionTypeParamItems(FunctionTypeSingleParam(FunctionTypeSimpleParam(AliasedType(RecordType("{",RecordTypeField(String,":",TypeName),"}"),as,TypeParameter(Quote("'"),VariableName))))),")"),FunctionArrow("=>"),TypeName))))),TypeDeclaration(type,TypeBinding(TypeName,"=",TypeBody(TypeAlias(FunctionType(FunctionTypeLabeledParam("~",LabelName,FunctionTypeAnnotation(":",TypeName)),FunctionArrow("=>"),TypeName))))))
+
 # recursive modules and decorated simultaneous bindings
 
 module rec A: S = {let x = 1}

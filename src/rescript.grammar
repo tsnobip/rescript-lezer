@@ -39,6 +39,7 @@ statement[@isGroup=Statement] {
   ModuleDeclaration |
   ModuleTypeDeclaration |
   TypeDeclaration |
+  TypeExtension |
   OpenStatement |
   IncludeStatement |
   ExternalDeclaration |
@@ -169,6 +170,7 @@ ModuleTypeStatement {
   ModuleTypeInclude |
   ModuleTypeAlias
   | RecursiveModuleSpec
+  | TypeExtension
 }
 
 RecursiveModuleSpec { kw<"module"> kw<"rec"> ModuleName ModuleSpec (~binding Decorator* kw<"and"> ModuleName ModuleSpec)* ~binding }
@@ -704,7 +706,7 @@ Hash { "#" }
 TypeParameter { Quote (VariableName | uppercaseIdentifier) }
 
 FunctionType {
-  (FunctionTypeParamList | TypeName | TypePath | TypeParameter | TypeApplication | DictType | ListType | ParenthesizedType | RecordType | ObjectType | ModulePackageType | PolyVariantType) ~typeAlias FunctionArrow type
+  (FunctionTypeParamList | TypeName | TypePath | TypeParameter | TypeApplication | DictType | ListType | ParenthesizedType | RecordType | ObjectType | ModulePackageType | PolyVariantType | AliasedType | FunctionTypeLabeledParam) ~typeAlias FunctionArrow type
 }
 
 FunctionArrow { "=>" }
@@ -729,12 +731,14 @@ type[@isGroup=Type] {
   AliasedType
   | UnitType
   | LocallyAbstractType
+  | ExtensionType
   ) ~typeBody ~typeAlias
 }
 
 ObjectType { "{" (".." | ".") commaSep<RecordTypeField> "}" }
 UnitType { "(" ~functionType ")" ~functionType }
 LocallyAbstractType { kw<"type"> TypeName+ "." type }
+ExtensionType { ExtensionExpression }
 DecoratedType { Decorator ~decorated type }
 QuantifiedType { (TypeParameter ~typeAlias)+ "." type }
 AliasedType { type ~typeAlias kw<"as"> TypeParameter }
@@ -755,11 +759,11 @@ TypeParams { TypeAngleLeftNode commaSep<TypeParam> TypeAngleRightNode }
 TypeParam { (ArithOp<"+"> | ArithOp<"-">)? ("_" | VariableDefinition | TypeParameter) }
 
 RecordType {
-  "{" commaSep1<RecordTypeField> "}"
+  "{" commaSep<RecordTypeField> "}"
 }
 
 RecordTypeField {
-  Decorator* kw<"mutable">? (PropertyDefinition "?"? | String) ":" type |
+  Decorator* kw<"mutable">? (PropertyDefinition "?"? (":" type)? | String ":" type) |
   SpreadOperator (TypeName | TypePath)
 }
 
@@ -816,12 +820,20 @@ TypeConstraint { kw<"constraint"> type "=" type }
 TypeBody {
   kw<"private">? (
   VariantType |
+  ExtensibleVariantType |
   RecordType ~typeBody |
   TypeAlias ("=" kw<"private">? (RecordType | VariantType))?
   )
 }
 
 TypeAlias[@dynamicPrecedence=-1] { type }
+ExtensibleVariantType { ".." }
+
+TypeExtension {
+  kw<"type"> (TypeName | TypePath) TypeParams? "+=" kw<"private">? ExtensionConstructorList
+}
+ExtensionConstructorList { "|"? ExtensionConstructor (~case "|" ExtensionConstructor)* ~case }
+ExtensionConstructor { VariantConstructorCase ("=" ModulePrefix? VariantConstructor)? }
 
 VariantType {
   "|"? VariantConstructorCase (~case "|" VariantConstructorCase)* ~case
@@ -978,6 +990,7 @@ Interpolation {
   "." ".." "," ":" ";"
   "=" "?" "|" "~" "'" "@" "%" "_" "`" "${" ":=" ":>"
   "@@" "%%"
+  "+="
 
   "+." "-." "*." "/."
 
