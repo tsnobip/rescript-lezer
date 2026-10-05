@@ -1,3 +1,12 @@
+# annotated module unpacking
+
+module M = unpack(value: S)
+module M = unpack({let x = value; x}: S with type t = int)
+
+==>
+
+Script(ModuleDeclaration(module,ModuleName,ModuleDeclarationBody("=",ModuleExpression(ModuleUnpackExpression(unpack,"(",VariableName,ModuleUnpackSpec(":",ModuleTypeExpr(ModulePath(ModuleName))),")")))),ModuleDeclaration(module,ModuleName,ModuleDeclarationBody("=",ModuleExpression(ModuleUnpackExpression(unpack,"(",BlockExpression("{",LetBinding(let,LetValueBinding(VariableDefinition,"=",VariableName)),";",VariableName,"}"),ModuleUnpackSpec(":",ModuleTypeExpr(ModulePath(ModuleName)),ModuleWithConstraint(with,type,TypeName,ConstraintOperator("="),TypeName)),")")))))
+
 # extension, qualified field, signed range and template patterns
 
 let alt = (%first | %second) => ()

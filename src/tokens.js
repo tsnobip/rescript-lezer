@@ -20,6 +20,7 @@ import {
   RegExpLiteral,
   DivisionOp,
   TernaryColon,
+  ModuleUnpackColon,
   AttributeArgsOpen,
 } from "./parser.terms.js";
 
@@ -108,9 +109,11 @@ export const regexp = new ExternalTokenizer((input, stack) => {
 }, { contextual: true });
 
 export const ternaryColon = new ExternalTokenizer((input, stack) => {
-  if (input.next == colon && input.peek(1) != 62 && input.peek(1) != 61 && stack.canShift(TernaryColon)) {
+  if (input.next == colon && input.peek(1) != 62 && input.peek(1) != 61) {
+    const term = stack.canShift(ModuleUnpackColon) ? ModuleUnpackColon : TernaryColon;
+    if (!stack.canShift(term)) return;
     input.advance();
-    input.acceptToken(TernaryColon);
+    input.acceptToken(term);
   }
 }, { contextual: true });
 
