@@ -509,6 +509,7 @@ expression {
   BinaryExpression {
     expression !assign "=" expression |
     expression !assign ":=" expression |
+    expression !assign "#=" expression |
     expression !times (ArithOp<"**"> | ArithOp<"*"> | DivisionOp | ArithOp<"*."> | softkw<"mod">) expression |
     expression !plus (ArithOp<"+"> | ArithOp<"-"> | ArithOp<"+."> | ArithOp<"-.">) expression |
     expression !shift ShiftOp expression |
@@ -1011,7 +1012,7 @@ Interpolation {
   "." ".." "," ":" ";"
   "=" "?" "|" "~" "'" "@" "%" "_" "`" "${" ":=" ":>"
   "@@" "%%"
-  "+="
+  "+=" "#="
 
   "+." "-." "*." "/."
 

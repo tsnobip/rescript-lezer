@@ -1,3 +1,12 @@
+# hash assignment with JSX values
+
+foo #= <bar />
+foo #=<bar />
+
+==>
+
+Script(BinaryExpression(VariableName,"#=",JSXElement(JSXSelfClosingTag(JSXStartTag,JSXIntrinsicElementName(JSXIdentifier),JSXSelfCloseEndTag))),BinaryExpression(VariableName,"#=",JSXElement(JSXSelfClosingTag(JSXStartTag,JSXIntrinsicElementName(JSXIdentifier),JSXSelfCloseEndTag))))
+
 # exotic identifiers containing literal backslashes
 
 if \"module\" { () }
