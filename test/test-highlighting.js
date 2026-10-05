@@ -1,9 +1,9 @@
 import assert from "node:assert/strict"
+import {TreeFragment} from "@lezer/common"
 import {highlightTree, tags as t} from "@lezer/highlight"
 import {parser} from "../dist/index.js"
 
-function checkHighlighting(source, expected) {
-  const tree = parser.parse(source)
+function checkHighlighting(source, expected, tree = parser.parse(source)) {
   tree.iterate({enter(node) {
     assert.ok(!node.type.isError, `Parse error at ${node.from}-${node.to}: ${tree}`)
   }})
@@ -27,7 +27,7 @@ describe("highlighting regressions", () => {
     const source = `exception HttpError({status: int})
 let isRetriable: exn => bool = error =>
   switch error {
-  | HttpError({status: 502}) => true
+  | HttpError({status: 502 | 503 | 504}) => true
   | _ => false
   }
 Console.log(isRetriable(HttpError({status: 500})))`
@@ -38,6 +38,9 @@ Console.log(isRetriable(HttpError({status: 500})))`
       ["int", t.typeName],
       ["HttpError", t.atom, source.indexOf("switch")],
       ["502", t.number],
+      ["503", t.number],
+      ["504", t.number],
+      ["|", t.operator, source.indexOf("502")],
       ["switch", t.controlKeyword],
       ["true", t.bool],
       ["Console.", t.namespace],
@@ -64,5 +67,44 @@ module M = {
     checkHighlighting(`type response = | HttpError({status: int}) | Ok(string)`, [
       ["HttpError", t.atom], ["status", t.definition(t.propertyName)], ["Ok", t.atom],
     ])
+  })
+
+  it("supports nested alternative patterns, aliases and guards without merging switch cases", () => {
+    const source = `switch value {
+  | HttpError({status: (502 | 503) as code}) | Timeout if retry => true
+  | ({status: 200 | 201}, [Some(x) | None], dict{"code": 200 | 201}) => false
+  | _ => false
+}`
+    const tree = checkHighlighting(source, [
+      ["code", t.definition(t.variableName)], ["if", t.controlKeyword],
+      ["200", t.number],
+    ])
+    assert.equal(tree.topNode.firstChild.getChildren("SwitchCase").length, 3)
+  })
+
+  it("keeps highlighting consistent when editing an alternative pattern", () => {
+    const source = `${"let before = true\n".repeat(20)}
+exception HttpError({status: int})
+let retry = error => switch error {
+| HttpError({status: 502}) => true
+| _ => false
+}
+${"let after = false\n".repeat(20)}`
+    const from = source.indexOf("502") + 3
+    const inserted = " | 503 | 504"
+    const edited = source.slice(0, from) + inserted + source.slice(from)
+    const fragments = TreeFragment.applyChanges(TreeFragment.addTree(parser.parse(source)), [
+      {fromA: from, toA: from, fromB: from, toB: from + inserted.length},
+    ])
+    const tree = parser.parse(edited, fragments)
+    const expected = [["exception", t.definitionKeyword], ["503", t.number], ["504", t.number]]
+    checkHighlighting(edited, expected, tree)
+    const fresh = checkHighlighting(edited, expected)
+    const nodes = tree => {
+      const result = []
+      tree.iterate({enter(node) {result.push([node.name, node.from, node.to])}})
+      return result
+    }
+    assert.deepEqual(nodes(tree), nodes(fresh))
   })
 })

@@ -225,7 +225,7 @@ PatternGuard {
 }
 
 Pattern {
-  PatternPrimary PatternAlias?
+  PatternPrimary PatternAlias? ("|" PatternPrimary PatternAlias?)*
 }
 
 PatternAlias {

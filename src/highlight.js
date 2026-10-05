@@ -68,6 +68,7 @@ export const rescriptHighlight = styleTags({
   RegExpLiteral: t.regexp,
 
   PatternGuard: t.controlKeyword,
+  "Pattern/|": t.operator,
   VariantSpreadPattern: t.operator,
   PolyVariantPattern: t.atom,
   PolyVariantSpreadPattern: t.operator,
