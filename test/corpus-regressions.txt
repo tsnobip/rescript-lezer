@@ -1,3 +1,14 @@
+# bounded and decorated polymorphic variants
+
+type empty = [>]
+type t = [< | @a #A(int) & (string) | @b #B > #A #B]
+type openT = @attr ..
+type fn = (@attr ~a: int, @attr ~b: string, @attr float) => unit
+
+==>
+
+Script(TypeDeclaration(type,TypeBinding(TypeName,"=",TypeBody(TypeAlias(PolyVariantType("[",PolyVariantVarianceMarker(PolyVariantVarianceUpper(CompareOp)),"]"))))),TypeDeclaration(type,TypeBinding(TypeName,"=",TypeBody(TypeAlias(PolyVariantType("[",PolyVariantVarianceMarker(PolyVariantVarianceLower(CompareOp)),PolyVariantCaseList("|",PolyVariantCase(Decorator("@",AttributeIdentifier),PolyVariantTagCase(PolyVariantTag(Hash,PolyVariantName),PolyVariantPayload("(",TypeName,")"),PolyVariantPayload("(",TypeName,")"))),"|",PolyVariantCase(Decorator("@",AttributeIdentifier),PolyVariantTagCase(PolyVariantTag(Hash,PolyVariantName)))),PolyVariantVarianceUpper(CompareOp),PolyVariantTag(Hash,PolyVariantName),PolyVariantTag(Hash,PolyVariantName),"]"))))),TypeDeclaration(type,TypeBinding(TypeName,"=",TypeBody(ExtensibleVariantType(Decorator("@",AttributeIdentifier),"..")))),TypeDeclaration(type,TypeBinding(TypeName,"=",TypeBody(TypeAlias(FunctionType(FunctionTypeParamList("(",FunctionTypeParamItems(FunctionTypeLabeledParamList(FunctionTypeLabeledParam(Decorator("@",AttributeIdentifier),FunctionTypeLabeledParam("~",LabelName,FunctionTypeAnnotation(":",TypeName))),",",FunctionTypeParameter(FunctionTypeLabeledParam(Decorator("@",AttributeIdentifier),FunctionTypeLabeledParam("~",LabelName,FunctionTypeAnnotation(":",TypeName)))),",",FunctionTypeParameter(FunctionTypeSimpleParam(Decorator("@",AttributeIdentifier),FunctionTypeSimpleParam(TypeName))))),")"),FunctionArrow("=>"),TypeName))))))
+
 # nested comments and escaped template delimiters
 
 /* outer /* middle /* inner */ middle */ outer */

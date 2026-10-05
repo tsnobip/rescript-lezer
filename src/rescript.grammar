@@ -696,6 +696,7 @@ FunctionTypeParameter {
 }
 
 FunctionTypeLabeledParam {
+  Decorator FunctionTypeLabeledParam |
   "~" LabelName FunctionTypeAnnotation ParameterDefault?
 }
 
@@ -792,7 +793,7 @@ PolyVariantVarianceMarker { PolyVariantVarianceUpper | PolyVariantVarianceLower 
 
 // PolyVariantType: one-or-more variant tags separated by pipe `|` (e.g. [#A | #B])
 PolyVariantType {
-  "[" PolyVariantVarianceMarker? PolyVariantCaseList "]" (~typeAlias kw<"as"> TypeParameter)? ~typeAlias
+  "[" PolyVariantVarianceMarker? (PolyVariantCaseList (PolyVariantVarianceUpper PolyVariantTag+)?)? "]" (~typeAlias kw<"as"> TypeParameter)? ~typeAlias
 }
 
 PolyVariantCaseList {
@@ -800,9 +801,11 @@ PolyVariantCaseList {
 }
 
 PolyVariantCase {
+  Decorator* (
   PolyVariantSpreadCase |
   PolyVariantTagCase |
   PolyVariantTypeReference
+  )
 }
 
 PolyVariantPayload {
@@ -810,7 +813,7 @@ PolyVariantPayload {
 }
 
 PolyVariantTagCase {
-  PolyVariantTag PolyVariantPayload?
+  PolyVariantTag PolyVariantPayload? ("&" PolyVariantPayload)*
 }
 
 PolyVariantSpreadCase {
@@ -842,7 +845,7 @@ TypeBody {
 }
 
 TypeAlias[@dynamicPrecedence=-1] { type }
-ExtensibleVariantType { ".." }
+ExtensibleVariantType { (Decorator ~decorated)* ".." }
 
 TypeExtension {
   kw<"type"> (TypeName | TypePath) TypeParams? "+=" kw<"private">? ExtensionConstructorList
