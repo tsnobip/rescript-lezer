@@ -184,8 +184,11 @@ LetBinding {
 
 LetValueBinding {
   DestructuringPattern (":" type)? "=" expression |
-  VariableDefinition ParamList? (":" type)? "=" expression
+  VariableDefinition ParamList? (":" type)? "=" expression |
+  PatternBinding
 }
+
+PatternBinding[@dynamicPrecedence=-1] { Pattern "=" expression }
 
 LetRecBindings {
   kw<"rec"> LetRecBinding (kw<"and"> LetRecBinding)*
@@ -254,13 +257,13 @@ PatternGuard {
 }
 
 Pattern {
-  PatternPrimary PatternAnnotation? PatternAlias? ("|" PatternPrimary PatternAnnotation? PatternAlias?)*
+  PatternPrimary (PatternAnnotation | PatternAlias)* ("|" PatternPrimary (PatternAnnotation | PatternAlias)*)*
 }
 
-PatternAnnotation { ":" annotationType }
+PatternAnnotation { ":" annotationType ~typeAlias }
 
 PatternAlias {
-  ~typeAlias kw<"as"> VariableName
+  ~typeAlias kw<"as"> Decorator* VariableName
 }
 
 Decorator {
@@ -287,6 +290,7 @@ PatternPrimary {
   ExceptionPattern |
   DecoratedPattern |
   ModulePattern |
+  ExtensionExpression |
   String |
   Char |
   boolean |
@@ -302,7 +306,7 @@ PatternPrimary {
 }
 
 VariantSpreadPattern {
-  SpreadOperator TypeName
+  SpreadOperator (TypeName | TypePath | TypeApplication)
 }
 
 SignedPattern { (ArithOp<"-"> | ArithOp<"-."> | ArithOp<"+"> | ArithOp<"+.">) Number }
@@ -353,6 +357,7 @@ RecordPattern {
 }
 
 PatternField {
+  SpreadOperator (TypeName | TypePath | TypeApplication) PatternAlias? |
   "?" VariableName |
   VariableName ~parameter |
   ModulePrefix? PropertyName (":" Pattern)
@@ -376,7 +381,7 @@ PolyVariantPattern {
 }
 
 PolyVariantSpreadPattern {
-  Hash SpreadOperator TypeName
+  Hash SpreadOperator (TypeName | TypePath | TypeApplication)
 }
 
 PatternArguments {
@@ -431,10 +436,7 @@ expression {
   RecordExpression[@dynamicPrecedence=1] { "{" commaSep1<Property> "}" } |
   Decorator ~decorated |
   DecoratedExpression { Decorator ~decorated expression } |
-  ExtensionExpression {
-    ("%" | "%%") AttributeIdentifier |
-    ("%" | "%%") AttributeIdentifier !decorator AttributeArguments
-  } |
+  ExtensionExpression |
   ModulePackExpression |
   CallExpression |
   MemberExpression |
@@ -463,6 +465,10 @@ expression {
 }
 
 AwaitExpression { kw<"await"> expression }
+ExtensionExpression {
+  ("%" | "%%") AttributeIdentifier |
+  ("%" | "%%") AttributeIdentifier !decorator AttributeArguments
+}
 AsyncExpression { softkw<"async"> expression }
 ParenthesizedExpression[@dynamicPrecedence=-1] {
   "(" expression ~annotation (IndexConstraint !parenConstraint)? ~parenthesized ")" !arrow
@@ -480,7 +486,7 @@ ReturnTypeAnnotation {
 }
 
 annotationType {
-  TypeName | TypePath | TypeParameter | TypeApplication | DictType | ListType | ParenthesizedType | TupleType | PolyVariantType | ModulePackageType
+  type ~typeAlias
 }
 TupleExpression { "(" expression "," commaSep1<expression> ")" }
 
@@ -810,7 +816,7 @@ softkw<term> { @extend[@name={term}]<identifier, term> }
 boolean { @specialize[@name=BooleanLiteral]<identifier, "true" | "false"> }
 
 VariableName { (identifier | exoticIdentifier) ~record }
-VariableDefinition { identifier | exoticIdentifier }
+VariableDefinition { (identifier | exoticIdentifier) ~record }
 TypePath {
   ModulePrefix TypeName
 }

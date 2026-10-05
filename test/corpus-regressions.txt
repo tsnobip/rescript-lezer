@@ -1,3 +1,18 @@
+# general pattern bindings, aliases and record rest patterns
+
+let 123 = value
+let "hello" as text = value
+let Some(item) | None = value
+let {id} as record = value
+let (1, 2) as pair: (int, int) = value
+let {id, ...M.t<'a> as rest} = value
+let %pattern = value
+let labeled = (~value as @attr renamed) => renamed
+
+==>
+
+Script(LetBinding(let,LetValueBinding(PatternBinding(Pattern(PatternPrimary(Number)),"=",VariableName))),LetBinding(let,LetValueBinding(PatternBinding(Pattern(PatternPrimary(String),PatternAlias(as,VariableName)),"=",VariableName))),LetBinding(let,LetValueBinding(PatternBinding(Pattern(PatternPrimary(ConstructorPattern(VariantConstructor,PatternArguments("(",Pattern(PatternPrimary(VariableName)),")"))),"|",PatternPrimary(ConstructorPattern(VariantConstructor))),"=",VariableName))),LetBinding(let,LetValueBinding(PatternBinding(Pattern(PatternPrimary(RecordPattern("{",PatternField(VariableName),"}")),PatternAlias(as,VariableName)),"=",VariableName))),LetBinding(let,LetValueBinding(PatternBinding(Pattern(PatternPrimary(TuplePattern("(",Pattern(PatternPrimary(Number)),",",Pattern(PatternPrimary(Number)),")")),PatternAlias(as,VariableName),PatternAnnotation(":",TupleType("(",TypeName,",",TypeName,")"))),"=",VariableName))),LetBinding(let,LetValueBinding(DestructuringPattern(RecordPattern("{",PatternField(VariableName),",",PatternField(SpreadOperator,TypeApplication(TypePath(ModulePrefix,TypeName),TypeAngleLeftNode(CompareOp),TypeParameter(Quote("'"),VariableName),TypeAngleRightNode(CompareOp)),PatternAlias(as,VariableName)),"}")),"=",VariableName)),LetBinding(let,LetValueBinding(PatternBinding(Pattern(PatternPrimary(ExtensionExpression("%",AttributeIdentifier))),"=",VariableName))),LetBinding(let,LetValueBinding(VariableDefinition,"=",ArrowFunction(ParamList("(",ParamItems(LabeledParameterList(LabeledParameter("~",LabelName,PatternAlias(as,Decorator("@",AttributeIdentifier),VariableName)))),")"),"=>",VariableName))))
+
 # for-of, asynchronous loops and parenthesized loop headers
 
 for (index in 0 to 3) {ignore(index)}
