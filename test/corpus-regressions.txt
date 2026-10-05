@@ -1,3 +1,14 @@
+# contextual keyword identifiers
+
+let map = (list, dict) => switch list { | list{} => dict | list{head, ...tail} => head }
+external mod: (int, int) => int = "%mod"
+let result = mod(10, 3)
+type mode = [#list | #dict | #async | #mod]
+
+==>
+
+Script(LetBinding(let,LetValueBinding(VariableDefinition,"=",ArrowFunction(ParamList("(",ParamItems(UnlabeledParameter(SimpleParameter(VariableName)),",",SimpleParameter(VariableName)),")"),"=>",SwitchExpression(switch,VariableName,"{",SwitchCase("|",Pattern(PatternPrimary(ListPattern(list,"{","}"))),"=>",VariableName),SwitchCase("|",Pattern(PatternPrimary(ListPattern(list,"{",Pattern(PatternPrimary(VariableName)),",",Pattern(PatternPrimary(VariantSpreadPattern(SpreadOperator,TypeName))),"}"))),"=>",VariableName),"}")))),ExternalDeclaration(external,VariableDefinition,":",FunctionType(FunctionTypeParamList("(",FunctionTypeParamItems(FunctionTypeUnlabeledParam(FunctionTypeSimpleParam(TypeName)),",",FunctionTypeParameter(FunctionTypeSimpleParam(TypeName))),")"),FunctionArrow("=>"),TypeName),"=",ExternalBody(String)),LetBinding(let,LetValueBinding(VariableDefinition,"=",CallExpression(VariableName,"(",Argument(Number),",",Argument(Number),")"))),TypeDeclaration(type,TypeBinding(TypeName,"=",TypeBody(TypeAlias(PolyVariantType("[",PolyVariantCaseList(PolyVariantCase(PolyVariantTagCase(PolyVariantTag(Hash,PolyVariantName))),"|",PolyVariantCase(PolyVariantTagCase(PolyVariantTag(Hash,PolyVariantName))),"|",PolyVariantCase(PolyVariantTagCase(PolyVariantTag(Hash,PolyVariantName))),"|",PolyVariantCase(PolyVariantTagCase(PolyVariantTag(Hash,PolyVariantName)))),"]"))))))
+
 # variant decorations and type parameter variance
 
 type component<-'props>

@@ -303,7 +303,7 @@ ArrayPattern {
 }
 
 ListPattern {
-  kw<"list"> "{" commaSep<Pattern> "}"
+  softkw<"list"> "{" commaSep<Pattern> "}"
 }
 
 TuplePattern {
@@ -336,7 +336,7 @@ PatternField {
 }
 
 DictPattern {
-  kw<"dict"> "{" commaSep<DictPatternField> "}"
+  softkw<"dict"> "{" commaSep<DictPatternField> "}"
 }
 
 DictPatternField {
@@ -402,8 +402,8 @@ expression {
   RegExpLiteral |
   UnitToken ~annotation |
   ArrayExpression { "[" commaSep<collectionItem> "]" } |
-  ListExpression { kw<"list"> "{" commaSep<collectionItem> "}" } |
-  DictExpression { kw<"dict"> "{" commaSep<DictEntry> "}" } |
+  ListExpression[@dynamicPrecedence=1] { softkw<"list"> "{" commaSep<collectionItem> "}" } |
+  DictExpression[@dynamicPrecedence=2] { softkw<"dict"> "{" commaSep<DictEntry> "}" } |
   RecordExpression[@dynamicPrecedence=1] { "{" commaSep1<Property> "}" } |
   Decorator |
   ExtensionExpression {
@@ -416,7 +416,7 @@ expression {
   BinaryExpression {
     expression !assign "=" expression |
     expression !assign ":=" expression |
-    expression !times (ArithOp<"**"> | ArithOp<"*"> | ArithOp<"/"> | ArithOp<"*."> | ArithOp<"/."> | kw<"mod">) expression |
+    expression !times (ArithOp<"**"> | ArithOp<"*"> | ArithOp<"/"> | ArithOp<"*."> | ArithOp<"/."> | softkw<"mod">) expression |
     expression !plus (ArithOp<"+"> | ArithOp<"-"> | ArithOp<"+."> | ArithOp<"-.">) expression |
     expression !shift ShiftOp expression |
     expression !bitand BitAndOp expression |
@@ -436,7 +436,7 @@ expression {
 }
 
 AwaitExpression { kw<"await"> expression }
-AsyncExpression { kw<"async"> expression }
+AsyncExpression { softkw<"async"> expression }
 ParenthesizedExpression[@dynamicPrecedence=-1] {
   "(" expression IndexConstraint? ~parenthesized ")" !arrow
 }
@@ -643,8 +643,8 @@ ModulePackageType { kw<"module"> "(" ModuleTypeExpr ModuleWithConstraint* ")" }
 TypeAngleLeftNode { TypeAngleLeftToken }
 TypeAngleRightNode { TypeAngleRightToken }
 
-DictType { kw<"dict"> TypeAngleLeftNode type TypeAngleRightNode }
-ListType { kw<"list"> TypeAngleLeftNode type TypeAngleRightNode }
+DictType[@dynamicPrecedence=1] { softkw<"dict"> TypeAngleLeftNode type TypeAngleRightNode }
+ListType[@dynamicPrecedence=1] { softkw<"list"> TypeAngleLeftNode type TypeAngleRightNode }
 
 TypeApplication { (TypeName | TypePath) TypeAngleLeftNode commaSep<type> TypeAngleRightNode }
 
@@ -752,6 +752,8 @@ commaSep1<content> {
 
 // Keywords
 kw<term> { @specialize[@name={term}]<identifier, term> }
+
+softkw<term> { @extend[@name={term}]<identifier, term> }
 
 boolean { @specialize[@name=BooleanLiteral]<identifier, "true" | "false"> }
 
