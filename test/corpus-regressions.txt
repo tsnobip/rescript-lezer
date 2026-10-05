@@ -1,3 +1,18 @@
+# array statements after an expression on the previous line
+
+foo()
+[
+  fn(x => {let _ = x}),
+  fn(y => {let _ = y}),
+]
+let indexed = values[0]
+let separated = {value /* newline
+comment */ [1, 2]}
+
+==>
+
+Script(CallExpression(VariableName,UnitToken),ArrayExpression("[",CallExpression(VariableName,"(",Argument(ArrowFunction(SingleParam(VariableName),"=>",BlockExpression("{",LetBinding(let,LetValueBinding(VariableDefinition,"=",VariableName)),"}"))),")"),",",CallExpression(VariableName,"(",Argument(ArrowFunction(SingleParam(VariableName),"=>",BlockExpression("{",LetBinding(let,LetValueBinding(VariableDefinition,"=",VariableName)),"}"))),")"),",","]"),LetBinding(let,LetValueBinding(VariableDefinition,"=",MemberExpression(VariableName,"[",Number,"]"))),LetBinding(let,LetValueBinding(VariableDefinition,"=",BlockExpression("{",VariableName,BlockComment,ArrayExpression("[",Number,",",Number,"]"),"}"))))
+
 # hash assignment with JSX values
 
 foo #= <bar />

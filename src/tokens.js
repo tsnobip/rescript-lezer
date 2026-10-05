@@ -17,6 +17,7 @@ import {
   TypeAngleLeftToken,
   TypeAngleRightToken,
   UnitToken,
+  IndexOpen,
   RegExpLiteral,
   DivisionOp,
   TernaryColon,
@@ -39,7 +40,8 @@ const braceR = 125,
 
 export const trackNewline = new ContextTracker({
   start: false,
-  shift(context, term) {
+  shift(context, term, stack, input) {
+    if (term == BlockComment && /[\r\n\u2028\u2029]/.test(input.read(input.pos, stack.pos))) return true;
     return term == LineComment || term == BlockComment || term == spaces
       ? context
       : term == newline;
@@ -77,6 +79,13 @@ export const comments = new ExternalTokenizer(input => {
     } else input.advance();
   }
 });
+
+export const postfix = new ExternalTokenizer((input, stack) => {
+  if (input.next == 91 && !stack.context && stack.canShift(IndexOpen)) {
+    input.advance();
+    input.acceptToken(IndexOpen);
+  }
+}, { contextual: true });
 
 export const unit = new ExternalTokenizer((input, stack) => {
   if (input.next == 40 && input.peek(1) == 41 && stack.canShift(UnitToken)) {

@@ -565,7 +565,7 @@ SingleParam { VariableName ~parameter }
 MemberExpression {
   ModulePrefix MemberLeaf |
   RecordFieldAccess |
-  expression !member "[" expression ~annotation (IndexConstraint !parenConstraint)? "]"
+  expression !member IndexOpen expression ~annotation (IndexConstraint !parenConstraint)? "]"
 }
 
 IndexConstraint {
@@ -923,6 +923,7 @@ LabelName { identifier | exoticIdentifier }
 @external tokens regexp from "./tokens" { RegExpLiteral }
 @external tokens ternaryColon from "./tokens" { TernaryColon[@name=":"], ModuleUnpackColon[@name=":"] }
 @external tokens attributeArgs from "./tokens" { AttributeArgsOpen[@name="("] }
+@external tokens postfix from "./tokens" { IndexOpen[@name="["] }
 @external tokens unit from "./tokens" { UnitToken }
 @external tokens typeAngle from "./tokens" { TypeAngleLeftToken[@name=CompareOp], TypeAngleRightToken[@name=CompareOp] }
 @external tokens jsxTag from "./tokens" { JSXIdentifier, JSXEndTag }
@@ -1082,7 +1083,7 @@ JSXCallExpression[@name=CallExpression] {
 JSXMemberExpression[@name=MemberExpression] {
   ModulePrefix MemberLeaf |
   JSXRecordFieldAccess |
-  jsxAtomicValue !member "[" expression ~annotation (IndexConstraint !parenConstraint)? "]"
+  jsxAtomicValue !member IndexOpen expression ~annotation (IndexConstraint !parenConstraint)? "]"
 }
 JSXRecordFieldAccess[@name=RecordFieldAccess] { jsxAtomicValue !member "." ModulePrefix? PropertyName }
 
