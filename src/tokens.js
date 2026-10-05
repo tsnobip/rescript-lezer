@@ -148,29 +148,19 @@ export const jsxTag = new ExternalTokenizer((input, stack) => {
 
 export const jsx = new ExternalTokenizer((input, stack) => {
   if (input.next != lt || input.peek(1) == 61 || input.peek(1) == lt) return;
-  if (stack.canShift(LessThan) && !stack.canShift(JSXStartCloseTag) &&
-      !(stack.canShift(JSXStartTag) && (input.peek(1) == 62 || stack.context && identifierChar(input.peek(1), true)))) {
+  let offset = 1;
+  while (space.includes(input.peek(offset))) offset++;
+  const next = input.peek(offset);
+  if (next == slash && stack.canShift(JSXStartCloseTag)) {
+    input.advance(offset + 1);
+    input.acceptToken(JSXStartCloseTag);
+  } else if (stack.canShift(LessThan) &&
+      !(stack.canShift(JSXStartTag) && (next == 62 || stack.context && identifierChar(next, true)))) {
     input.advance();
     input.acceptToken(LessThan);
-    return;
-  }
-  if (!stack.canShift(JSXStartTag)) return;
-  input.advance();
-  if (input.next == slash) return; // Could be </
-
-  // JSX tags don't have space after <
-  // If there's space, it's likely a comparison operator
-  if (space.indexOf(input.next) > -1) {
-    input.acceptToken(LessThan);
-    return;
-  }
-
-  // If followed by an identifier character, it's JSX
-  if (identifierChar(input.next, true) || input.next == 62) {
+  } else if (stack.canShift(JSXStartTag) && (identifierChar(next, true) || next == 62)) {
+    input.advance();
     input.acceptToken(JSXStartTag);
-  } else {
-    // Not an identifier, treat as less-than
-    input.acceptToken(LessThan);
   }
 }, { contextual: true });
 

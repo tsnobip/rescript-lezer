@@ -504,7 +504,7 @@ expression {
   ModulePackExpression |
   CallExpression |
   MemberExpression |
-  ConstrainedExpression[@dynamicPrecedence=-1] { expression ~annotation !annotation IndexConstraint } |
+  ConstrainedExpression[@dynamicPrecedence=-2] { expression ~annotation !annotation IndexConstraint } |
   TernaryExpression { expression !ternary "?" expression TernaryColon expression } |
   BinaryExpression {
     expression !assign "=" expression |
@@ -925,7 +925,7 @@ LabelName { identifier | exoticIdentifier }
 @external tokens unit from "./tokens" { UnitToken }
 @external tokens typeAngle from "./tokens" { TypeAngleLeftToken[@name=CompareOp], TypeAngleRightToken[@name=CompareOp] }
 @external tokens jsxTag from "./tokens" { JSXIdentifier, JSXEndTag }
-@external tokens jsx from "./tokens" { JSXStartTag, LessThan[@name=CompareOp] }
+@external tokens jsx from "./tokens" { JSXStartTag, JSXStartCloseTag, LessThan[@name=CompareOp] }
 
 @skip {} {
   String[isolate] {
@@ -1020,33 +1020,24 @@ Interpolation {
 
   
   JSXSelfCloseEndTag { "/>" }
-  JSXStartCloseTag { "</" }
-  JSXText { ![<{]+ }
 
   AttributeIdentifier {
     (identifier | uppercaseIdentifier | exoticIdentifier) ("." (identifier | uppercaseIdentifier | exoticIdentifier))*
   }
 }
 
-@skip {} {
-  JSXElement {
-    JSXSelfClosingTag |
-    JSXOpenTag jsxChildren* JSXCloseTag |
-    JSXFragment
-  }
-
-  JSXFragment { JSXFragmentOpenTag jsxChildren* JSXFragmentCloseTag }
+JSXElement {
+  JSXSelfClosingTag |
+  JSXOpenTag jsxChildren* JSXCloseTag |
+  JSXFragment
 }
 
-jsxChildren {
-  JSXText |
-  JSXElement |
-  JSXExpressionContainer
-}
+JSXFragment { JSXFragmentOpenTag jsxChildren* JSXFragmentCloseTag }
+jsxChildren { jsxChildValue | JSXExpressionContainer }
 
-jsxBlock[@dynamicPrecedence=-1] { BlockExpression }
+jsxBlock[@dynamicPrecedence=-1] { BlockExpression ~jsxAttribute }
 
-JSXExpressionContainer {
+JSXExpressionContainer[@dynamicPrecedence=2] {
   "{" expression ~jsxAttribute "}" |
   jsxBlock
 }
@@ -1070,14 +1061,32 @@ jsxAttribute {
   JSXSpreadAttribute { "{" SpreadOperator expression "}" }
 }
 
-jsxAttributeValue { (
+jsxAttributeValue { (jsxAtomicValue | "{" expression ~jsxAttribute "}" | jsxBlock) ~jsxAttribute }
+
+jsxAtomicValue { (jsxAtom | JSXMemberExpression | JSXCallExpression) ~jsxAttribute }
+jsxChildValue { (jsxAtom | JSXChildMemberExpression) ~jsxAttribute }
+jsxAtom { (
   String | Number | Char | boolean | VariableName |
-  MemberExpression | CallExpression | ParenthesizedExpression | TupleExpression |
+  ParenthesizedExpression | TupleExpression |
   RegExpLiteral | TemplateString | UnitToken |
   ArrayExpression | ListExpression | DictExpression | RecordExpression |
-  VariantLiteral | PolyVariantLiteral | ModulePackExpression | JSXElement | ExtensionExpression |
-  "{" expression ~jsxAttribute "}" | jsxBlock
+  VariantLiteral | PolyVariantLiteral | ModulePackExpression | JSXElement | ExtensionExpression
 ) ~jsxAttribute }
+JSXChildMemberExpression[@name=MemberExpression] {
+  ModulePrefix MemberLeaf | JSXChildFieldAccess
+}
+JSXChildFieldAccess[@name=RecordFieldAccess] { jsxChildValue !member "." ModulePrefix? PropertyName }
+
+JSXCallExpression[@name=CallExpression] {
+  jsxAtomicValue !call "(" DotUncurried? commaSep<Argument> ")" |
+  jsxAtomicValue !call UnitToken
+}
+JSXMemberExpression[@name=MemberExpression] {
+  ModulePrefix MemberLeaf |
+  JSXRecordFieldAccess |
+  jsxAtomicValue !member "[" expression ~annotation (IndexConstraint !parenConstraint)? "]"
+}
+JSXRecordFieldAccess[@name=RecordFieldAccess] { jsxAtomicValue !member "." ModulePrefix? PropertyName }
 
 @external propSource rescriptHighlight from "./highlight"
 
