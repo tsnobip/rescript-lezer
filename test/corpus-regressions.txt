@@ -1,3 +1,15 @@
+# decorated parameters, mixed local types and module patterns
+
+let decorated = (@attr ~a, @attr b, @attr ~c) => (a, b, c)
+let local = (type t, xs: list<t>, type s, ys: list<s>) => (xs, ys)
+let unpack = (module(M: S), value) => M.run(value)
+let nested = ((@attr value), other) => value
+let choose = value => switch value { | 1 .. 3 => true | _ => false }
+
+==>
+
+Script(LetBinding(let,LetValueBinding(VariableDefinition,"=",ArrowFunction(ParamList("(",ParamItems(Decorator("@",AttributeIdentifier),ParamItems(LabeledParameterList(LabeledParameter("~",LabelName),",",Decorator("@",AttributeIdentifier),SimpleParameter(VariableName),",",Decorator("@",AttributeIdentifier),LabeledParameter("~",LabelName)))),")"),"=>",TupleExpression("(",VariableName,",",VariableName,",",VariableName,")")))),LetBinding(let,LetValueBinding(VariableDefinition,"=",ArrowFunction(ParamList("(",ParamItems(LocalTypeParameter(type,TypeName),",",SimpleParameter(VariableName,ParameterAnnotation(":",ListType(list,TypeAngleLeftNode(CompareOp),TypeName,TypeAngleRightNode(CompareOp)))),",",LocalTypeParameter(type,TypeName),",",SimpleParameter(VariableName,ParameterAnnotation(":",ListType(list,TypeAngleLeftNode(CompareOp),TypeName,TypeAngleRightNode(CompareOp))))),")"),"=>",TupleExpression("(",VariableName,",",VariableName,")")))),LetBinding(let,LetValueBinding(VariableDefinition,"=",ArrowFunction(ParamList("(",ParamItems(UnlabeledParameter(SimpleParameter(DestructuringPattern(ModulePattern(module,"(",ModulePath(ModuleName),ModuleSpec(":",ModuleTypeExpr(ModulePath(ModuleName))),")")))),",",SimpleParameter(VariableName)),")"),"=>",CallExpression(MemberExpression(ModulePrefix,MemberLeaf(VariableName)),"(",Argument(VariableName),")")))),LetBinding(let,LetValueBinding(VariableDefinition,"=",ArrowFunction(ParamList("(",ParamItems(UnlabeledParameter(SimpleParameter(DestructuringPattern(ParenthesizedPattern("(",Pattern(PatternPrimary(DecoratedPattern(Decorator("@",AttributeIdentifier),PatternPrimary(VariableName)))),")")))),",",SimpleParameter(VariableName)),")"),"=>",VariableName))),LetBinding(let,LetValueBinding(VariableDefinition,"=",ArrowFunction(SingleParam(VariableName),"=>",SwitchExpression(switch,VariableName,"{",SwitchCase("|",Pattern(PatternPrimary(RangePattern(Number,"..",Number))),"=>",BooleanLiteral),SwitchCase("|",Pattern(PatternPrimary(VariableName)),"=>",BooleanLiteral),"}")))))
+
 # decorated expressions and nested parameter annotations
 
 let fn = @attr async (value) => value

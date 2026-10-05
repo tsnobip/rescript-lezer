@@ -112,7 +112,7 @@ ModulePackExpression {
 }
 
 ModulePackContent {
-  (ModulePath | ModuleBody | ModuleApplication) ModuleSpec?
+  (ModulePath | ModuleBody | ModuleApplication) ~modulePattern ModuleSpec? ~modulePattern
 }
 
 ModuleBody {
@@ -144,7 +144,7 @@ ValueSpec {
 }
 
 ModulePath {
-  ModulePrefix? ModuleName
+  ModulePrefix? ModuleName ~modulePattern
 }
 
 OpenStatement {
@@ -195,8 +195,8 @@ LetRecBinding {
   VariableDefinition ParamList? (":" type)? "=" expression
 }
 
-ModuleUnpackBinding {
-  "(" ModuleName ")" "=" expression
+ModuleUnpackBinding[@dynamicPrecedence=1] {
+  "(" ModuleName ~modulePattern ")" "=" expression
 }
 
 SwitchExpression[@dynamicPrecedence=1] {
@@ -280,6 +280,8 @@ PatternPrimary {
   SignedPattern |
   RangePattern |
   ExceptionPattern |
+  DecoratedPattern |
+  ModulePattern |
   String |
   Char |
   boolean |
@@ -299,8 +301,10 @@ VariantSpreadPattern {
 }
 
 SignedPattern { (ArithOp<"-"> | ArithOp<"-."> | ArithOp<"+"> | ArithOp<"+.">) Number }
-RangePattern { Char ".." Char }
+RangePattern { (Char | Number) ".." (Char | Number) }
 ExceptionPattern { kw<"exception"> PatternPrimary }
+DecoratedPattern { Decorator ~decorated PatternPrimary }
+ModulePattern { kw<"module"> "(" ModulePath ~modulePattern ModuleSpec? ~modulePattern ")" }
 
 UnitPattern { UnitToken ~annotation | "(" ")" }
 
@@ -335,6 +339,7 @@ DestructuringPattern {
   Wildcard
   | ParenthesizedPattern
   | ExceptionPattern
+  | ModulePattern
   ) ~parameter
 }
 
@@ -550,6 +555,7 @@ ParamList {
 DotUncurried { "." }
 
 ParamItems {
+  Decorator ParamItems |
   LabeledParameterList |
   LocalTypeParameter ("," parameter?)* |
   SingleParameter |
@@ -567,7 +573,8 @@ SingleParameter[@dynamicPrecedence=-1] { SimpleParameter }
 parameter {
   LabeledParameter |
   SimpleParameter |
-  Decorator parameter
+  Decorator parameter |
+  LocalTypeParameter
 }
 
 LabeledParameter {
