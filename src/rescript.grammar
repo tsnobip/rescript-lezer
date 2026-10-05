@@ -267,6 +267,7 @@ AttributeArguments {
 Wildcard { "_" }
 
 PatternPrimary {
+  (
   Wildcard |
   VariantSpreadPattern |
   PolyVariantSpreadPattern |
@@ -284,16 +285,17 @@ PatternPrimary {
   RecordPattern |
   PolyVariantPattern |
   ParenthesizedPattern
+  ) ~parameter
 }
 
 VariantSpreadPattern {
   SpreadOperator TypeName
 }
 
-UnitPattern { UnitToken | "(" ")" }
+UnitPattern { UnitToken ~annotation | "(" ")" }
 
 ConstructorPattern {
-  ModulePrefix? VariantConstructor PatternArguments?
+  ModulePrefix? VariantConstructor ~pattern PatternArguments? ~pattern
 }
 
 ArrayPattern {
@@ -309,6 +311,7 @@ TuplePattern {
 }
 
 DestructuringPattern {
+  (
   TuplePattern |
   ArrayPattern |
   ListPattern |
@@ -320,6 +323,7 @@ DestructuringPattern {
   VariantSpreadPattern |
   PolyVariantSpreadPattern |
   Wildcard
+  ) ~parameter
 }
 
 RecordPattern {
@@ -327,7 +331,7 @@ RecordPattern {
 }
 
 PatternField {
-  VariableName |
+  VariableName ~parameter |
   ModulePrefix? PropertyName (":" Pattern)
 }
 
@@ -345,7 +349,7 @@ DictPatternValue {
 }
 
 PolyVariantPattern {
-  PolyVariantTag PatternArguments?
+  PolyVariantTag PatternArguments? ~pattern
 }
 
 PolyVariantSpreadPattern {
@@ -353,11 +357,11 @@ PolyVariantSpreadPattern {
 }
 
 PatternArguments {
-  "(" commaSep<Pattern> ")"
+  ~pattern "(" commaSep<Pattern> ")"
 }
 
 VariantLiteral {
-  VariantConstructor VariantArguments?
+  VariantConstructor VariantArguments? ~pattern
 }
 
 VariantArguments {
@@ -365,7 +369,7 @@ VariantArguments {
 }
 
 PolyVariantLiteral {
-  PolyVariantTag PolyVariantArguments?
+  PolyVariantTag PolyVariantArguments? ~pattern
 }
 
 PolyVariantArguments {
@@ -377,6 +381,7 @@ ParenthesizedPattern {
 }
 
 expression {
+  (
   AwaitExpression |
   IfExpression |
   WhileExpression |
@@ -427,6 +432,7 @@ expression {
   ParenthesizedExpression ~annotation |
   TupleExpression |
   JSXElement
+  ) ~parameter
 }
 
 AwaitExpression { kw<"await"> expression }
@@ -475,7 +481,7 @@ CallExpression {
 }
 
 MemberLeaf {
-  VariantConstructor |
+  VariantConstructor ~pattern |
   VariableName
 }
 
@@ -552,7 +558,8 @@ LabeledParameter {
 UnlabeledParameter { SimpleParameter }
 
 SimpleParameter {
-  VariableName ~parameter ParameterAnnotation? ParameterDefault?
+  VariableName ~parameter ParameterAnnotation? ParameterDefault? |
+  DestructuringPattern PatternAlias? ParameterAnnotation? ParameterDefault?
 }
 
 ParameterAnnotation {
@@ -734,7 +741,7 @@ VariantConstructorResult {
 }
 
 commaSep<content> {
-  "" | content ("," content?)*
+  "" ~pattern | content ("," content?)*
 }
 
 commaSep1<content> {
@@ -751,9 +758,9 @@ VariableDefinition { identifier | exoticIdentifier }
 TypePath {
   ModulePrefix TypeName
 }
-TypeName { identifier }
+TypeName { identifier ~record }
 VariantConstructor { uppercaseIdentifier }
-PropertyName { identifier }
+PropertyName { identifier ~record }
 PropertyDefinition { (identifier | ModulePrefix identifier) ~record }
 LabelName { identifier }
 

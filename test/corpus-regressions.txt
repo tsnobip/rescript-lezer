@@ -1,3 +1,14 @@
+# destructured function parameters
+
+let compare = ((x, _), (y, _)) => x < y
+let merge = ({cmp} as m, values) => cmp(m, values)
+let sum = ((a, b): (int, int)) => a + b
+let unwrap = (Some(value)) => value
+
+==>
+
+Script(LetBinding(let,LetValueBinding(VariableDefinition,"=",ArrowFunction(ParamList("(",ParamItems(UnlabeledParameter(SimpleParameter(DestructuringPattern(TuplePattern("(",Pattern(PatternPrimary(VariableName)),",",Pattern(PatternPrimary(VariableName)),")")))),",",SimpleParameter(DestructuringPattern(TuplePattern("(",Pattern(PatternPrimary(VariableName)),",",Pattern(PatternPrimary(VariableName)),")")))),")"),"=>",BinaryExpression(VariableName,CompareOp,VariableName)))),LetBinding(let,LetValueBinding(VariableDefinition,"=",ArrowFunction(ParamList("(",ParamItems(UnlabeledParameter(SimpleParameter(DestructuringPattern(RecordPattern("{",PatternField(VariableName),"}")),PatternAlias(as,VariableName))),",",SimpleParameter(VariableName)),")"),"=>",CallExpression(VariableName,"(",Argument(VariableName),",",Argument(VariableName),")")))),LetBinding(let,LetValueBinding(VariableDefinition,"=",ArrowFunction(ParamList("(",ParamItems(SingleParameter(SimpleParameter(DestructuringPattern(TuplePattern("(",Pattern(PatternPrimary(VariableName)),",",Pattern(PatternPrimary(VariableName)),")")),ParameterAnnotation(":",TupleType("(",TypeName,",",TypeName,")"))))),")"),"=>",BinaryExpression(VariableName,ArithOp,VariableName)))),LetBinding(let,LetValueBinding(VariableDefinition,"=",ArrowFunction(ParenthesizedExpression("(",VariantLiteral(VariantConstructor,VariantArguments("(",VariableName,")")),")"),"=>",VariableName))))
+
 # expression after a local module body
 
 let run = () => {
