@@ -275,6 +275,8 @@ PatternPrimary {
   TuplePattern |
   VariableName |
   Number |
+  SignedPattern |
+  RangePattern |
   String |
   Char |
   boolean |
@@ -292,6 +294,9 @@ PatternPrimary {
 VariantSpreadPattern {
   SpreadOperator TypeName
 }
+
+SignedPattern { (ArithOp<"-"> | ArithOp<"-."> | ArithOp<"+"> | ArithOp<"+.">) Number }
+RangePattern { Char ".." Char }
 
 UnitPattern { UnitToken ~annotation | "(" ")" }
 
@@ -393,6 +398,7 @@ expression {
   Number |
   String |
   TemplateString |
+  TaggedTemplateExpression { VariableName !call TemplateString } |
   Char |
   boolean |
   AsyncExpression |
@@ -620,7 +626,7 @@ Hash { "#" }
 TypeParameter { Quote VariableName }
 
 FunctionType {
-  (FunctionTypeParamList | TypeName | TypePath | TypeParameter | TypeApplication | DictType | ListType | ParenthesizedType) FunctionArrow type
+  (FunctionTypeParamList | TypeName | TypePath | TypeParameter | TypeApplication | DictType | ListType | ParenthesizedType | RecordType | ObjectType | ModulePackageType | PolyVariantType) FunctionArrow type
 }
 
 FunctionArrow { "->" | "=>" }
@@ -720,16 +726,20 @@ TypeDeclaration {
 }
 
 TypeBinding {
-  TypeName (TypeParams)? ("=" TypeBody)?
+  TypeName (TypeParams)? ("=" TypeBody)? TypeConstraint*
 }
+
+TypeConstraint { kw<"constraint"> type "=" type }
 
 TypeBody {
+  kw<"private">? (
   VariantType |
   RecordType ~typeBody |
-  TypeAlias ("=" (RecordType | VariantType))?
+  TypeAlias ("=" kw<"private">? (RecordType | VariantType))?
+  )
 }
 
-TypeAlias { type }
+TypeAlias[@dynamicPrecedence=-1] { type }
 
 VariantType {
   "|"? VariantConstructorCase (~case "|" VariantConstructorCase)* ~case

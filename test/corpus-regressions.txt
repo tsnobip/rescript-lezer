@@ -1,3 +1,16 @@
+# signed patterns, tagged templates and object function types
+
+let find = index => switch index { | -1 => None | _ => Some(index) }
+let classify = char => switch char { | 'a' .. 'z' => true | _ => false }
+external create: {..} => {..} = "Object.create"
+external stringify: (int, @as(json`null`) _) => string = "stringify"
+type privateRecord = private {value: int}
+type constrained<'a> = {value: 'a} constraint 'a = int
+
+==>
+
+Script(LetBinding(let,LetValueBinding(VariableDefinition,"=",ArrowFunction(SingleParam(VariableName),"=>",SwitchExpression(switch,VariableName,"{",SwitchCase("|",Pattern(PatternPrimary(SignedPattern(ArithOp,Number))),"=>",VariantLiteral(VariantConstructor)),SwitchCase("|",Pattern(PatternPrimary(VariableName)),"=>",VariantLiteral(VariantConstructor,VariantArguments("(",VariableName,")"))),"}")))),LetBinding(let,LetValueBinding(VariableDefinition,"=",ArrowFunction(SingleParam(VariableName),"=>",SwitchExpression(switch,VariableName,"{",SwitchCase("|",Pattern(PatternPrimary(RangePattern(Char,"..",Char))),"=>",BooleanLiteral),SwitchCase("|",Pattern(PatternPrimary(VariableName)),"=>",BooleanLiteral),"}")))),ExternalDeclaration(external,VariableDefinition,":",FunctionType(ObjectType("{","..","}"),FunctionArrow("=>"),ObjectType("{","..","}")),"=",ExternalBody(String)),ExternalDeclaration(external,VariableDefinition,":",FunctionType(FunctionTypeParamList("(",FunctionTypeParamItems(FunctionTypeUnlabeledParam(FunctionTypeSimpleParam(TypeName)),",",FunctionTypeParameter(FunctionTypeSimpleParam(Decorator("@",AttributeIdentifier,AttributeArguments("(",TaggedTemplateExpression(VariableName,TemplateString("`",TemplateContent,"`")),")")),FunctionTypeSimpleParam(TypeName)))),")"),FunctionArrow("=>"),TypeName),"=",ExternalBody(String)),TypeDeclaration(type,TypeBinding(TypeName,"=",TypeBody(private,RecordType("{",RecordTypeField(PropertyDefinition,":",TypeName),"}")))),TypeDeclaration(type,TypeBinding(TypeName,TypeParams(TypeAngleLeftNode(CompareOp),TypeParam(TypeParameter(Quote("'"),VariableName)),TypeAngleRightNode(CompareOp)),"=",TypeBody(RecordType("{",RecordTypeField(PropertyDefinition,":",TypeParameter(Quote("'"),VariableName)),"}")),TypeConstraint(constraint,TypeParameter(Quote("'"),VariableName),"=",TypeName))))
+
 # open objects, nested types and exotic field names
 
 type object = {..}
