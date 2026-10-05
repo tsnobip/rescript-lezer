@@ -60,4 +60,5 @@ let identity = (value) => value
 
 ==>
 
-Script(LetBinding(let,LetValueBinding(VariableDefinition,"=",ArrowFunction(ParenthesizedExpression("(",VariableName,")"),"=>",VariableName))))
+Script(LetBinding(let,LetValueBinding(VariableDefinition,"=",ArrowFunction(ParamList("(",ParamItems(SingleParameter(SimpleParameter(VariableName))),")"),"=>",VariableName))))
+

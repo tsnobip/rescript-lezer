@@ -306,7 +306,7 @@ PatternGuard {
 }
 
 Pattern {
-  PatternPrimary (PatternAnnotation | PatternAlias)* ("|" PatternPrimary (PatternAnnotation | PatternAlias)*)*
+  PatternPrimary ~parameter (PatternAnnotation | PatternAlias)* ~parameter ("|" PatternPrimary ~parameter (PatternAnnotation | PatternAlias)* ~parameter)*
 }
 
 PatternAnnotation { ":" annotationType ~typeAlias }
@@ -352,6 +352,7 @@ PatternPrimary {
   DecoratedPattern |
   ModulePattern |
   ExtensionExpression |
+  TemplateString |
   String |
   Char |
   boolean |
@@ -371,9 +372,9 @@ VariantSpreadPattern {
 }
 
 SignedPattern { (ArithOp<"-"> | ArithOp<"-."> | ArithOp<"+"> | ArithOp<"+.">) Number }
-RangePattern { (Char | Number) ".." (Char | Number) }
+RangePattern { (Char | Number | SignedPattern) ".." (Char | Number | SignedPattern) }
 ExceptionPattern { kw<"exception"> PatternPrimary }
-DecoratedPattern { Decorator ~decorated PatternPrimary }
+DecoratedPattern { Decorator ~decorated PatternPrimary ~parameter }
 ModulePattern { kw<"module"> "(" ModulePath ~modulePattern ModuleSpec? ~modulePattern ")" }
 
 UnitPattern { UnitToken ~annotation | "(" ")" }
@@ -391,7 +392,7 @@ ListPattern {
 }
 
 TuplePattern {
-  "(" Pattern "," commaSep1<Pattern> ")"
+  "(" Pattern ~parameter "," commaSep1<Pattern> ")"
 }
 
 DestructuringPattern {
@@ -421,6 +422,7 @@ PatternField {
   SpreadOperator (TypeName | TypePath | TypeApplication) PatternAlias? |
   "?" VariableName |
   VariableName ~parameter |
+  ModulePrefix PropertyName |
   ModulePrefix? PropertyName ":" "?"? Pattern
 }
 
@@ -466,7 +468,7 @@ PolyVariantArguments {
 }
 
 ParenthesizedPattern {
-  "(" Pattern ")"
+  "(" Pattern ~parameter ")"
 }
 
 expression {
@@ -537,7 +539,6 @@ ParenthesizedExpression[@dynamicPrecedence=-1] {
 }
 
 ArrowFunction[@dynamicPrecedence=1] {
-  ParenthesizedExpression ~annotation ReturnTypeAnnotation? !arrow "=>" expression |
   ParamList ReturnTypeAnnotation? !arrow "=>" expression |
   UnitToken ~annotation ReturnTypeAnnotation? !arrow "=>" expression |
   SingleParam !arrow "=>" expression
@@ -660,10 +661,12 @@ UnlabeledParameter { SimpleParameter }
 SimpleParameter {
   VariableName ~parameter PatternAlias? ParameterAnnotation? ParameterDefault? |
   DestructuringPattern PatternAlias? ParameterAnnotation? ParameterDefault? |
-  LiteralParameter PatternAlias? ParameterAnnotation? ParameterDefault?
+  LiteralParameter PatternAlias? ParameterAnnotation? ParameterDefault? |
+  PatternParameter ParameterDefault?
 }
 
-LiteralParameter { (Number | String | Char | boolean) ~parameter }
+LiteralParameter { (Number | String | Char | boolean | ExtensionExpression | TemplateString) ~parameter }
+PatternParameter[@dynamicPrecedence=-1] { Pattern ~parameter }
 
 ParameterAnnotation {
   ":" type
