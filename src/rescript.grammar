@@ -509,7 +509,7 @@ RecordFieldAccess {
 }
 
 CallExpression {
-  expression !call "(" commaSep<Argument> ")" |
+  expression !call "(" DotUncurried? commaSep<Argument> ")" |
   expression !call UnitToken
 }
 
@@ -529,7 +529,7 @@ SpreadExpression { SpreadOperator expression }
 
 Property {
   OptionalPropertyPun |
-  (PropertyDefinition | String) ~parameter ":" expression |
+  (PropertyDefinition | String) ~parameter ":" "?"? expression |
   PropertyPun |
   SpreadExpression
 }
@@ -547,7 +547,7 @@ Argument {
 }
 
 LabeledArgument {
-  "~" LabelName LabeledArgumentAnnotation? ("=" ArgumentValue)?
+  "~" LabelName "?"? LabeledArgumentAnnotation? ("=" ArgumentValue)?
 }
 
 LabeledArgumentAnnotation {
@@ -560,7 +560,8 @@ ArgumentValue {
 }
 
 ParamList {
-  "(" DotUncurried? ParamItems ")"
+  "(" DotUncurried? ParamItems ")" |
+  "(" DotUncurried ")"
 }
 
 DotUncurried { "." }
@@ -655,7 +656,7 @@ tupleTypeItem { type ~functionType }
 Quote { "'" }
 Hash { "#" }
 
-TypeParameter { Quote VariableName }
+TypeParameter { Quote (VariableName | uppercaseIdentifier) }
 
 FunctionType {
   (FunctionTypeParamList | TypeName | TypePath | TypeParameter | TypeApplication | DictType | ListType | ParenthesizedType | RecordType | ObjectType | ModulePackageType | PolyVariantType) ~typeAlias FunctionArrow type
@@ -873,13 +874,13 @@ Interpolation {
 
   identifierChar { @asciiLetter | $[_$] }
   
-  identifier { $[a-z_] (identifierChar | @digit)* }
+  identifier { $[a-z_] (identifierChar | @digit | "'" )* }
   
-  ModulePrefix { $[A-Z] (identifierChar | @digit)* ("." $[A-Z] (identifierChar | @digit)*)* "." }
+  ModulePrefix { $[A-Z] (identifierChar | @digit | "'" )* ("." $[A-Z] (identifierChar | @digit | "'" )*)* "." }
   exoticIdentifier { "\\\"" (!["\\\n] | ExoticEscape)* "\"" }
   SpreadOperator { "..." }
   
-  uppercaseIdentifier { $[A-Z] (identifierChar | @digit)* }
+  uppercaseIdentifier { $[A-Z] (identifierChar | @digit | "'" )* }
 
   @precedence { ModulePrefix, SpreadOperator, uppercaseIdentifier }
 
@@ -887,16 +888,16 @@ Interpolation {
 
   Number {
     (@digit ("_" | @digit)* ("." ("_" | @digit)*)? | "." @digit ("_" | @digit)*)
-      (("e" | "E") ("+" | "-")? ("_" | @digit)+)? |
-    @digit ("_" | @digit)* "n" |
-    "0x" $[0-9a-fA-F_]+ |
-    "0b" $[01_]+ |
-    "0o" $[0-7_]+
+      (("e" | "E") ("+" | "-")? ("_" | @digit)+)? $[nlL]? |
+    "0" $[xX] $[0-9a-fA-F_]+ ("." $[0-9a-fA-F_]*)?
+      ($[pP] $[+-]? $[0-9_]+)? $[nlL]? |
+    "0" $[bB] $[01_]+ $[nlL]? |
+    "0" $[oO] $[0-7_]+ $[nlL]?
   }
 
   @precedence { Number, "." }
 
-  Char { "'" (![\\\n'] | "\\" _) "'" }
+  Char { "'" (![\\\n'] | "\\" ("x" $[0-9a-fA-F] $[0-9a-fA-F] | "o" $[0-7] $[0-7] $[0-7] | @digit @digit @digit | "u" ("{" $[0-9a-fA-F]+ "}" | $[0-9a-fA-F] $[0-9a-fA-F] $[0-9a-fA-F] $[0-9a-fA-F]) | _)) "'" }
 
   Escape {
     "\\" ("x" $[0-9a-fA-F] $[0-9a-fA-F] | "u" ("{" $[0-9a-fA-F]+ "}" | $[0-9a-fA-F] $[0-9a-fA-F] $[0-9a-fA-F] $[0-9a-fA-F]) | ![xu])

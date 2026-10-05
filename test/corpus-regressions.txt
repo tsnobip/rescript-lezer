@@ -1,3 +1,27 @@
+# escaped characters, numeric suffixes and identifier apostrophes
+
+let l' = 42L
+let l'' = 42l
+let hex = 0XA_A.ff_ffp-10
+let chars = ['\xAA', '\o021', '\179', '\u2665', '\u{1F600}']
+type capital<'A> = 'A
+
+==>
+
+Script(LetBinding(let,LetValueBinding(VariableDefinition,"=",Number)),LetBinding(let,LetValueBinding(VariableDefinition,"=",Number)),LetBinding(let,LetValueBinding(VariableDefinition,"=",Number)),LetBinding(let,LetValueBinding(VariableDefinition,"=",ArrayExpression("[",Char,",",Char,",",Char,",",Char,",",Char,"]"))),TypeDeclaration(type,TypeBinding(TypeName,TypeParams(TypeAngleLeftNode(CompareOp),TypeParam(TypeParameter(Quote("'"))),TypeAngleRightNode(CompareOp)),"=",TypeBody(TypeAlias(TypeParameter(Quote("'")))))))
+
+# optional arguments, record values and legacy uncurried calls
+
+let value = call(~a?, ~b=?value, ~c)
+let record = {x: ?None, y: ?Some(value)}
+let fn = (.) => 42
+let result = call(. 1, 2)
+let unit = fn(.)
+
+==>
+
+Script(LetBinding(let,LetValueBinding(VariableDefinition,"=",CallExpression(VariableName,"(",Argument(LabeledArgument("~",LabelName,"?")),",",Argument(LabeledArgument("~",LabelName,"=",ArgumentValue("?",VariableName))),",",Argument(LabeledArgument("~",LabelName)),")"))),LetBinding(let,LetValueBinding(VariableDefinition,"=",RecordExpression("{",Property(PropertyDefinition,":","?",VariantLiteral(VariantConstructor)),",",Property(PropertyDefinition,":","?",VariantLiteral(VariantConstructor,VariantArguments("(",VariableName,")"))),"}"))),LetBinding(let,LetValueBinding(VariableDefinition,"=",ArrowFunction(ParamList("(",DotUncurried("."),")"),"=>",Number))),LetBinding(let,LetValueBinding(VariableDefinition,"=",CallExpression(VariableName,"(",DotUncurried("."),Argument(Number),",",Argument(Number),")"))),LetBinding(let,LetValueBinding(VariableDefinition,"=",CallExpression(VariableName,"(",DotUncurried("."),")"))))
+
 # general pattern bindings, aliases and record rest patterns
 
 let 123 = value
