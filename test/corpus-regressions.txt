@@ -1,3 +1,14 @@
+# variant decorations and type parameter variance
+
+type component<-'props>
+type nullable<+'a> = Value('a) | @as(null) Null
+type mode = @as("auto") Auto | @as("manual") Manual
+type spaced = | First (int) | Second : spaced
+
+==>
+
+Script(TypeDeclaration(type,TypeBinding(TypeName,TypeParams(TypeAngleLeftNode(CompareOp),TypeParam(ArithOp,TypeParameter(Quote("'"),VariableName)),TypeAngleRightNode(CompareOp)))),TypeDeclaration(type,TypeBinding(TypeName,TypeParams(TypeAngleLeftNode(CompareOp),TypeParam(ArithOp,TypeParameter(Quote("'"),VariableName)),TypeAngleRightNode(CompareOp)),"=",TypeBody(VariantType(VariantConstructorCase(VariantConstructorArgsToken,VariantConstructorArgs("(",TypeParameter(Quote("'"),VariableName),")")),"|",VariantConstructorCase(Decorator("@",AttributeIdentifier,AttributeArguments("(",VariableName,")")),VariantConstructor))))),TypeDeclaration(type,TypeBinding(TypeName,"=",TypeBody(VariantType(VariantConstructorCase(Decorator("@",AttributeIdentifier,AttributeArguments("(",String,")")),VariantConstructor),"|",VariantConstructorCase(Decorator("@",AttributeIdentifier,AttributeArguments("(",String,")")),VariantConstructor))))),TypeDeclaration(type,TypeBinding(TypeName,"=",TypeBody(VariantType("|",VariantConstructorCase(VariantConstructor,VariantConstructorArgs("(",TypeName,")")),"|",VariantConstructorCase(VariantConstructor,VariantConstructorResult(":",TypeName)))))))
+
 # destructured function parameters
 
 let compare = ((x, _), (y, _)) => x < y

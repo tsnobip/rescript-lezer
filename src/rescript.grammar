@@ -650,7 +650,7 @@ TypeApplication { (TypeName | TypePath) TypeAngleLeftNode commaSep<type> TypeAng
 
 TypeParams { TypeAngleLeftNode commaSep<TypeParam> TypeAngleRightNode }
 
-TypeParam { "_" | VariableDefinition | TypeParameter }
+TypeParam { (ArithOp<"+"> | ArithOp<"-">)? ("_" | VariableDefinition | TypeParameter) }
 
 RecordType {
   "{" commaSep1<RecordTypeField> "}"
@@ -718,14 +718,16 @@ TypeBody {
 TypeAlias { type }
 
 VariantType {
-  "|" VariantConstructorCase (~case "|" VariantConstructorCase)* ~case
+  "|"? VariantConstructorCase (~case "|" VariantConstructorCase)* ~case
 }
 
 VariantConstructorCase {
+  Decorator* (
   VariantSpreadCase |
   VariantConstructorArgsToken VariantConstructorArgs VariantConstructorResult? |
   VariantConstructorResultToken VariantConstructorResult |
-  VariantConstructor
+  VariantConstructor VariantConstructorArgs? VariantConstructorResult?
+  )
 }
 
 VariantSpreadCase {
